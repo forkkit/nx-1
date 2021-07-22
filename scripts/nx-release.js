@@ -155,6 +155,8 @@ const pkgFiles = [
   'build/npm/linter/package.json',
   'build/npm/nx-plugin/package.json',
   'build/npm/nx/package.json',
+  'build/npm/react-native/package.json',
+  'build/npm/detox/package.json',
 ];
 /**
  * Set the static options for release-it
