@@ -6,6 +6,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { jestVersion } from '@nrwl/jest/src/utils/versions';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Schema } from './schema';
 import {
   detoxVersion,
@@ -13,7 +14,6 @@ import {
   testingLibraryJestDom,
   typesDetoxVersion,
 } from '../../utils/versions';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function detoxInitGenerator(host: Tree, schema: Schema) {
   const tasks = [moveDependency(host), updateDependencies(host)];

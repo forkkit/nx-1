@@ -23,18 +23,20 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
+    "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
+    "@nrwl/react": "*",
     "chalk": "^4.1.0"
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
     "detox": "18.18.0"
   },
-  "schematics": "./generators.json",
   "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
-  }
+  },
+  "schematics": "./generators.json"
 }

@@ -24,12 +24,15 @@
   "types": "index.d.ts",
   "dependencies": {
     "@nrwl/detox": "*",
+    "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/react": "*",
     "chalk": "^4.1.0",
-    "ignore": "^5.1.8",
-    "node-fetch": "2.6.1"
+    "ignore": "^5.0.4",
+    "metro-resolver": "^0.66.2",
+    "node-fetch": "^2.6.1",
+    "tsconfig-paths": "^3.9.0"
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
