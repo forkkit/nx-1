@@ -1,6 +1,6 @@
 # @nrwl/detox:application
 
-Create an application
+Create a detox application
 
 ## Usage
 
