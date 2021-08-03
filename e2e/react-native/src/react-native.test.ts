@@ -22,7 +22,7 @@ describe('react native', () => {
     runCLI(`generate @nrwl/react-native:application ${appName}`);
     runCLI(`generate @nrwl/react-native:library ${libName}`);
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName}`
+      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
     );
 
     const appTestResults = await runCLIAsync(`test ${appName}`);
