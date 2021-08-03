@@ -6,13 +6,13 @@ export const typesReactVersion = '17.0.6';
 export const reactNativeVersion = '0.65.0-rc.3';
 export const typesReactNativeVersion = '0.64.12';
 
-export const metroVersion = '0.66.0';
+export const metroVersion = '0.66.2';
 
 export const reactNativeCommunityCli = '6.0.0-rc.0';
 export const reactNativeCommunityCliIos = '6.0.0-rc.0';
 export const reactNativeCommunityCliAndroid = '6.0.0-rc.0';
 
-export const metroReactNativeBabelPresetVersion = '0.66.0';
+export const metroReactNativeBabelPresetVersion = '0.66.2';
 
 export const testingLibraryReactNativeVersion = '8.0.0-rc.0';
 export const testingLibraryJestNativeVersion = '4.0.1';

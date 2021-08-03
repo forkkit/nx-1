@@ -46,6 +46,8 @@ export function normalizeOptions(
    */
   return {
     ...options,
+    unitTestRunner: options.unitTestRunner || 'jest',
+    e2eTestRunner: options.e2eTestRunner || 'detox',
     name: fileName,
     className,
     lowerCaseName: className.toLowerCase(),

@@ -4,7 +4,7 @@
   "extends": ["@nrwl/workspace"],
   "schematics": {
     "init": {
-      "factory": "./src/generators/init/init#detoxInitGenerator",
+      "factory": "./src/generators/init/init#detoxInitSchematic",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/detox plugin",
       "hidden": true
@@ -13,7 +13,21 @@
       "factory": "./src/generators/application/application#detoxApplicationSchematic",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
-      "description": "Create an application"
+      "description": "Create an detox application"
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#detoxInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/detox plugin",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#detoxApplicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an detox application"
     }
   }
 }

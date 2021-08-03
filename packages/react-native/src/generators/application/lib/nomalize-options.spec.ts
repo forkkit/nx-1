@@ -31,6 +31,7 @@ describe('Normalize Options', () => {
       linter: Linter.EsLint,
       entryFile: '/virtual/apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
+      unitTestRunner: 'jest',
     });
   });
 
@@ -52,6 +53,7 @@ describe('Normalize Options', () => {
       projectName: 'my-app',
       entryFile: '/virtual/apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
+      unitTestRunner: 'jest',
     });
   });
 
@@ -75,6 +77,7 @@ describe('Normalize Options', () => {
       projectName: 'directory-my-app',
       entryFile: '/virtual/apps/directory/my-app/src/main.tsx',
       e2eTestRunner: 'none',
+      unitTestRunner: 'jest',
     });
   });
 
@@ -97,6 +100,7 @@ describe('Normalize Options', () => {
       projectName: 'my-app',
       entryFile: '/virtual/apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
+      unitTestRunner: 'jest',
     });
   });
 });

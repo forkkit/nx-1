@@ -10,15 +10,30 @@ import {
 import { join } from 'path';
 
 describe('react native', () => {
-  beforeEach(() => newProject());
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
 
   it('create ios and android JS bundles', async () => {
     const appName = uniq('my-app');
-    runCLI(`generate @nrwl/react-native:application ${appName}`);
+    const libName = uniq('lib');
+    const componentName = uniq('component');
 
-    expect(runCLI(`test ${appName}`)).resolves.toMatchObject({
-      stdout: expect.any(String),
-    });
+    runCLI(`generate @nrwl/react-native:application ${appName}`);
+    runCLI(`generate @nrwl/react-native:library ${libName}`);
+    runCLI(
+      `generate @nrwl/react-native:component ${componentName} --project=${libName}`
+    );
+
+    const appTestResults = await runCLIAsync(`test ${appName}`);
+    expect(appTestResults.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+
+    const libTestResults = await runCLIAsync(`test ${appName}`);
+    expect(libTestResults.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
 
     const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
     expect(iosBundleResult).toContain('Done writing bundle output');
