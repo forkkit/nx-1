@@ -36,13 +36,17 @@ describe('react native', () => {
     );
 
     const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
-    expect(iosBundleResult).toContain('Done writing bundle output');
+    expect(iosBundleResult.combinedOutput).toContain(
+      'Done writing bundle output'
+    );
     expect(() =>
       checkFilesExist(`dist/apps/${appName}/ios/main.bundle`)
     ).not.toThrow();
 
     const androidBundleResult = await runCLIAsync(`bundle-android ${appName}`);
-    expect(androidBundleResult).toContain('Done writing bundle output');
+    expect(androidBundleResult.combinedOutput).toContain(
+      'Done writing bundle output'
+    );
     expect(() =>
       checkFilesExist(`dist/apps/${appName}/android/main.bundle`)
     ).not.toThrow();
