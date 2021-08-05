@@ -25,7 +25,7 @@
     "e2e-angular-extensions": "e2e/angular-extensions",
     "e2e-cli": "e2e/cli",
     "e2e-cypress": "e2e/cypress",
-    "e2e-detox": "e2e/react",
+    "e2e-detox": "e2e/detox",
     "e2e-gatsby": "e2e/gatsby",
     "e2e-jest": "e2e/jest",
     "e2e-linter": "e2e/linter",
