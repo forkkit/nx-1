@@ -21,9 +21,7 @@ describe('Detox', () => {
     checkFilesExist(`apps/${appName}-e2e/test-setup.ts`);
     checkFilesExist(`apps/${appName}-e2e/src/app.spec.ts`);
 
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
+    const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
+    expect(lintResults.combinedOutput).toContain('All files pass linting');
   });
 });
