@@ -39,7 +39,10 @@ function updateJestConfig(tree: Tree) {
         tree.write(
           jestConfigPath,
           contents
-            .replace(`...workspacePreset,`, '')
+            .replace(
+              `...workspacePreset,`,
+              "resolver: '@nrwl/jest/plugins/resolver',"
+            )
             .replace(
               `const workspacePreset = require('../../jest.preset');`,
               ''

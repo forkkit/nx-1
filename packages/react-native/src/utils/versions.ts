@@ -1,10 +1,10 @@
 export const nxVersion = '*';
 
 export const reactVersion = '17.0.2';
-export const typesReactVersion = '17.0.15';
+export const typesReactVersion = '17.0.17';
 
-export const reactNativeVersion = '0.65.0-rc.3';
-export const typesReactNativeVersion = '0.64.12';
+export const reactNativeVersion = '0.65.0-rc.4';
+export const typesReactNativeVersion = '0.64.13';
 
 export const metroVersion = '0.66.2';
 
