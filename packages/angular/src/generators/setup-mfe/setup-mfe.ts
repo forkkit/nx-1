@@ -1,51 +1,46 @@
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
-import {
-  readProjectConfiguration,
-  addDependenciesToPackageJson,
-  formatFiles,
-} from '@nrwl/devkit';
+import { readProjectConfiguration, formatFiles } from '@nrwl/devkit';
 
 import {
+  addCypressOnErrorWorkaround,
   addEntryModule,
-  addImplicitDeps,
   addRemoteToHost,
   changeBuildTarget,
   fixBootstrap,
   generateWebpackConfig,
   getRemotesWithPorts,
   setupServeTarget,
+  setupHostIfDynamic,
+  updateTsConfigTarget,
 } from './lib';
 
-export async function setupMfe(host: Tree, options: Schema) {
-  const projectConfig = readProjectConfiguration(host, options.appName);
+export async function setupMfe(tree: Tree, options: Schema) {
+  const projectConfig = readProjectConfiguration(tree, options.appName);
 
-  const remotesWithPorts = getRemotesWithPorts(host, options);
-  addRemoteToHost(host, options);
+  options.federationType = options.federationType ?? 'static';
 
-  generateWebpackConfig(host, options, projectConfig.root, remotesWithPorts);
+  setupHostIfDynamic(tree, options);
 
-  addEntryModule(host, options, projectConfig.root);
-  addImplicitDeps(host, options);
-  changeBuildTarget(host, options);
-  setupServeTarget(host, options);
+  const remotesWithPorts = getRemotesWithPorts(tree, options);
+  addRemoteToHost(tree, options);
 
-  fixBootstrap(host, projectConfig.root);
+  generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
 
-  // add package to install
-  const installPackages = addDependenciesToPackageJson(
-    host,
-    { '@angular-architects/module-federation': '^12.2.0' },
-    {}
-  );
+  addEntryModule(tree, options, projectConfig.root);
+  changeBuildTarget(tree, options);
+  updateTsConfigTarget(tree, options);
+  setupServeTarget(tree, options);
+
+  fixBootstrap(tree, projectConfig.root, options);
+
+  addCypressOnErrorWorkaround(tree, options);
 
   // format files
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
-
-  return installPackages;
 }
 
 export default setupMfe;

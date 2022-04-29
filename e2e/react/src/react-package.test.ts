@@ -1,13 +1,18 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  getSize,
   killPorts,
   newProject,
   readFile,
   readJson,
+  rmDist,
   runCLI,
+  runCLIAsync,
+  tmpProjPath,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
@@ -27,10 +32,6 @@ describe('Build React libraries and apps', () => {
   let childLib: string;
   let childLib2: string;
 
-  let buildableParentLib: string;
-  let buildableChildLib: string;
-  let buildableChildLib2: string;
-
   let proj: string;
 
   beforeEach(() => {
@@ -38,9 +39,6 @@ describe('Build React libraries and apps', () => {
     parentLib = uniq('parentlib');
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
-    buildableParentLib = uniq('buildableparentlib');
-    buildableChildLib = uniq('buildablechildlib');
-    buildableChildLib2 = uniq('buildablechildlib2');
 
     proj = newProject();
 
@@ -65,17 +63,17 @@ describe('Build React libraries and apps', () => {
       );
     };
 
-    runCLI(`generate @nrwl/react:app ${app}`);
+    runCLI(`generate @nrwl/react:app ${app} `);
 
-    // generate publishable libs
+    // generate buildable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive`
+      `generate @nrwl/react:library ${parentLib} --buildable --importPath=@${proj}/${parentLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive`
+      `generate @nrwl/react:library ${childLib} --buildable --importPath=@${proj}/${childLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive`
+      `generate @nrwl/react:library ${childLib2} --buildable --importPath=@${proj}/${childLib2} --no-interactive `
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -89,43 +87,96 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
-      json.projects[childLib].targets.build.options.assets = [
-        `libs/${childLib}/src/assets`,
-      ];
-      return JSON.stringify(json, null, 2);
+    updateProjectConfig(childLib, (json) => {
+      json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
+      return json;
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
-
-    // generate buildable libs
-    runCLI(
-      `generate @nrwl/react:library ${buildableParentLib} --buildable --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/react:library ${buildableChildLib} --buildable --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/react:library ${buildableChildLib2} --buildable --no-interactive`
-    );
-
-    createDep(buildableParentLib, [buildableChildLib, buildableChildLib2]);
-
-    // we are setting paths to {} to make sure built libs are read from dist
-    updateFile('tsconfig.base.json', (c) => {
-      const json = JSON.parse(c);
-      json.compilerOptions.paths = {};
-      return JSON.stringify(json, null, 2);
-    });
   });
+
   afterEach(() => killPorts());
 
-  describe('Publishable libraries', () => {
+  describe('Buildable libraries', () => {
+    it('should build libraries with and without dependencies', () => {
+      /*
+       * 1. Without dependencies
+       */
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${childLib2}`);
+
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.umd.js`);
+
+      checkFilesExist(`dist/libs/${childLib2}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib2}/index.umd.js`);
+
+      checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
+      checkFilesExist(`dist/libs/${childLib2}/README.md`);
+
+      /*
+       * 2. With dependencies
+       */
+      runCLI(`build ${parentLib}`);
+
+      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${parentLib}/index.umd.js`);
+
+      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+      expect(jsonFile.peerDependencies).toEqual(
+        expect.objectContaining({
+          [`@${proj}/${childLib}`]: '0.0.1',
+          [`@${proj}/${childLib2}`]: '0.0.1',
+        })
+      );
+
+      /*
+       * 3. With dependencies without existing dist
+       */
+      rmDist();
+
+      runCLI(`build ${parentLib} --skip-nx-cache`);
+
+      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib2}/index.esm.js`);
+    });
+
+    it('should support --format option', () => {
+      updateFile(
+        `libs/${childLib}/src/index.ts`,
+        (s) => `${s}
+export async function f() { return 'a'; }
+export async function g() { return 'b'; }
+export async function h() { return 'c'; }
+`
+      );
+
+      runCLI(`build ${childLib} --format cjs,esm,umd`);
+
+      checkFilesExist(`dist/libs/${childLib}/index.cjs.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.umd.js`);
+
+      const cjsPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/index.cjs.js`)
+      );
+      const esmPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/index.esm.js`)
+      );
+      const umdPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/index.umd.js`)
+      );
+
+      // This is a loose requirement that ESM and CJS packages should be less than the UMD counterpart.
+      expect(esmPackageSize).toBeLessThanOrEqual(umdPackageSize);
+      expect(cjsPackageSize).toBeLessThanOrEqual(umdPackageSize);
+    });
+
     it('should preserve the tsconfig target set by user', () => {
       // Setup
       const myLib = uniq('my-lib');
       runCLI(
-        `generate @nrwl/react:library ${myLib} --publishable=true --importPath="@mproj/${myLib}" --no-interactive`
+        `generate @nrwl/react:library ${myLib} --publishable --importPath="@mproj/${myLib}" --no-interactive`
       );
 
       /**
@@ -163,7 +214,7 @@ describe('Build React libraries and apps', () => {
       // What we're testing
       runCLI(`build ${myLib}`);
       // Assertion
-      const content = readFile(`dist/libs/${myLib}/${myLib}.esm.js`);
+      const content = readFile(`dist/libs/${myLib}/index.esm.js`);
 
       /**
        * Then check if the result contains this "promise" polyfill?
@@ -172,77 +223,30 @@ describe('Build React libraries and apps', () => {
       expect(content).toContain('function __generator(thisArg, body) {');
     });
 
-    it('should build the library when it does not have any deps', () => {
-      const output = runCLI(`build ${childLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      expect(output).toContain(`${childLib}.esm.js`);
-      expect(output).toContain(`Bundle complete: ${childLib}`);
-      checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
-    });
-
-    it('should copy the README to dist', () => {
-      const output = runCLI(`build ${childLib2}`);
-      expect(output).toContain(`Bundle complete: ${childLib2}`);
-      checkFilesExist(`dist/libs/${childLib2}/README.md`);
-    });
-
-    it('should properly add references to any dependency into the parent package.json', () => {
-      const childLibOutput = runCLI(`build ${childLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      const childLib2Output = runCLI(`build ${childLib2}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      const parentLibOutput = runCLI(`build ${parentLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-
-      expect(childLibOutput).toContain(`${childLib}.esm.js`);
-      expect(childLibOutput).toContain(`${childLib}.umd.js`);
-      expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
-
-      expect(childLib2Output).toContain(`${childLib2}.esm.js`);
-      expect(childLib2Output).toContain(`${childLib2}.umd.js`);
-      expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
-
-      expect(parentLibOutput).toContain(`${parentLib}.esm.js`);
-      expect(parentLibOutput).toContain(`${parentLib}.umd.js`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
-
-      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.peerDependencies).toEqual(
-        expect.objectContaining({
-          [`@${proj}/${childLib}`]: '0.0.1',
-          [`@${proj}/${childLib2}`]: '0.0.1',
-        })
+    it('should build an app composed out of buildable libs', () => {
+      const buildFromSource = runCLI(
+        `build ${app} --buildLibsFromSource=false`
       );
-    });
-
-    it('should build an app composed out of publishable libs', () => {
-      const buildWithDeps = runCLI(
-        `build ${app} --with-deps --buildLibsFromSource=false`
-      );
-      expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+      expect(buildFromSource).toContain('Successfully ran target build');
       checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
-
-      // we remove all path mappings from the root tsconfig, so when trying to build
-      // libs from source, the builder will throw
-      const failedBuild = runCLI(
-        `build ${app} --with-deps --buildLibsFromSource`,
-        { silenceError: true }
-      );
-      expect(failedBuild).toContain(`Can't resolve`);
     }, 1000000);
-  });
 
-  describe('Buildable libraries', () => {
-    it('should build dependent libraries', () => {
-      const parentLibOutput = runCLI(`build ${parentLib} --with-deps`);
+    it('should not create a dist folder if there is an error', async () => {
+      const libName = uniq('lib');
 
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
-    });
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --buildable --importPath=@${proj}/${libName} --no-interactive`
+      );
+
+      const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
+      updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
+
+      await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
+        /Bundle failed/
+      );
+      expect(() => {
+        checkFilesExist(`dist/libs/${libName}/package.json`);
+      }).toThrow();
+    }, 250000);
   });
 });

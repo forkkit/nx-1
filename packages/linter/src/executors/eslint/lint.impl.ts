@@ -1,12 +1,11 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { ESLint } from 'eslint';
 
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 import type { Schema } from './schema';
 import { lint, loadESLint } from './utility/eslint-utils';
-import { createDirectory } from './utility/create-directory';
 
 export default async function run(
   options: Schema,
@@ -79,8 +78,29 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   }
 
   if (lintResults.length === 0) {
-    throw new Error('Invalid lint configuration. Nothing to lint.');
+    const ignoredPatterns = (
+      await Promise.all(
+        options.lintFilePatterns.map(async (pattern) =>
+          (await eslint.isPathIgnored(pattern)) ? pattern : null
+        )
+      )
+    )
+      .filter((pattern) => !!pattern)
+      .map((pattern) => `- '${pattern}'`);
+    if (ignoredPatterns.length) {
+      throw new Error(
+        `All files matching the following patterns are ignored:\n${ignoredPatterns.join(
+          '\n'
+        )}\n\nPlease check your '.eslintignore' file.`
+      );
+    }
+    throw new Error(
+      'Invalid lint configuration. Nothing to lint. Please check your lint target pattern(s).'
+    );
   }
+
+  // output fixes to disk, if applicable based on the options
+  await projectESLint.ESLint.outputFixes(lintResults);
 
   // if quiet, only show errors
   if (options.quiet) {
@@ -93,9 +113,6 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   let totalErrors = 0;
   let totalWarnings = 0;
 
-  // output fixes to disk, if applicable based on the options
-  await projectESLint.ESLint.outputFixes(lintResults);
-
   for (const result of lintResults) {
     if (result.errorCount || result.warningCount) {
       totalErrors += result.errorCount;
@@ -103,11 +120,11 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     }
   }
 
-  const formattedResults = formatter.format(lintResults);
+  const formattedResults = await formatter.format(lintResults);
 
   if (options.outputFile) {
     const pathToOutputFile = join(context.root, options.outputFile);
-    createDirectory(dirname(pathToOutputFile));
+    mkdirSync(dirname(pathToOutputFile), { recursive: true });
     writeFileSync(pathToOutputFile, formattedResults);
   } else {
     console.info(formattedResults);

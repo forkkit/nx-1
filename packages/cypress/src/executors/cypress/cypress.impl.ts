@@ -15,27 +15,29 @@ const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole
 export type Json = { [k: string]: any };
 
 export interface CypressExecutorOptions extends Json {
-  baseUrl: string;
   cypressConfig: string;
-  devServerTarget: string;
-  headless: boolean;
-  exit: boolean;
-  parallel: boolean;
-  record: boolean;
+  watch?: boolean;
+  tsConfig?: string;
+  devServerTarget?: string;
+  headed?: boolean;
+  headless?: boolean;
+  exit?: boolean;
   key?: string;
-  tsConfig: string;
-  watch: boolean;
+  record?: boolean;
+  parallel?: boolean;
+  baseUrl?: string;
   browser?: string;
   env?: Record<string, string>;
   spec?: string;
   copyFiles?: string;
-  ciBuildId?: string;
+  ciBuildId?: string | number;
   group?: string;
   ignoreTestFiles?: string;
   reporter?: string;
   reporterOptions?: string;
-  skipServe: boolean;
+  skipServe?: boolean;
   testingType?: 'component' | 'e2e';
+  tag?: string;
 }
 
 export default async function cypressExecutor(
@@ -65,9 +67,12 @@ function normalizeOptions(
 ) {
   options.env = options.env || {};
   if (options.tsConfig) {
-    options.env.tsConfig = join(context.root, options.tsConfig);
+    const tsConfigPath = join(context.root, options.tsConfig);
+    options.env.tsConfig = tsConfigPath;
+    process.env.TS_NODE_PROJECT = tsConfigPath;
   }
   checkSupportedBrowser(options);
+  warnDeprecatedHeadless(options);
   return options;
 }
 
@@ -98,6 +103,20 @@ function checkSupportedBrowser({ browser }: CypressExecutorOptions) {
     You are using a browser that is not supported by cypress v3.
     `);
     return;
+  }
+}
+
+function warnDeprecatedHeadless({ headless }: CypressExecutorOptions) {
+  if (installedCypressVersion() < 8 || headless === undefined) {
+    return;
+  }
+
+  if (headless) {
+    const deprecatedMsg = stripIndents`
+    NOTE:
+    You can now remove the use of the '--headless' flag during 'cypress run' as this is the default for all browsers.`;
+
+    logger.warn(deprecatedMsg);
   }
 }
 
@@ -140,10 +159,8 @@ async function* startDevServer(
 
 /**
  * @whatItDoes Initialize the Cypress test runner with the provided project configuration.
- * If `headless` is `false`: open the Cypress application, the user will
- * be able to interact directly with the application.
- * If `headless` is `true`: Cypress will run in headless mode and will
- * provide directly the results in the console output.
+ * By default, Cypress will run tests from the CLI without the GUI and provide directly the results in the console output.
+ * If `watch` is `true`: Open Cypress in the interactive GUI to interact directly with the application.
  */
 async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   // Cypress expects the folder where a `cypress.json` is present
@@ -169,22 +186,34 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
     options.spec = opts.spec;
   }
 
+  options.tag = opts.tag;
   options.exit = opts.exit;
-  options.headed = !opts.headless;
-  options.headless = opts.headless;
+  options.headed = opts.headed;
+
+  if (opts.headless) {
+    options.headless = opts.headless;
+  }
+
   options.record = opts.record;
   options.key = opts.key;
   options.parallel = opts.parallel;
-  options.ciBuildId = opts.ciBuildId;
+  options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
   options.ignoreTestFiles = opts.ignoreTestFiles;
-  options.reporter = opts.reporter;
-  options.reporterOptions = opts.reporterOptions;
+
+  if (opts.reporter) {
+    options.reporter = opts.reporter;
+  }
+
+  if (opts.reporterOptions) {
+    options.reporterOptions = opts.reporterOptions;
+  }
+
   options.testingType = opts.testingType;
 
-  const result = await (!opts.watch || opts.headless
-    ? Cypress.run(options)
-    : Cypress.open(options));
+  const result = await (opts.watch
+    ? Cypress.open(options)
+    : Cypress.run(options));
 
   /**
    * `cypress.open` is returning `0` and is not of the same type as `cypress.run`.

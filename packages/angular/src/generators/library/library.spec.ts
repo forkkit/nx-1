@@ -1,26 +1,33 @@
 import {
+  getProjects,
   NxJsonConfiguration,
+  parseJson,
   readJson,
+  readProjectConfiguration,
   Tree,
   updateJson,
-  parseJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import { toNewFormat } from 'nx/src/config/workspaces';
 import { createApp } from '../../utils/nx-devkit/testing';
+import { UnitTestRunner } from '../../utils/test-runners';
+import {
+  autoprefixerVersion,
+  postcssVersion,
+  tailwindVersion,
+} from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
-import { UnitTestRunner } from '../../utils/test-runners';
 
 describe('lib', () => {
-  let appTree: Tree;
+  let tree: Tree;
 
   async function runLibraryGeneratorWithOpts(opts: Partial<Schema> = {}) {
-    await libraryGenerator(appTree, {
+    await libraryGenerator(tree, {
       name: 'myLib',
       publishable: false,
       buildable: false,
-      enableIvy: false,
       linter: Linter.EsLint,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
@@ -31,7 +38,66 @@ describe('lib', () => {
   }
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace();
+  });
+
+  describe('workspace v2', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace(2);
+    });
+
+    it('should run the library generator without erroring if the directory has a trailing slash', async () => {
+      // ACT & ASSERT
+      await expect(
+        runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
+      ).resolves.not.toThrow();
+    });
+
+    it('should default to standalone project for first project', async () => {
+      await runLibraryGeneratorWithOpts();
+      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
+        'my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(workspaceJsonEntry).toEqual('libs/my-lib');
+    });
+
+    it('should obey standalone === false for first project', async () => {
+      await runLibraryGeneratorWithOpts({
+        standaloneConfig: false,
+      });
+      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
+        'my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+    });
+  });
+
+  describe('workspace v1', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace(1);
+    });
+
+    it('should default to inline project for first project', async () => {
+      await runLibraryGeneratorWithOpts({
+        standaloneConfig: false,
+      });
+      const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
+        .projects['my-lib'];
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+    });
+
+    it('should throw for standaloneConfig === true', async () => {
+      const promise = runLibraryGeneratorWithOpts({
+        standaloneConfig: true,
+      });
+      await expect(promise).rejects.toThrow();
+    });
   });
 
   describe('not nested', () => {
@@ -43,7 +109,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      let ngPackage = readJson(appTree, 'libs/my-lib/ng-package.json');
+      let ngPackage = readJson(tree, 'libs/my-lib/ng-package.json');
 
       expect(ngPackage.dest).toEqual('../../dist/libs/my-lib');
     });
@@ -55,7 +121,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      let ngPackage = readJson(appTree, 'libs/my-lib/ng-package.json');
+      let ngPackage = readJson(tree, 'libs/my-lib/ng-package.json');
 
       expect(ngPackage.$schema).toEqual(
         '../../node_modules/ng-packagr/ng-package.schema.json'
@@ -67,8 +133,12 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts();
 
       // ASSERT
-      const packageJson = readJson(appTree, '/package.json');
+      const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss-import']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss-preset-env']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
     it('should update package.json when publishable', async () => {
@@ -79,20 +149,25 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const packageJson = readJson(appTree, '/package.json');
+      const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
+      expect(packageJson.devDependencies['postcss']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
-    it('should update tsconfig.lib.prod.json when enableIvy', async () => {
+    it('should update package.json when buildable', async () => {
       // ACT
-      await runLibraryGeneratorWithOpts({
-        buildable: true,
-        enableIvy: true,
-      });
+      await runLibraryGeneratorWithOpts({ buildable: true });
 
       // ASSERT
-      const tsConfig = readJson(appTree, '/libs/my-lib/tsconfig.lib.prod.json');
-      expect(tsConfig.angularCompilerOptions['enableIvy']).toBe(true);
+      const packageJson = readJson(tree, '/package.json');
+      expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
+      expect(packageJson.devDependencies['postcss']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
     it('should update workspace.json', async () => {
@@ -103,10 +178,25 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, '/workspace.json');
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
+    });
+
+    it('should not generate a module file and index.ts should be empty', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        skipModule: true,
+      });
+
+      // ASSERT
+      const moduleFileExists = tree.exists(
+        'libs/my-lib/src/lib/my-lib.module.ts'
+      );
+      expect(moduleFileExists).toBeFalsy();
+      const indexApi = tree.read('libs/my-lib/src/index.ts', 'utf-8');
+      expect(indexApi).toEqual(``);
     });
 
     it('should remove "build" target from workspace.json when a library is not publishable', async () => {
@@ -116,7 +206,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, '/workspace.json');
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(
@@ -132,13 +222,13 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, '/workspace.json');
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
-    it('should remove tsconfib.lib.prod.json when library is not publishable', async () => {
+    it('should remove .browserlistrc when library is not buildable or publishable', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: false,
@@ -146,12 +236,21 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const libProdConfig = appTree.read('libs/my-lib/tsconfig.lib.prod.json');
-
-      expect(libProdConfig).toBeFalsy();
+      expect(tree.read('libs/my-lib/.browserlistrc')).toBeFalsy();
     });
 
-    it('should update nx.json', async () => {
+    it('should remove tsconfib.lib.prod.json when library is not buildable or publishable', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        publishable: false,
+        buildable: false,
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/tsconfig.lib.prod.json')).toBeFalsy();
+    });
+
+    it('should update tags', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: false,
@@ -160,11 +259,11 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-lib': {
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toEqual({
+        'my-lib': expect.objectContaining({
           tags: ['one', 'two'],
-        },
+        }),
       });
     });
 
@@ -173,7 +272,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts();
 
       // ASSERT
-      const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -184,7 +283,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts();
 
       // ASSERT
-      const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.json');
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.base.json',
         angularCompilerOptions: {
@@ -195,6 +294,8 @@ describe('lib', () => {
         compilerOptions: {
           forceConsistentCasingInFileNames: true,
           noFallthroughCasesInSwitch: true,
+          noPropertyAccessFromIndexSignature: true,
+          noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
         },
@@ -211,30 +312,46 @@ describe('lib', () => {
       });
     });
 
-    it('should check for existance of spec files before deleting them', async () => {
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
       // ARRANGE
-      updateJson(appTree, '/workspace.json', (workspaceJSON) => {
-        workspaceJSON.schematics = {
-          '@schematics/angular:service': {
-            skipTests: true,
-          },
-          '@schematics/angular:component': {
-            skipTests: true,
-          },
-        };
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
 
-        return workspaceJSON;
-      });
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.json');
+    });
+
+    it('should check for existence of spec files before deleting them', async () => {
+      // ARRANGE
+      updateJson<NxJsonConfiguration, NxJsonConfiguration>(
+        tree,
+        '/nx.json',
+        (nxJson) => {
+          nxJson.generators = {
+            '@schematics/angular:service': {
+              skipTests: true,
+            },
+            '@schematics/angular:component': {
+              skipTests: true,
+            },
+          };
+
+          return nxJson;
+        }
+      );
 
       // ACT
       await runLibraryGeneratorWithOpts();
 
       // ASSERT
       expect(
-        appTree.read('libs/my-lib/src/lib/my-lib.component.spec.ts')
+        tree.read('libs/my-lib/src/lib/my-lib.component.spec.ts')
       ).toBeFalsy();
       expect(
-        appTree.read('libs/my-lib/src/lib/my-lib.service.spec.ts')
+        tree.read('libs/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
     });
 
@@ -243,7 +360,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts();
 
       // ASSERT
-      const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.spec.json');
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
@@ -253,7 +370,7 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts();
 
         // ASSERT
-        const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
+        const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       });
 
@@ -262,7 +379,7 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts();
 
         // ASSERT
-        const tsConfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
+        const tsConfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsConfigJson.include).toEqual(['**/*.ts']);
       });
 
@@ -271,10 +388,11 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts();
 
         // ASSERT
-        const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
+        const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
       });
 
@@ -285,8 +403,12 @@ describe('lib', () => {
         });
 
         // ASSERT
-        const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsconfigJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
+        const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+        expect(tsconfigJson.exclude).toEqual([
+          'src/test.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
+        ]);
       });
 
       it('should remove the excludes when unitTestRunner is none', async () => {
@@ -296,8 +418,8 @@ describe('lib', () => {
         });
 
         // ASSERT
-        const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsconfigJson.exclude).toEqual([]);
+        const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+        expect(tsconfigJson.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
       });
     });
 
@@ -307,42 +429,63 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ name: 'my-lib2' });
 
       // ASSERT
-      expect(appTree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
-      expect(appTree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.module.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeFalsy();
+
+      expect(tree.exists(`libs/my-lib2/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists('libs/my-lib2/src/index.ts')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib2/src/lib/my-lib2.module.ts')
       ).toBeTruthy();
 
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.component.ts')
+        tree.exists('libs/my-lib2/src/lib/my-lib2.component.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
+        tree.exists('libs/my-lib2/src/lib/my-lib2.component.spec.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.service.ts')
+        tree.exists('libs/my-lib2/src/lib/my-lib2.service.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
+        tree.exists('libs/my-lib2/src/lib/my-lib2.service.spec.ts')
       ).toBeFalsy();
+    });
 
-      expect(appTree.exists(`libs/my-lib2/jest.config.js`)).toBeTruthy();
-      expect(appTree.exists('libs/my-lib2/src/index.ts')).toBeTruthy();
-      expect(
-        appTree.exists('libs/my-lib2/src/lib/my-lib2.module.ts')
-      ).toBeTruthy();
+    it('should work if the new project root is changed', async () => {
+      // ARRANGE
+      updateJson(tree, 'workspace.json', (json) => ({
+        ...json,
+        newProjectRoot: 'newProjectRoot',
+      }));
 
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib2/src/lib/my-lib2.component.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-lib2/src/lib/my-lib2.component.spec.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
       ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
       expect(
-        appTree.exists('libs/my-lib2/src/lib/my-lib2.service.ts')
-      ).toBeFalsy();
-      expect(
-        appTree.exists('libs/my-lib2/src/lib/my-lib2.service.spec.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
     });
 
@@ -356,12 +499,12 @@ describe('lib', () => {
 
       // ASSERT
       expect(
-        JSON.parse(appTree.read('workspace.json').toString()).projects['my-lib']
+        JSON.parse(tree.read('workspace.json').toString()).projects['my-lib']
           .prefix
       ).toEqual('proj');
 
       expect(
-        JSON.parse(appTree.read('workspace.json').toString()).projects[
+        JSON.parse(tree.read('workspace.json').toString()).projects[
           'my-lib-with-prefix'
         ].prefix
       ).toEqual('custom');
@@ -369,7 +512,7 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({ tags: 'one', directory: 'my-dir' });
       await runLibraryGeneratorWithOpts({
@@ -379,15 +522,15 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
+      const projects = Object.fromEntries(getProjects(tree));
 
-      expect(nxJson.projects).toEqual({
-        'my-dir-my-lib': {
+      expect(projects).toEqual({
+        'my-dir-my-lib': expect.objectContaining({
           tags: ['one'],
-        },
-        'my-dir-my-lib2': {
+        }),
+        'my-dir-my-lib2': expect.objectContaining({
           tags: ['one', 'two'],
-        },
+        }),
       });
     });
 
@@ -401,42 +544,42 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(appTree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
-      expect(appTree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
-        appTree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
       ).toBeTruthy();
 
       expect(
-        appTree.exists('libs/my-dir/my-lib/src/lib/my-lib.component.ts')
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.component.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-dir/my-lib/src/lib/my-lib.component.spec.ts')
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.component.spec.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.ts')
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.spec.ts')
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      expect(appTree.exists(`libs/my-dir/my-lib2/jest.config.js`)).toBeTruthy();
-      expect(appTree.exists('libs/my-dir/my-lib2/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib2/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib2/src/index.ts')).toBeTruthy();
       expect(
-        appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
+        tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
       ).toBeTruthy();
 
       expect(
-        appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.component.ts')
+        tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.component.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.component.spec.ts')
+        tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.component.spec.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.service.ts')
+        tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.service.ts')
       ).toBeFalsy();
       expect(
-        appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.service.spec.ts')
+        tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.service.spec.ts')
       ).toBeFalsy();
     });
 
@@ -449,7 +592,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      let ngPackage = readJson(appTree, 'libs/my-dir/my-lib/ng-package.json');
+      let ngPackage = readJson(tree, 'libs/my-dir/my-lib/ng-package.json');
       expect(ngPackage.dest).toEqual('../../../dist/libs/my-dir/my-lib');
     });
 
@@ -458,7 +601,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ directory: 'myDir' });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, '/workspace.json');
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
         'libs/my-dir/my-lib'
@@ -470,7 +613,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ directory: 'myDir' });
 
       // ASSERT
-      const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['libs/my-dir/my-lib/src/index.ts']
       );
@@ -481,7 +624,7 @@ describe('lib', () => {
 
     it('should update tsconfig.json (no existing path mappings)', async () => {
       // ARRANGE
-      updateJson(appTree, 'tsconfig.base.json', (json) => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
         json.compilerOptions.paths = undefined;
         return json;
       });
@@ -490,7 +633,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ directory: 'myDir' });
 
       // ASSERT
-      const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['libs/my-dir/my-lib/src/index.ts']
@@ -505,10 +648,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ directory: 'myDir' });
 
       // ASSERT
-      const tsconfigJson = readJson(
-        appTree,
-        'libs/my-dir/my-lib/tsconfig.json'
-      );
+      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
 
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.base.json',
@@ -520,6 +660,8 @@ describe('lib', () => {
         compilerOptions: {
           forceConsistentCasingInFileNames: true,
           noFallthroughCasesInSwitch: true,
+          noPropertyAccessFromIndexSignature: true,
+          noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
         },
@@ -535,21 +677,116 @@ describe('lib', () => {
         ],
       });
     });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
+    });
+  });
+
+  describe('at the root', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace(2);
+      updateJson(tree, 'nx.json', (json) => ({
+        ...json,
+        workspaceLayout: { libsDir: '' },
+      }));
+    });
+
+    it('should accept numbers in the path', async () => {
+      await runLibraryGeneratorWithOpts({ directory: 'src/1-api' });
+
+      // ASSERT
+      const workspaceJson = readJson(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['src-api-my-lib']).toEqual(
+        'src/1-api/my-lib'
+      );
+    });
+
+    it('should have root relative routes', async () => {
+      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
+      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
+        'my-dir-my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(tree, 'my-dir-my-lib');
+      expect(projectConfig.root).toEqual('my-dir/my-lib');
+      expect(workspaceJsonEntry).toEqual('my-dir/my-lib');
+    });
+
+    it('should generate files with correct output paths', async () => {
+      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
+        const content = readJson(tree, path);
+
+        expect(lookupFn(content)).toEqual(expectedValue);
+      };
+      await runLibraryGeneratorWithOpts({
+        directory: 'myDir',
+        simpleModuleName: true,
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
+
+      const libModulePath = 'my-dir/my-lib/src/lib/my-lib.module.ts';
+      expect(tree.read(libModulePath, 'utf-8')).toContain('class MyLibModule');
+
+      // Make sure these exist
+      [
+        'my-dir/my-lib/.browserslistrc',
+        'my-dir/my-lib/jest.config.ts',
+        'my-dir/my-lib/ng-package.json',
+        'my-dir/my-lib/project.json',
+        'my-dir/my-lib/tsconfig.lib.prod.json',
+        'my-dir/my-lib/src/index.ts',
+        'my-dir/my-lib/src/lib/my-lib.module.ts',
+      ].forEach((path) => {
+        expect(tree.exists(path)).toBeTruthy();
+      });
+
+      // Make sure these have properties
+      [
+        {
+          path: 'tsconfig.base.json',
+          lookupFn: (json) => json.compilerOptions.paths['@myorg/lib'],
+          expectedValue: ['my-dir/my-lib/src/index.ts'],
+        },
+        {
+          path: 'my-dir/my-lib/ng-package.json',
+          lookupFn: (json) => json.dest,
+          expectedValue: '../../dist/my-dir/my-lib',
+        },
+        {
+          path: 'my-dir/my-lib/project.json',
+          lookupFn: (json) => json.targets.build.outputs,
+          expectedValue: ['dist/my-dir/my-lib'],
+        },
+        {
+          path: 'my-dir/my-lib/tsconfig.lib.json',
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../dist/out-tsc',
+        },
+        {
+          path: 'my-dir/my-lib/.eslintrc.json',
+          lookupFn: (json) => json.extends,
+          expectedValue: ['../../.eslintrc.json'],
+        },
+      ].forEach(hasJsonValue);
+    });
   });
 
   describe('router', () => {
     it('should error when lazy is set without routing', async () => {
-      try {
-        // ACT
-        await runLibraryGeneratorWithOpts({ lazy: true });
-
-        fail();
-      } catch (e) {
-        // ASSERT
-        expect(e.message).toEqual(
-          'To use --lazy option, --routing must also be set.'
-        );
-      }
+      // ACT & ASSERT
+      await expect(runLibraryGeneratorWithOpts({ lazy: true })).rejects.toThrow(
+        'To use "--lazy" option, "--routing" must also be set.'
+      );
     });
 
     describe('lazy', () => {
@@ -571,27 +808,25 @@ describe('lib', () => {
 
         // ASSERT
         expect(
-          appTree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
+          tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
         ).toBeTruthy();
         expect(
-          appTree
+          tree
             .read('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
             .toString()
         ).toContain('RouterModule.forChild');
 
         expect(
-          appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
+          tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
         ).toBeTruthy();
         expect(
-          appTree
-            .read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
-            .toString()
+          tree.read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts').toString()
         ).toContain('RouterModule.forChild');
       });
 
       it('should update the parent module', async () => {
         // ARRANGE
-        createApp(appTree, 'myapp');
+        createApp(tree, 'myapp');
 
         // ACT
         await runLibraryGeneratorWithOpts({
@@ -601,13 +836,13 @@ describe('lib', () => {
           parentModule: 'apps/myapp/src/app/app.module.ts',
         });
 
-        const moduleContents = appTree
+        const moduleContents = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
-        const tsConfigAppJson = readJson(
-          appTree,
-          'apps/myapp/tsconfig.app.json'
+        const tsConfigAppJson = readJson(tree, 'apps/myapp/tsconfig.app.json');
+        const tsConfigLibJson = parseJson(
+          tree.read('libs/my-dir/my-lib/tsconfig.lib.json').toString()
         );
 
         await runLibraryGeneratorWithOpts({
@@ -619,12 +854,15 @@ describe('lib', () => {
           parentModule: 'apps/myapp/src/app/app.module.ts',
         });
 
-        const moduleContents2 = appTree
+        const moduleContents2 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
         const tsConfigAppJson2 = parseJson(
-          appTree.read('apps/myapp/tsconfig.app.json').toString()
+          tree.read('apps/myapp/tsconfig.app.json').toString()
+        );
+        const tsConfigLibJson2 = parseJson(
+          tree.read('libs/my-dir/my-lib2/tsconfig.lib.json').toString()
         );
 
         await runLibraryGeneratorWithOpts({
@@ -636,16 +874,19 @@ describe('lib', () => {
           parentModule: 'apps/myapp/src/app/app.module.ts',
         });
 
-        const moduleContents3 = appTree
+        const moduleContents3 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
         const tsConfigAppJson3 = parseJson(
-          appTree.read('apps/myapp/tsconfig.app.json').toString()
+          tree.read('apps/myapp/tsconfig.app.json').toString()
+        );
+
+        const tsConfigLibJson3 = parseJson(
+          tree.read('libs/my-dir/my-lib3/tsconfig.lib.json').toString()
         );
 
         // ASSERT
-
         expect(moduleContents).toContain('RouterModule.forRoot([');
         expect(moduleContents).toContain(
           `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
@@ -654,6 +895,11 @@ describe('lib', () => {
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
           '../../libs/my-dir/my-lib/src/index.ts',
+        ]);
+        expect(tsConfigLibJson.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
 
         expect(moduleContents2).toContain('RouterModule.forRoot([');
@@ -668,6 +914,11 @@ describe('lib', () => {
           '**/*.ts',
           '../../libs/my-dir/my-lib/src/index.ts',
           '../../libs/my-dir/my-lib2/src/index.ts',
+        ]);
+        expect(tsConfigLibJson2.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
 
         expect(moduleContents3).toContain('RouterModule.forRoot([');
@@ -687,12 +938,17 @@ describe('lib', () => {
           '../../libs/my-dir/my-lib2/src/index.ts',
           '../../libs/my-dir/my-lib3/src/index.ts',
         ]);
+        expect(tsConfigLibJson3.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
+        ]);
       });
 
       it('should update the parent module even if the route is declared outside the .forRoot(...)', async () => {
         // ARRANGE
-        createApp(appTree, 'myapp');
-        appTree.write(
+        createApp(tree, 'myapp');
+        tree.write(
           'apps/myapp/src/app/app.module.ts',
           `
           import { NgModule } from '@angular/core';
@@ -720,7 +976,7 @@ describe('lib', () => {
         });
 
         // ASSERT
-        const moduleContents = appTree
+        const moduleContents = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
@@ -747,37 +1003,33 @@ describe('lib', () => {
         });
         // ASSERT
         expect(
-          appTree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
+          tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
         ).toBeTruthy();
         expect(
-          appTree
+          tree
             .read('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
             .toString()
         ).toContain('RouterModule');
         expect(
-          appTree
+          tree
             .read('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
             .toString()
         ).toContain('const myDirMyLibRoutes: Route[] = ');
 
         expect(
-          appTree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
+          tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
         ).toBeTruthy();
         expect(
-          appTree
-            .read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
-            .toString()
+          tree.read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts').toString()
         ).toContain('RouterModule');
         expect(
-          appTree
-            .read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
-            .toString()
+          tree.read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts').toString()
         ).toContain('const myLib2Routes: Route[] = ');
       });
 
       it('should update the parent module', async () => {
         // ARRANGE
-        createApp(appTree, 'myapp');
+        createApp(tree, 'myapp');
 
         // ACT
         await runLibraryGeneratorWithOpts({
@@ -787,7 +1039,7 @@ describe('lib', () => {
           parentModule: 'apps/myapp/src/app/app.module.ts',
         });
 
-        const moduleContents = appTree
+        const moduleContents = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
@@ -799,7 +1051,7 @@ describe('lib', () => {
           parentModule: 'apps/myapp/src/app/app.module.ts',
         });
 
-        const moduleContents2 = appTree
+        const moduleContents2 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
@@ -811,7 +1063,7 @@ describe('lib', () => {
           simpleModuleName: true,
         });
 
-        const moduleContents3 = appTree
+        const moduleContents3 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
@@ -846,8 +1098,8 @@ describe('lib', () => {
 
       it('should update the parent module even if the route is declared outside the .forRoot(...)', async () => {
         // ARRANGE
-        createApp(appTree, 'myapp');
-        appTree.write(
+        createApp(tree, 'myapp');
+        tree.write(
           'apps/myapp/src/app/app.module.ts',
           `
           import { NgModule } from '@angular/core';
@@ -875,7 +1127,7 @@ describe('lib', () => {
         });
 
         // ASSERT
-        const moduleContents = appTree
+        const moduleContents = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
@@ -895,16 +1147,16 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, 'workspace.json');
+      const workspaceJson = readJson(tree, 'workspace.json');
 
-      expect(appTree.exists('libs/my-lib/src/test.ts')).toBeTruthy();
-      expect(appTree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
-      expect(appTree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/test.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
       ).toBeFalsy();
-      expect(appTree.exists('karma.conf.js')).toBeTruthy();
+      expect(tree.exists('karma.conf.js')).toBeTruthy();
       expect(workspaceJson.projects['my-lib'].architect.test.builder).toEqual(
         '@angular-devkit/build-angular:karma'
       );
@@ -919,7 +1171,7 @@ describe('lib', () => {
       // ASSERT
 
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
       ).toBeTruthy();
     });
   });
@@ -932,16 +1184,16 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, 'workspace.json');
+      const workspaceJson = readJson(tree, 'workspace.json');
 
       expect(
-        appTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
+        tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
       ).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
     });
   });
@@ -956,8 +1208,8 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const packageJson = readJson(appTree, 'libs/my-dir/my-lib/package.json');
-      const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
+      const packageJson = readJson(tree, 'libs/my-dir/my-lib/package.json');
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(packageJson.name).toBe('@myorg/lib');
       expect(
@@ -972,20 +1224,27 @@ describe('lib', () => {
         importPath: '@myorg/lib',
       });
 
-      try {
-        // ACT
-        await runLibraryGeneratorWithOpts({
+      // ACT & ASSERT
+      await expect(
+        runLibraryGeneratorWithOpts({
           name: 'myLib2',
           publishable: true,
           importPath: '@myorg/lib',
-        });
-      } catch (e) {
-        expect(e.message).toContain(
-          'You already have a library using the import path'
-        );
-      }
+        })
+      ).rejects.toThrowError(
+        'You already have a library using the import path'
+      );
+    });
 
-      expect.assertions(1);
+    it('should fail if no importPath has been used', async () => {
+      // ACT && ASSERT
+      await expect(
+        runLibraryGeneratorWithOpts({
+          publishable: true,
+        })
+      ).rejects.toThrowError(
+        'For publishable libs you have to provide a proper "--importPath"'
+      );
     });
   });
 
@@ -1000,14 +1259,16 @@ describe('lib', () => {
 
       // ASSERT
       const { compilerOptions, angularCompilerOptions } = readJson(
-        appTree,
+        tree,
         'libs/my-lib/tsconfig.json'
       );
-      const workspaceJson = readJson(appTree, 'workspace.json');
+      const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       // check that the TypeScript compiler options have been updated
       expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
       expect(compilerOptions.strict).toBe(true);
+      expect(compilerOptions.noImplicitOverride).toBe(true);
+      expect(compilerOptions.noPropertyAccessFromIndexSignature).toBe(true);
       expect(compilerOptions.noImplicitReturns).toBe(true);
       expect(compilerOptions.noFallthroughCasesInSwitch).toBe(true);
 
@@ -1017,9 +1278,7 @@ describe('lib', () => {
 
       // check to see if the workspace configuration has been updated to use strict
       // mode by default in future libraries
-      expect(
-        workspaceJson.schematics['@nrwl/angular:library'].strict
-      ).not.toBeDefined();
+      expect(generators['@nrwl/angular:library'].strict).not.toBeDefined();
     });
 
     it('should set defaults when --strict=false', async () => {
@@ -1033,10 +1292,8 @@ describe('lib', () => {
       // ASSERT
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future libraries
-      const workspaceJson = readJson(appTree, 'workspace.json');
-      expect(workspaceJson.schematics['@nrwl/angular:library'].strict).toBe(
-        false
-      );
+      const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(generators['@nrwl/angular:library'].strict).toBe(false);
     });
   });
 
@@ -1047,17 +1304,17 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
         // ASSERT
-        const workspaceJson = readJson(appTree, 'workspace.json');
+        const workspaceJson = readJson(tree, 'workspace.json');
 
-        expect(appTree.exists('libs/my-lib/tslint.json')).toBe(false);
+        expect(tree.exists('libs/my-lib/tslint.json')).toBe(false);
         expect(workspaceJson.projects['my-lib'].architect.lint)
           .toMatchInlineSnapshot(`
           Object {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "libs/my-lib/src/**/*.ts",
-                "libs/my-lib/src/**/*.html",
+                "libs/my-lib/**/*.ts",
+                "libs/my-lib/**/*.html",
               ],
             },
           }
@@ -1070,7 +1327,7 @@ describe('lib', () => {
 
         // ASSERT
 
-        const eslintConfig = readJson(appTree, 'libs/my-lib/.eslintrc.json');
+        const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
           Object {
             "extends": Array [
@@ -1128,9 +1385,76 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({ linter: Linter.None });
 
         // ASSERT
-        const workspaceJson = readJson(appTree, 'workspace.json');
+        const workspaceJson = readJson(tree, 'workspace.json');
         expect(workspaceJson.projects['my-lib'].architect.lint).toBeUndefined();
       });
+    });
+  });
+
+  describe('--add-tailwind', () => {
+    it('should throw when "--addTailwind=true" and "--buildable" and "--publishable" are not set', async () => {
+      // ACT & ASSERT
+      await expect(
+        runLibraryGeneratorWithOpts({ addTailwind: true })
+      ).rejects.toThrow(
+        `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
+      );
+    });
+
+    it('should not set up Tailwind when "--add-tailwind" is not specified', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      expect(tree.exists('libs/my-lib/tailwind.config.js')).toBeFalsy();
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['tailwindcss']).toBeUndefined();
+      expect(devDependencies['postcss']).toBeUndefined();
+      expect(devDependencies['autoprefixer']).toBeUndefined();
+    });
+
+    it('should not set up Tailwind when "--add-tailwind=false"', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({ addTailwind: false });
+
+      // ASSERT
+      expect(tree.exists('libs/my-lib/tailwind.config.js')).toBeFalsy();
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['tailwindcss']).toBeUndefined();
+      expect(devDependencies['postcss']).toBeUndefined();
+      expect(devDependencies['autoprefixer']).toBeUndefined();
+    });
+
+    it('should set up Tailwind when "--add-tailwind=true"', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({ addTailwind: true, buildable: true });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/tailwind.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          content: [
+            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
+          theme: {
+            extend: {},
+          },
+          plugins: [],
+        };
+        "
+      `);
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build.options.tailwindConfig).toBe(
+        'libs/my-lib/tailwind.config.js'
+      );
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
+      expect(devDependencies['postcss']).toBe(postcssVersion);
+      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
     });
   });
 });

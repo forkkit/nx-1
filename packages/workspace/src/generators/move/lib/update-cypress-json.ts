@@ -1,5 +1,4 @@
-import { Tree } from '@nrwl/devkit';
-import { ProjectConfiguration } from '@nrwl/tao/src/shared/workspace';
+import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import * as path from 'path';
 import { NormalizedSchema } from '../schema';
 

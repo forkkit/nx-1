@@ -46,7 +46,6 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -74,7 +73,6 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -110,7 +108,6 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -136,7 +133,7 @@ For a large organization it's crucial to establish how projects can depend on ea
 - Libraries with a broader scope (e.g., `shared/ui`) should not depend on the libraries with narrower scope (e.g., `happynrwlapp/search/utils-testing`).
 - Component libraries should only depend on other component libraries and utility libraries, but should not depend feature libraries.
 
-Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/{{framework}}/structure/monorepo-tags).
+Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/structure/monorepo-tags).
 
 ## Code Ownership
 
@@ -150,6 +147,8 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 /libs/shared/ui             hank-the-ui-guy
 /libs/shared/utils-testing  julie,hank
 ```
+
+If you want to know more about code ownership on Github, please check [the documentation on the `CODEOWNERS` file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 
 ## Enforcing Best Practices
 
@@ -186,13 +185,13 @@ Note `all the projects affected by a PR/commit`. This is very important. Monorep
 - The performance of CI checks will degrade over time. The time it takes to run the CI checks should be proportional to the impact of the change, not the size of the repo.
 - We will be affected by the code your change didn’t touch
 
-We should utilize `affected:*` commands to build and test projects. Read more about them [here](/{{framework}}/cli/affected).
+We should utilize `affected:*` commands to build and test projects. Read more about them [here](/cli/affected).
 
 ### Trunk-based development
 
 Monorepo-style development works best when used with trunk-based development.
 
-When using trunk-based development, we have a single main branch (say `master`) where every team submits their code. And
-they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into master in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
+When using trunk-based development, we have a single main branch (say `main`) where every team submits their code. And
+they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into main in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
 
-One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `master` to. With this, we can still frequently merge code into `master` and have our release isolated from changes made by other teams.
+One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `main` to. With this, we can still frequently merge code into `main` and have our release isolated from changes made by other teams.

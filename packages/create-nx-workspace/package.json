@@ -1,10 +1,11 @@
 {
   "name": "create-nx-workspace",
   "version": "0.0.1",
-  "description": "Smart, Extensible Build Framework",
+  "description": "Smart, Fast and Extensible Build System",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/create-nx-workspace"
   },
   "keywords": [
     "Monorepo",
@@ -18,7 +19,7 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js"
+    "create-nx-workspace": "./bin/index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -28,11 +29,11 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "tmp": "~0.2.1",
-    "yargs-parser": "20.0.0",
+    "yargs": "^17.4.0",
     "enquirer": "~2.3.6",
     "flat": "^5.0.2",
     "chalk": "4.1.0",
     "ora": "5.3.0",
-    "tslib": "^2.0.0"
+    "tslib": "^2.3.0"
   }
 }

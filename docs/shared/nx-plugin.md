@@ -4,9 +4,9 @@ Nx plugins are npm packages that contain generators and executors to extend a Nx
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/community) section.
-> Plugins are written using Nx Devkit. **Read [Nx Devkit](/{{framework}}/core-concepts/nx-devkit) for more information.**
+> Plugins are written using Nx Devkit. **Read [Nx Devkit](/getting-started/nx-devkit) for more information.**
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 ## Generating a Plugin
 
@@ -19,57 +19,6 @@ npx create-nx-plugin my-org --pluginName my-plugin
 This command creates a brand new workspace, and sets up a pre-configured plugin with the specified name.
 
 > Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
-
-## Workspace Structure
-
-After executing the above command, the following tree structure is created:
-
-```treeview
-my-org/
-├── e2e/
-│   └── my-plugin-e2e/
-│       ├── jest.config.js
-│       ├── tests/
-│       │   └── my-plugin.test.ts
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
-├── packages/
-│   └── my-plugin/
-│       ├── README.md
-│       ├── executors.json
-│       ├── generators.json
-│       ├── jest.config.js
-│       ├── package.json
-│       ├── src/
-│       │   ├── executors/
-│       │   │   └── my-plugin/
-│       │   │       ├── executor.spec.ts
-│       │   │       ├── executor.ts
-│       │   │       ├── schema.d.ts
-│       │   │       └── schema.json
-│       │   ├── index.ts
-│       │   └── generators/
-│       │       └── my-plugin/
-│       │           ├── files/
-│       │           │   └── src/
-│       │           │       └── index.ts.__template__
-│       │           ├── schema.d.ts
-│       │           ├── schema.json
-│       │           ├── generator.spec.ts
-│       │           └── generator.ts
-│       ├── tsconfig.json
-│       ├── tsconfig.lib.json
-│       └── tsconfig.spec.json
-├── tools
-│   ├── generators/
-│   └── tsconfig.tools.json
-├── jest.config.js
-├── nx.json
-├── package.json
-├── tsconfig.base.json
-├── workspace.json
-└── yarn.lock
-```
 
 > If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
 
@@ -134,13 +83,13 @@ Full E2Es are supported (and recommended) and will run everything on the file sy
 
 ## Testing your plugin
 
-One of the biggest benefits that the Nx Plugin package provides is support for E2E testing.
+One of the biggest benefits that the Nx Plugin package provides is support for E2E and unit testing.
 
 When the E2E app runs, a temporary E2E directory is created in the root of the workspace. This directory is a blank Nx workspace, and will have the plugin's built package installed locally.
 
 ### E2E Testing file
 
-When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there are already tests for making sure that the executor ran, checking if directories are created with the `--directory` option, and checking if tags are added to `nx.json`.
+When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there are already tests for making sure that the executor ran, checking if directories are created with the `--directory` option, and checking if tags are added to the project configuration.
 
 We'll go over a few parts of a test file below:
 
@@ -167,7 +116,7 @@ There are additional functions that the `@nrwl/nx-plugin/testing` package export
 
 Sometimes you might want to include some assets with the plugin. This might be a image or some additional binaries.
 
-To make sure that assets are copied to the dist folder, open the `workspace.json` file, and find the plugin's project. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
+To make sure that assets are copied to the dist folder, open the plugin's `project.json` file. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
 
 ```json
 "build": {
@@ -196,9 +145,13 @@ To make sure that assets are copied to the dist folder, open the `workspace.json
 }
 ```
 
+## Using your Nx Plugin
+
+To use your plugin, simply list it in `nx.json` or use its generators and executors as you would for any other plugin. This could look like `nx g @my-org/my-plugin:lib` for generators or `"executor": "@my-org/my-plugin:build"` for executors. It should be usable in all of the same ways as published plugins in your local workspace immediately after generating it. This includes setting it up as the default collection in `nx.json`, which would allow you to run `nx g lib` and hit your plugin's generator.
+
 ## Publishing your Nx Plugin
 
-To publish your plugin follow these steps:
+In order to use your plugin in other workspaces or share it with the community, you will need to publish it to an npm registry. To publish your plugin follow these steps:
 
 1. Build your plugin with the command `nx run my-plugin:build`
 1. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
@@ -221,3 +174,88 @@ Nx provides a utility (`nx list`) that lists both core and community plugins. To
 > The `yarn submit-plugin` command automatically opens the Github pull request process with the correct template.
 
 We will then verify the plugin, offer suggestions or merge the pull request!
+
+## Preset
+
+A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some of the internal presets that Nx provides by default.
+
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/yGUrF0-uqaU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+ 
+### Custom Preset
+
+At its core a preset is a generator, which we can create inside of a plugin.
+If you **don't** have an existing plugin you can create one by running
+
+```bash
+  npx create-nx-plugin my-org --pluginName my-plugin
+```
+
+To create our preset inside of our plugin we can run
+
+```bash
+  nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
+```
+
+> Note: the word `preset` is required for the name of this generator
+
+You should have a similar structure to this:
+
+```treeview
+happynrwl/
+	├── e2e
+	├── jest.config.js
+	├── jest.preset.js
+	├── nx.json
+	├── package-lock.json
+	├── package.json
+	├── packages
+	│   └── happynrwl
+	│       ├── src
+	│       │   ├── executors
+	│       │   ├── generators
+	│       │   │   ├── happynrwl
+	│       │   │   └── preset 		// <------------- Here
+	│       │   └── index.ts
+	├── tools
+	├── tsconfig.base.json
+	└── workspace.json
+```
+
+After the command is finished, the preset generator is created under the folder named **preset**.
+The **generator.ts** provides an entry point to the generator. This file contains a function that is called to perform manipulations on a tree that represents the file system. The **schema.json** provides a description of the generator, available options, validation information, and default values.
+
+Here is the sample generator function which you can customize to meet your needs.
+
+```typescript
+export default async function (tree: Tree, options: PresetGeneratorSchema) {
+  const normalizedOptions = normalizeOptions(tree, options);
+  addProjectConfiguration(tree, normalizedOptions.projectName, {
+    root: normalizedOptions.projectRoot,
+    projectType: 'application',
+    sourceRoot: `${normalizedOptions.projectRoot}/src`,
+    targets: {
+      exec: {
+        executor: '@nrwl/workspace:run-commands',
+        options: {
+          command: `node ${projectRoot}/src/index.js`,
+        },
+      },
+    },
+    tags: normalizedOptions.parsedTags,
+  });
+  addFiles(tree, normalizedOptions);
+  await formatFiles(tree);
+}
+```
+
+To get an in-depth guide on customizing/running or debugging your generator see [workspace generators](https://nx.dev/generators/workspace-generators#running-a-workspace-generator).
+
+#### Usage
+
+Before you are able to use your newly created preset you must package and publish it to a registry.
+
+After you have published your plugin to a registry you can now use your preset when creating a new workspace
+
+```bash
+npx create-nx-workspace my-workspace --preset=my-plugin-name
+```

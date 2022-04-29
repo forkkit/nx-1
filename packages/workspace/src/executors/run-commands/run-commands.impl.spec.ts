@@ -2,6 +2,10 @@ import { readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import runCommands, { LARGE_BUFFER } from './run-commands.impl';
+import { env } from 'npm-run-path';
+const {
+  devDependencies: { '@nrwl/workspace': version },
+} = require('package.json');
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
@@ -59,11 +63,40 @@ describe('Command Runner Builder', () => {
       context
     );
     expect(exec).toHaveBeenCalledWith(`echo --a=123 --b=456`, {
-      stdio: [0, 1, 2],
+      stdio: ['inherit', 'inherit', 'inherit'],
       cwd: undefined,
-      env: process.env,
+      env: {
+        ...process.env,
+        ...env(),
+      },
       maxBuffer: LARGE_BUFFER,
     });
+  });
+
+  it('should add args containing spaces to in the command', async () => {
+    const exec = jest.spyOn(require('child_process'), 'execSync');
+
+    await runCommands(
+      {
+        command: `echo`,
+        a: 123,
+        b: '4 5 6',
+        c: '4 "5" 6',
+      },
+      context
+    );
+    expect(exec).toHaveBeenCalledWith(
+      `echo --a=123 --b="4 5 6" --c="4 \"5\" 6"`,
+      {
+        stdio: ['inherit', 'inherit', 'inherit'],
+        cwd: undefined,
+        env: {
+          ...process.env,
+          ...env(),
+        },
+        maxBuffer: LARGE_BUFFER,
+      }
+    );
   });
 
   it('should forward args by default when using commands (plural)', async () => {
@@ -82,11 +115,17 @@ describe('Command Runner Builder', () => {
     expect(exec).toHaveBeenCalledTimes(2);
     expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        ...env(),
+      },
     });
     expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        ...env(),
+      },
     });
   });
 
@@ -109,11 +148,17 @@ describe('Command Runner Builder', () => {
     expect(exec).toHaveBeenCalledTimes(2);
     expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        ...env(),
+      },
     });
     expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        ...env(),
+      },
     });
   });
 
@@ -136,11 +181,17 @@ describe('Command Runner Builder', () => {
     expect(exec).toHaveBeenCalledTimes(2);
     expect(exec).toHaveBeenNthCalledWith(1, 'echo', {
       maxBuffer: LARGE_BUFFER,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        ...env(),
+      },
     });
     expect(exec).toHaveBeenNthCalledWith(2, 'echo foo', {
       maxBuffer: LARGE_BUFFER,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        ...env(),
+      },
     });
   });
 
@@ -261,11 +312,17 @@ describe('Command Runner Builder', () => {
       expect(exec).toHaveBeenCalledTimes(2);
       expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
         maxBuffer: LARGE_BUFFER,
-        env: { ...process.env },
+        env: {
+          ...process.env,
+          ...env(),
+        },
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
-        env: { ...process.env },
+        env: {
+          ...process.env,
+          ...env(),
+        },
       });
     });
 
@@ -283,16 +340,36 @@ describe('Command Runner Builder', () => {
       expect(exec).toHaveBeenCalledTimes(2);
       expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
         maxBuffer: LARGE_BUFFER,
-        env: { ...process.env, FORCE_COLOR: `true` },
+        env: { ...process.env, FORCE_COLOR: `true`, ...env() },
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
-        env: { ...process.env, FORCE_COLOR: `true` },
+        env: { ...process.env, FORCE_COLOR: `true`, ...env() },
       });
     });
   });
 
   describe('cwd', () => {
+    it('should use workspace root package when cwd is not specified', async () => {
+      const root = dirSync().name;
+      const f = fileSync().name;
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `nx --version >> ${f}`,
+            },
+          ],
+          parallel: true,
+          cwd: process.cwd(),
+        },
+        { root } as any
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).not.toBe('12.0.0');
+    });
+
     it('should run the task in the workspace root when no cwd is specified', async () => {
       const root = dirSync().name;
       const f = fileSync().name;

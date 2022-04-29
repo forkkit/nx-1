@@ -138,7 +138,8 @@ async function normalizeOptions(
   assertValidOptions(options);
 
   const { className, fileName } = names(options.name);
-  const componentFileName = options.pascalCaseFiles ? className : fileName;
+  const componentFileName =
+    options.fileName ?? (options.pascalCaseFiles ? className : fileName);
   const project = getProjects(host).get(options.project);
 
   if (!project) {
@@ -178,7 +179,11 @@ async function normalizeOptions(
 }
 
 async function getDirectory(host: Tree, options: Schema) {
-  const fileName = names(options.name).fileName;
+  const genNames = names(options.name);
+  const fileName =
+    options.pascalCaseDirectory === true
+      ? genNames.className
+      : genNames.fileName;
   const workspace = getProjects(host);
   let baseDir: string;
   if (options.directory) {

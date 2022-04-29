@@ -1,181 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app --mfe should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
-"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
-const mf = require(\\"@angular-architects/module-federation/webpack\\");
-const path = require(\\"path\\");
-
-const sharedMappings = new mf.SharedMappings();
-sharedMappings.register(path.join(__dirname, \\"../../tsconfig.base.json\\"), [
-  /* mapped paths to share */
-]);
-
-module.exports = {
-  output: {
-    uniqueName: \\"app1\\",
-    publicPath: \\"auto\\",
-  },
-  optimization: {
-    runtimeChunk: false,
-    minimize: false,
-  },
-  resolve: {
-    alias: {
-      ...sharedMappings.getAliases(),
-    },
-  },
-  plugins: [
-    new ModuleFederationPlugin({
-      remotes: {
-    		\\"remote1\\": 'remote1@http://localhost:4201/remoteEntry.js',
-    		\\"remote2\\": 'remote2@http://localhost:4202/remoteEntry.js',
-      
-      },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
-        ...sharedMappings.getDescriptors(),
-      },
-    }),
-    sharedMappings.getPlugin(),
-  ],
-};
-"
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
-"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
-const mf = require(\\"@angular-architects/module-federation/webpack\\");
-const path = require(\\"path\\");
-
-const sharedMappings = new mf.SharedMappings();
-sharedMappings.register(path.join(__dirname, \\"../../tsconfig.base.json\\"), [
-  /* mapped paths to share */
-]);
-
-module.exports = {
-  output: {
-    uniqueName: \\"app1\\",
-    publicPath: \\"auto\\",
-  },
-  optimization: {
-    runtimeChunk: false,
-    minimize: false,
-  },
-  resolve: {
-    alias: {
-      ...sharedMappings.getAliases(),
-    },
-  },
-  plugins: [
-    new ModuleFederationPlugin({
-      remotes: {
-    		\\"remote1\\": 'remote1@http://localhost:4200/remoteEntry.js',
-      
-      },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
-        ...sharedMappings.getDescriptors(),
-      },
-    }),
-    sharedMappings.getPlugin(),
-  ],
-};
-"
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should generate a Module Federation correctly for a each app 1`] = `
-"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
-const mf = require(\\"@angular-architects/module-federation/webpack\\");
-const path = require(\\"path\\");
-
-const sharedMappings = new mf.SharedMappings();
-sharedMappings.register(path.join(__dirname, \\"../../tsconfig.base.json\\"), [
-  /* mapped paths to share */
-]);
-
-module.exports = {
-  output: {
-    uniqueName: \\"my-app\\",
-    publicPath: \\"auto\\",
-  },
-  optimization: {
-    runtimeChunk: false,
-    minimize: false,
-  },
-  resolve: {
-    alias: {
-      ...sharedMappings.getAliases(),
-    },
-  },
-  plugins: [
-    new ModuleFederationPlugin({
-      remotes: {
-      
-      },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
-        ...sharedMappings.getDescriptors(),
-      },
-    }),
-    sharedMappings.getPlugin(),
-  ],
-};
-"
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should generate a Module Federation correctly for a each app 2`] = `
-"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
-const mf = require(\\"@angular-architects/module-federation/webpack\\");
-const path = require(\\"path\\");
-
-const sharedMappings = new mf.SharedMappings();
-sharedMappings.register(path.join(__dirname, \\"../../tsconfig.base.json\\"), [
-  /* mapped paths to share */
-]);
-
-module.exports = {
-  output: {
-    uniqueName: \\"my-app\\",
-    publicPath: \\"auto\\",
-  },
-  optimization: {
-    runtimeChunk: false,
-    minimize: false,
-  },
-  resolve: {
-    alias: {
-      ...sharedMappings.getAliases(),
-    },
-  },
-  plugins: [
-    new ModuleFederationPlugin({
-      name: \\"my-app\\",
-      filename: \\"remoteEntry.js\\",
-      exposes: {
-        './Module': 'apps/my-app/src/app/remote-entry/entry.module.ts',
-      },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
-        ...sharedMappings.getDescriptors(),
-      },
-    }),
-    sharedMappings.getPlugin(),
-  ],
-};
-"
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);"
 `;
+
+exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app nested should update workspace.json 1`] = `
 Object {
@@ -243,8 +92,8 @@ Object {
       "builder": "@nrwl/linter:eslint",
       "options": Object {
         "lintFilePatterns": Array [
-          "apps/my-dir/my-app/src/**/*.ts",
-          "apps/my-dir/my-app/src/**/*.html",
+          "apps/my-dir/my-app/**/*.ts",
+          "apps/my-dir/my-app/**/*.html",
         ],
       },
     },
@@ -263,7 +112,7 @@ Object {
     "test": Object {
       "builder": "@nrwl/jest:jest",
       "options": Object {
-        "jestConfig": "apps/my-dir/my-app/jest.config.js",
+        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": Array [
@@ -275,6 +124,7 @@ Object {
   "projectType": "application",
   "root": "apps/my-dir/my-app",
   "sourceRoot": "apps/my-dir/my-app/src",
+  "tags": Array [],
 }
 `;
 
@@ -291,7 +141,6 @@ Object {
       "options": Object {
         "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
         "devServerTarget": "my-dir-my-app:serve:development",
-        "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
       },
     },
     "lint": Object {
@@ -301,11 +150,48 @@ Object {
           "apps/my-dir/my-app-e2e/**/*.{js,ts}",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
+  "implicitDependencies": Array [
+    "my-dir-my-app",
+  ],
   "projectType": "application",
   "root": "apps/my-dir/my-app-e2e",
   "sourceRoot": "apps/my-dir/my-app-e2e/src",
+  "tags": Array [],
+}
+`;
+
+exports[`app not nested should generate files 1`] = `
+Object {
+  "angularCompilerOptions": Object {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": Object {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+  ],
 }
 `;
 
@@ -375,8 +261,8 @@ Object {
       "builder": "@nrwl/linter:eslint",
       "options": Object {
         "lintFilePatterns": Array [
-          "apps/my-app/src/**/*.ts",
-          "apps/my-app/src/**/*.html",
+          "apps/my-app/**/*.ts",
+          "apps/my-app/**/*.html",
         ],
       },
     },
@@ -395,7 +281,7 @@ Object {
     "test": Object {
       "builder": "@nrwl/jest:jest",
       "options": Object {
-        "jestConfig": "apps/my-app/jest.config.js",
+        "jestConfig": "apps/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": Array [
@@ -407,6 +293,7 @@ Object {
   "projectType": "application",
   "root": "apps/my-app",
   "sourceRoot": "apps/my-app/src",
+  "tags": Array [],
 }
 `;
 
@@ -423,7 +310,6 @@ Object {
       "options": Object {
         "cypressConfig": "apps/my-app-e2e/cypress.json",
         "devServerTarget": "my-app:serve:development",
-        "tsConfig": "apps/my-app-e2e/tsconfig.e2e.json",
       },
     },
     "lint": Object {
@@ -433,10 +319,17 @@ Object {
           "apps/my-app-e2e/**/*.{js,ts}",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
+  "implicitDependencies": Array [
+    "my-app",
+  ],
   "projectType": "application",
   "root": "apps/my-app-e2e",
   "sourceRoot": "apps/my-app-e2e/src",
+  "tags": Array [],
 }
 `;

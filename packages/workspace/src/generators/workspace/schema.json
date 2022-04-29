@@ -3,6 +3,7 @@
   "$id": "SchematicsNxNgNew",
   "cli": "nx",
   "title": "Create an empty workspace",
+  "description": "Create an empty workspace.",
   "type": "object",
   "properties": {
     "name": {
@@ -44,11 +45,9 @@
       "description": "The directory name to create the workspace in.",
       "default": ""
     },
-    "layout": {
+    "preset": {
       "type": "string",
-      "description": "Layout of the workspace",
-      "default": "apps-and-libs",
-      "enum": ["apps-and-libs", "packages"]
+      "description": "Preset of the workspace."
     },
     "npmScope": {
       "type": "string",
@@ -56,8 +55,7 @@
     },
     "defaultBase": {
       "type": "string",
-      "description": "Default base branch for affected.",
-      "default": "master"
+      "description": "Default base branch for affected."
     },
     "skipInstall": {
       "description": "Skip installing dependency packages.",
@@ -92,6 +90,11 @@
         }
       ],
       "default": true
+    },
+    "packageManager": {
+      "description": "The package manager used to install dependencies.",
+      "type": "string",
+      "enum": ["npm", "yarn", "pnpm"]
     },
     "cli": {
       "description": "CLI used for generating code and running tasks",

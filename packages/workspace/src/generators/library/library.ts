@@ -12,10 +12,15 @@ import {
   GeneratorCallback,
   joinPathFragments,
   ProjectConfiguration,
-  NxJsonProjectConfiguration,
+  addDependenciesToPackageJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '../../utilities/typescript';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 // nx-ignore-next-line
@@ -33,8 +38,7 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  const projectConfiguration: ProjectConfiguration &
-    NxJsonProjectConfiguration = {
+  const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
@@ -44,8 +48,9 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 
   if (options.buildable) {
     const { libsDir } = getWorkspaceLayout(tree);
+    addDependenciesToPackageJson(tree, {}, { '@nrwl/js': nxVersion });
     projectConfiguration.targets.build = {
-      executor: '@nrwl/workspace:tsc',
+      executor: '@nrwl/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -82,8 +87,8 @@ export function addLint(
   });
 }
 
-function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.projectRoot, 'tsconfig.lib.json'), (json) => {
+function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, join(options.projectRoot, 'tsconfig.json'), (json) => {
     if (options.strict) {
       json.compilerOptions = {
         ...json.compilerOptions,
@@ -99,7 +104,7 @@ function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
 }
 
 function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];
@@ -125,6 +130,7 @@ function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
 function createFiles(tree: Tree, options: NormalizedSchema) {
   const { className, name, propertyName } = names(options.name);
 
+  const rootOffset = offsetFromRoot(options.projectRoot);
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     dot: '.',
@@ -135,8 +141,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     cliCommand: 'nx',
     strict: undefined,
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    offsetFromRoot: rootOffset,
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     hasUnitTestRunner: options.unitTestRunner !== 'none',
+    hasLinter: options.linter !== 'none',
   });
 
   if (options.unitTestRunner === 'none') {
@@ -157,7 +165,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tree.delete(join(options.projectRoot, 'package.json'));
   }
 
-  updateLibTsConfig(tree, options);
+  updateTsConfig(tree, options);
 }
 
 async function addJest(
@@ -165,6 +173,7 @@ async function addJest(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   return await jestProjectGenerator(tree, {
+    ...options,
     project: options.name,
     setupFile: 'none',
     supportTsx: true,
@@ -228,7 +237,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
 
   const { libsDir, npmScope } = getWorkspaceLayout(tree);
 
-  const projectRoot = `${libsDir}/${projectDirectory}`;
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

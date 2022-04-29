@@ -6,9 +6,9 @@ Object {
   "devDependencies": Object {
     "@nrwl/eslint-plugin-nx": "*",
     "@nrwl/linter": "*",
-    "@typescript-eslint/eslint-plugin": "~4.28.3",
-    "@typescript-eslint/parser": "~4.28.3",
-    "eslint": "7.22.0",
+    "@typescript-eslint/eslint-plugin": "~5.18.0",
+    "@typescript-eslint/parser": "~5.18.0",
+    "eslint": "~8.12.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "latest",
@@ -29,6 +29,9 @@ Object {
           "apps/e2e-app-1/**/*.{js,ts}",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
 }
@@ -184,12 +187,13 @@ Object {
         "@typescript-eslint/unified-signatures": "error",
         "arrow-body-style": "error",
         "constructor-super": "error",
+        "dot-notation": "off",
         "eqeqeq": Array [
           "error",
           "smart",
         ],
         "guard-for-in": "error",
-        "id-blacklist": "off",
+        "id-denylist": "off",
         "id-match": "off",
         "import/no-deprecated": "warn",
         "no-bitwise": "error",
@@ -222,6 +226,7 @@ Object {
         ],
         "no-debugger": "error",
         "no-empty": "off",
+        "no-empty-function": "off",
         "no-eval": "error",
         "no-fallthrough": "error",
         "no-new-wrappers": "error",
@@ -229,9 +234,11 @@ Object {
           "error",
           "rxjs/Rx",
         ],
+        "no-shadow": "error",
         "no-throw-literal": "error",
         "no-undef-init": "error",
         "no-underscore-dangle": "off",
+        "no-unused-expressions": "error",
         "no-var": "error",
         "prefer-const": "error",
         "radix": "error",
@@ -263,15 +270,6 @@ Object {
         "*.jsx",
       ],
       "rules": Object {},
-    },
-    Object {
-      "files": Array [
-        "src/plugins/index.js",
-      ],
-      "rules": Object {
-        "@typescript-eslint/no-var-requires": "off",
-        "no-undef": "off",
-      },
     },
   ],
   "plugins": Array [

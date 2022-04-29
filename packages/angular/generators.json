@@ -13,7 +13,14 @@
       "factory": "./src/generators/application/application.compat#applicationSchematic",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Creates an Angular application."
+    },
+    "component": {
+      "factory": "./src/generators/component/component.compat",
+      "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
+      "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/compat",
@@ -24,8 +31,7 @@
     "component-story": {
       "factory": "./src/generators/component-story/compat",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a stories.ts file for a component.",
-      "hidden": true
+      "description": "Creates a `stories.ts` file for a component."
     },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
@@ -40,8 +46,7 @@
     "init": {
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes the @nrwl/angular plugin.",
-      "aliases": ["ng-add"],
+      "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
     },
     "karma": {
@@ -58,7 +63,19 @@
       "factory": "./src/generators/library/library.compat#librarySchematic",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Creates an Angular library."
+    },
+    "library-secondary-entry-point": {
+      "factory": "./src/generators/library-secondary-entry-point/compat",
+      "schema": "./src/generators/library-secondary-entry-point/schema.json",
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library."
+    },
+    "remote": {
+      "factory": "./src/generators/remote/remote.compat",
+      "schema": "./src/generators/remote/schema.json",
+      "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveSchematic",
@@ -66,10 +83,51 @@
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
     },
+    "convert-to-with-mf": {
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf.compat",
+      "schema": "./src/generators/convert-to-with-mf/schema.json",
+      "description": "Converts an old micro frontend configuration to use the new `withModuleFederation` helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_"
+    },
+    "host": {
+      "factory": "./src/generators/host/host.compat",
+      "schema": "./src/generators/host/schema.json",
+      "description": "Generate a Host Angular Module Federation Application."
+    },
+    "ng-add": {
+      "factory": "./src/generators/ng-add/compat",
+      "schema": "./src/generators/ng-add/schema.json",
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true
+    },
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
+    },
+    "scam": {
+      "factory": "./src/generators/scam/scam.compat",
+      "schema": "./src/generators/scam/schema.json",
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-directive": {
+      "factory": "./src/generators/scam-directive/scam-directive.compat",
+      "schema": "./src/generators/scam-directive/schema.json",
+      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-pipe": {
+      "factory": "./src/generators/scam-pipe/scam-pipe.compat",
+      "schema": "./src/generators/scam-pipe/schema.json",
+      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/setup-mfe.compat",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/compat",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
     "stories": {
       "factory": "./src/generators/stories/compat",
@@ -81,28 +139,11 @@
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Adds Storybook configuration to a project."
     },
-    "storybook-migrate-defaults-5-to-6": {
-      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
-      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
-    },
-    "storybook-migrate-stories-to-6-2": {
-      "factory": "./src/generators/storybook-migrate-stories-to-6-2/compat",
-      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export."
-    },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/compat",
       "schema": "./src/generators/upgrade-module/schema.json",
       "description": "Sets up an Upgrade Module."
     },
-
-    "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/compat",
-      "schema": "./src/generators/setup-mfe/schema.json",
-      "description": "Generate a Module Federation configuration for a given Angular application."
-    },
-
     "web-worker": {
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
@@ -120,12 +161,14 @@
       "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Creates an Angular application."
     },
-    "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/setup-mfe",
-      "schema": "./src/generators/setup-mfe/schema.json",
-      "description": "Generate a Module Federation configuration for a given Angular application."
+    "component": {
+      "factory": "./src/generators/component/component",
+      "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
+      "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
@@ -136,8 +179,7 @@
     "component-story": {
       "factory": "./src/generators/component-story/component-story",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a stories.ts file for a component.",
-      "hidden": true
+      "description": "Creates a stories.ts file for a component."
     },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
@@ -152,8 +194,7 @@
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes the @nrwl/angular plugin.",
-      "aliases": ["ng-add"],
+      "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
     },
     "karma": {
@@ -170,7 +211,20 @@
       "factory": "./src/generators/library/library",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Creates an Angular library."
+    },
+    "library-secondary-entry-point": {
+      "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
+      "schema": "./src/generators/library-secondary-entry-point/schema.json",
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library."
+    },
+    "remote": {
+      "factory": "./src/generators/remote/remote",
+      "schema": "./src/generators/remote/schema.json",
+      "x-type": "application",
+      "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
@@ -178,10 +232,52 @@
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
     },
+    "convert-to-with-mf": {
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
+      "schema": "./src/generators/convert-to-with-mf/schema.json",
+      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_"
+    },
+    "host": {
+      "factory": "./src/generators/host/host",
+      "schema": "./src/generators/host/schema.json",
+      "x-type": "application",
+      "description": "Generate a Host Angular Module Federation Application."
+    },
+    "ng-add": {
+      "factory": "./src/generators/ng-add/ng-add",
+      "schema": "./src/generators/ng-add/schema.json",
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true
+    },
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
+    },
+    "scam": {
+      "factory": "./src/generators/scam/scam",
+      "schema": "./src/generators/scam/schema.json",
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-directive": {
+      "factory": "./src/generators/scam-directive/scam-directive",
+      "schema": "./src/generators/scam-directive/schema.json",
+      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-pipe": {
+      "factory": "./src/generators/scam-pipe/scam-pipe",
+      "schema": "./src/generators/scam-pipe/schema.json",
+      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/setup-mfe",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",
@@ -192,16 +288,6 @@
       "factory": "./src/generators/storybook-configuration/storybook-configuration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Adds Storybook configuration to a project."
-    },
-    "storybook-migrate-defaults-5-to-6": {
-      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
-      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
-    },
-    "storybook-migrate-stories-to-6-2": {
-      "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
-      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export."
     },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/upgrade-module",

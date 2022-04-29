@@ -14,13 +14,11 @@ import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { join, relative } from 'path';
 import {
   createSourceFile,
-  isDecorator,
-  isImportClause,
   isImportDeclaration,
   isStringLiteral,
   ScriptTarget,
 } from 'typescript';
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 export default function update(): Rule {
   return chain([
@@ -73,9 +71,7 @@ function updateImports(host: Tree) {
         isStringLiteral(statement.moduleSpecifier)
       ) {
         const nodeText = statement.moduleSpecifier.getText(sourceFile);
-        const modulePath = statement.moduleSpecifier
-          .getText(sourceFile)
-          .substr(1, nodeText.length - 2);
+        const modulePath = nodeText.slice(1, -1);
         if (modulePath === 'type-graphql') {
           changes.push(
             new ReplaceChange(

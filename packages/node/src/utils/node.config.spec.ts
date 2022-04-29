@@ -1,14 +1,14 @@
 import { join } from 'path';
+import { getNodeWebpackConfig } from './node.config';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import { BuildNodeBuilderOptions } from './types';
+
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
-  get appRootPath() {
+jest.mock('@nrwl/devkit', () => ({
+  get workspaceRoot() {
     return join(__dirname, '../../../..');
   },
 }));
-
-import { getNodeWebpackConfig } from './node.config';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { BuildNodeBuilderOptions } from './types';
 
 describe('getNodePartial', () => {
   let input: BuildNodeBuilderOptions;
@@ -21,7 +21,7 @@ describe('getNodePartial', () => {
       fileReplacements: [],
       statsJson: false,
     };
-    (<any>TsConfigPathsPlugin).mockImplementation(
+    (<any>TsconfigPathsPlugin).mockImplementation(
       function MockPathsPlugin() {}
     );
   });
@@ -46,22 +46,23 @@ describe('getNodePartial', () => {
   });
 
   describe('the optimization option when true', () => {
-    it('should not minify', () => {
+    it('should minify', () => {
       const result = getNodeWebpackConfig({
         ...input,
         optimization: true,
       });
 
-      expect(result.optimization.minimize).toEqual(false);
+      expect(result.optimization.minimize).toEqual(true);
+      expect(result.optimization.minimizer).toBeDefined();
     });
 
-    it('should not concatenate modules', () => {
+    it('should concatenate modules', () => {
       const result = getNodeWebpackConfig({
         ...input,
         optimization: true,
       });
 
-      expect(result.optimization.concatenateModules).toEqual(false);
+      expect(result.optimization.concatenateModules).toEqual(true);
     });
   });
 
@@ -79,9 +80,9 @@ describe('getNodePartial', () => {
         externalDependencies: ['module1'],
       });
       const callback = jest.fn();
-      result.externals[0](null, 'module1', callback);
+      result.externals[0]({ request: 'module1' }, callback);
       expect(callback).toHaveBeenCalledWith(null, 'commonjs module1');
-      result.externals[0](null, '@nestjs/core', callback);
+      result.externals[0]({ request: '@nestjs/core' }, callback);
       expect(callback).toHaveBeenCalledWith();
     });
 

@@ -1,5 +1,5 @@
-import type { DocumentsApi } from './documents.api';
-import { Menu } from './menu.models';
+import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { Menu } from '@nrwl/nx-dev/models-menu';
 import {
   createMenuItems,
   getApiSection,
@@ -8,21 +8,17 @@ import {
 } from './menu.utils';
 
 export class MenuApi {
-  private readonly menuCache = new Map<string, Menu>();
+  private menuCache: Menu | null = null;
 
-  constructor(private readonly documentsApi: DocumentsApi) {}
+  constructor(private readonly documents: DocumentMetadata) {}
 
-  getMenu(versionId: string, flavorId: string): Menu {
-    const key = `${versionId}-${flavorId}`;
-    let menu = this.menuCache.get(key);
+  getMenu(): Menu {
+    let menu = this.menuCache;
 
     if (!menu) {
-      const root = this.documentsApi.getDocuments(versionId);
-      const items = createMenuItems(versionId, flavorId, root);
+      const items = createMenuItems(this.documents);
       if (items) {
         menu = {
-          version: versionId,
-          flavor: flavorId,
           sections: [
             getBasicSection(items),
             getDeepDiveSection(items),
@@ -30,9 +26,9 @@ export class MenuApi {
           ],
         };
       } else {
-        throw new Error(`Cannot find documents for flavor "${flavorId}"`);
+        throw new Error(`Cannot find any documents`);
       }
-      this.menuCache.set(key, menu);
+      this.menuCache = menu;
     }
 
     return menu;

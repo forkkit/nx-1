@@ -20,12 +20,16 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
 
   const isModern = api.caller((caller) => caller?.isModern);
 
-  // This is set by `@nrwl/web:package` executor
+  // This is set by `@nrwl/web:rollup` executor
   const isNxPackage = api.caller((caller) => caller?.isNxPackage);
 
   const emitDecoratorMetadata = api.caller(
     (caller) => caller?.emitDecoratorMetadata ?? true
   );
+
+  // Determine settings  for `@babel/plugin-proposal-class-properties`,
+  // so that we can sync the `loose` option with `@babel/preset-env`.
+  const classProperties = options.classProperties ?? { loose: true };
 
   return {
     presets: [
@@ -36,7 +40,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
         // All other options will fail in Jest since Node does not support some ES features
         // such as import syntax.
         process.env.NODE_ENV === 'test'
-          ? { targets: { node: 'current' } }
+          ? { targets: { node: 'current' }, loose: true }
           : {
               // Allow importing core-js in entrypoint and use browserlist to select polyfills.
               // This is needed for differential loading as well.
@@ -48,6 +52,8 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
               bugfixes: true,
               // Exclude transforms that make all code slower
               exclude: ['transform-typeof-symbol'],
+              // This must match the setting for `@babel/plugin-proposal-class-properties`
+              loose: classProperties.loose,
             },
       ],
       require.resolve('@babel/preset-typescript'),
@@ -78,7 +84,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
       ],
       [
         require.resolve('@babel/plugin-proposal-class-properties'),
-        options.classProperties ?? { loose: true },
+        classProperties,
       ],
     ].filter(Boolean),
     overrides: [

@@ -1,9 +1,4 @@
-import {
-  createProjectGraphAsync,
-  onlyWorkspaceProjects,
-  reverse,
-} from '../../../core/project-graph';
-import type { ProjectGraph } from '@nrwl/devkit';
+import { createProjectGraphAsync, ProjectGraph, reverse } from '@nrwl/devkit';
 import { Schema } from '../schema';
 
 /**
@@ -16,9 +11,9 @@ export async function checkDependencies(_, schema: Schema): Promise<void> {
     return;
   }
 
-  const graph: ProjectGraph = await createProjectGraphAsync('4.0');
+  const graph: ProjectGraph = await createProjectGraphAsync();
 
-  const reverseGraph = onlyWorkspaceProjects(reverse(graph));
+  const reverseGraph = reverse(graph);
 
   const deps = reverseGraph.dependencies[schema.projectName] || [];
 

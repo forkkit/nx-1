@@ -2,7 +2,14 @@ import * as depcheck from 'depcheck';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': ['@nrwl/tao', '@nrwl/workspace', 'prettier', 'typescript', 'dotenv'],
+  '*': [
+    'nx',
+    '@nrwl/cli',
+    '@nrwl/workspace',
+    'prettier',
+    'typescript',
+    'dotenv',
+  ],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -15,16 +22,31 @@ const IGNORE_MATCHES = {
     '@ngrx/router-store',
     '@ngrx/store',
     '@storybook/angular',
-    'injection-js',
-    'ng-packagr',
     'rxjs',
     'semver',
+    // installed dynamically by the library generator
+    'ng-packagr',
+    // ng-packagr deps, some are handled if not installed
+    'injection-js',
+    'browserslist',
+    'cacache',
+    'find-cache-dir',
+    'less',
+    'node-sass',
+    'node-sass-tilde-importer',
+    'ora',
+    'postcss',
+    'postcss-import',
+    'postcss-preset-env',
+    'postcss-url',
+    'sass',
+    'stylus',
+    'tailwindcss',
   ],
-  cli: ['@nrwl/cli'],
+  cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
-  gatsby: ['@angular-devkit/architect', 'babel-preset-gatsby', 'rxjs'],
   jest: [
     'jest',
     '@jest/types',
@@ -55,8 +77,12 @@ const IGNORE_MATCHES = {
     'babel-plugin-styled-components',
     'rollup',
     'webpack',
+    '@swc/jest',
+    'babel-jest',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
+    '@swc/jest',
+    'babel-jest',
   ],
   storybook: [
     '@angular-devkit/architect',
@@ -65,29 +91,40 @@ const IGNORE_MATCHES = {
     '@storybook/addon-knobs',
     '@storybook/addon-essentials',
     '@storybook/core',
+    '@storybook/core-server',
     'rxjs',
   ],
-  tao: [
+  nx: [
     '@angular-devkit/build-angular',
     '@angular-devkit/schematics',
     '@angular-devkit/core',
     '@angular-devkit/architect',
+    '@angular/cli',
   ],
-  web: ['fibers', 'node-sass'],
+  web: [
+    // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
+    '@swc/core',
+    'swc-loader',
+
+    'fibers',
+    'node-sass',
+  ],
   workspace: [
     'tslint',
     '@angular-devkit/architect',
-    '@angular-devkit/build-angular',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    'karma',
-    'karma-chrome-launcher',
-    'karma-coverage-istanbul-reporter',
-    'karma-jasmine',
-    'karma-jasmine-html-reporter',
     'webpack',
     'webpack-dev-server',
+    '@nrwl/cli',
+    '@nrwl/jest',
+    '@nrwl/linter',
+    '@nrwl/devkit',
+    'tsconfig-paths',
+    '@swc-node/register',
   ],
+  nest: ['semver'],
+  'make-angular-cli-faster': ['@angular/core'],
 };
 
 export default async function getMissingDependencies(

@@ -4,43 +4,21 @@ exports[`new --preset angular should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {
     "@nrwl/angular": "*",
-    "tslib": "^2.0.0",
   },
   "devDependencies": Object {
     "@nrwl/cli": "*",
-    "@nrwl/tao": "*",
     "@nrwl/workspace": "*",
-    "@types/node": "14.14.33",
-    "dotenv": "~10.0.0",
-    "prettier": "^2.3.1",
-    "ts-node": "~9.1.1",
-    "typescript": "~4.3.5",
+    "nx": "*",
+    "prettier": "^2.5.1",
+    "typescript": "~4.6.2",
   },
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
   "scripts": Object {
-    "affected": "nx affected",
-    "affected:apps": "nx affected:apps",
-    "affected:build": "nx affected:build",
-    "affected:dep-graph": "nx affected:dep-graph",
-    "affected:e2e": "nx affected:e2e",
-    "affected:libs": "nx affected:libs",
-    "affected:lint": "nx affected:lint",
-    "affected:test": "nx affected:test",
     "build": "nx build",
-    "dep-graph": "nx dep-graph",
-    "e2e": "nx e2e",
-    "format": "nx format:write",
-    "format:check": "nx format:check",
-    "format:write": "nx format:write",
-    "help": "nx help",
-    "lint": "nx workspace-lint && nx lint",
-    "nx": "nx",
     "start": "nx serve",
     "test": "nx test",
-    "update": "nx migrate latest",
-    "workspace-generator": "nx workspace-generator",
   },
   "version": "0.0.0",
 }
@@ -48,44 +26,21 @@ Object {
 
 exports[`new --preset empty should generate necessary npm dependencies 1`] = `
 Object {
-  "dependencies": Object {
-    "tslib": "^2.0.0",
-  },
+  "dependencies": Object {},
   "devDependencies": Object {
     "@nrwl/cli": "*",
-    "@nrwl/tao": "*",
     "@nrwl/workspace": "*",
-    "@types/node": "14.14.33",
-    "dotenv": "~10.0.0",
-    "prettier": "^2.3.1",
-    "ts-node": "~9.1.1",
-    "typescript": "~4.3.5",
+    "nx": "*",
+    "prettier": "^2.5.1",
+    "typescript": "~4.6.2",
   },
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
   "scripts": Object {
-    "affected": "nx affected",
-    "affected:apps": "nx affected:apps",
-    "affected:build": "nx affected:build",
-    "affected:dep-graph": "nx affected:dep-graph",
-    "affected:e2e": "nx affected:e2e",
-    "affected:libs": "nx affected:libs",
-    "affected:lint": "nx affected:lint",
-    "affected:test": "nx affected:test",
     "build": "nx build",
-    "dep-graph": "nx dep-graph",
-    "e2e": "nx e2e",
-    "format": "nx format:write",
-    "format:check": "nx format:check",
-    "format:write": "nx format:write",
-    "help": "nx help",
-    "lint": "nx workspace-lint && nx lint",
-    "nx": "nx",
     "start": "nx serve",
     "test": "nx test",
-    "update": "nx migrate latest",
-    "workspace-generator": "nx workspace-generator",
   },
   "version": "0.0.0",
 }
@@ -93,45 +48,22 @@ Object {
 
 exports[`new --preset react should generate necessary npm dependencies 1`] = `
 Object {
-  "dependencies": Object {
-    "tslib": "^2.0.0",
-  },
+  "dependencies": Object {},
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/react": "*",
-    "@nrwl/tao": "*",
     "@nrwl/workspace": "*",
-    "@types/node": "14.14.33",
-    "dotenv": "~10.0.0",
-    "prettier": "^2.3.1",
-    "ts-node": "~9.1.1",
-    "typescript": "~4.3.5",
+    "nx": "*",
+    "prettier": "^2.5.1",
+    "typescript": "~4.6.2",
   },
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
   "scripts": Object {
-    "affected": "nx affected",
-    "affected:apps": "nx affected:apps",
-    "affected:build": "nx affected:build",
-    "affected:dep-graph": "nx affected:dep-graph",
-    "affected:e2e": "nx affected:e2e",
-    "affected:libs": "nx affected:libs",
-    "affected:lint": "nx affected:lint",
-    "affected:test": "nx affected:test",
     "build": "nx build",
-    "dep-graph": "nx dep-graph",
-    "e2e": "nx e2e",
-    "format": "nx format:write",
-    "format:check": "nx format:check",
-    "format:write": "nx format:write",
-    "help": "nx help",
-    "lint": "nx workspace-lint && nx lint",
-    "nx": "nx",
     "start": "nx serve",
     "test": "nx test",
-    "update": "nx migrate latest",
-    "workspace-generator": "nx workspace-generator",
   },
   "version": "0.0.0",
 }
@@ -140,7 +72,10 @@ Object {
 exports[`new should generate an empty nx.json 1`] = `
 Object {
   "affected": Object {
-    "defaultBase": "master",
+    "defaultBase": "main",
+  },
+  "cli": Object {
+    "defaultCollection": "@nrwl/workspace",
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
@@ -150,7 +85,6 @@ Object {
     },
   },
   "npmScope": "npmScope",
-  "projects": Object {},
   "targetDependencies": Object {
     "build": Array [
       Object {
@@ -169,7 +103,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -177,9 +111,6 @@ Object {
 
 exports[`new should generate an empty workspace.json 1`] = `
 Object {
-  "cli": Object {
-    "defaultCollection": "@nrwl/workspace",
-  },
   "projects": Object {},
   "version": 2,
 }

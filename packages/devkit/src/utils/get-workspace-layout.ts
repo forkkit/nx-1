@@ -1,9 +1,11 @@
-import { RawWorkspaceJsonConfiguration } from '@nrwl/tao/src/shared/workspace';
+import {
+  getWorkspacePath,
+  readNxJson,
+  shouldDefaultToUsingStandaloneConfigs,
+} from 'nx/src/generators/utils/project-configuration';
+import type { Tree } from 'nx/src/generators/tree';
 
-import { readNxJson } from '../generators/project-configuration';
-import { readJson } from './json';
-
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+export { getWorkspacePath } from 'nx/src/generators/utils/project-configuration';
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,
@@ -23,28 +25,10 @@ export function getWorkspaceLayout(tree: Tree): {
   npmScope: string;
 } {
   const nxJson = readNxJson(tree);
-  const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
-    tree,
-    getWorkspacePath(tree)
-  );
-
   return {
     appsDir: nxJson?.workspaceLayout?.appsDir ?? 'apps',
     libsDir: nxJson?.workspaceLayout?.libsDir ?? 'libs',
     npmScope: nxJson?.npmScope ?? '',
-    standaloneAsDefault: Object.values(rawWorkspace.projects).reduce(
-      // default for second, third... projects should be based on all projects being defined as a path
-      // for configuration read from ng schematics, this is determined by configFilePath's presence
-      (allStandalone, next) =>
-        allStandalone && (typeof next === 'string' || 'configFilePath' in next),
-
-      // default for first project should be false
-      Object.values(rawWorkspace.projects).length > 0
-    ),
+    standaloneAsDefault: shouldDefaultToUsingStandaloneConfigs(tree),
   };
-}
-
-export function getWorkspacePath(tree: Tree): string {
-  const possibleFiles = ['/angular.json', '/workspace.json'];
-  return possibleFiles.filter((path) => tree.exists(path))[0];
 }

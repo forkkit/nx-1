@@ -7,13 +7,14 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": ["nx-dev/feature-analytics/**/*.{ts,tsx,js,jsx}"]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/feature-analytics"],
       "options": {
-        "jestConfig": "nx-dev/feature-analytics/jest.config.js",
+        "jestConfig": "nx-dev/feature-analytics/jest.config.ts",
         "passWithNoTests": true
       }
     }

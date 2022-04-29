@@ -24,6 +24,9 @@ function pathExtractor(
       .map((i: any) => pathExtractor(pathList, i, currentPath))
       .flat();
   }
+  if (item.path) {
+    return pathList;
+  }
   if (item.file) {
     pathList.push(item.file);
     return pathList;
@@ -62,7 +65,7 @@ if (!!readmeMissList.length) {
   scriptError = true;
 } else {
   console.log(
-    `${chalk.green('🗸')} Markdown files are in sync with ${chalk.grey(
+    `${chalk.green('✓')} Markdown files are in sync with ${chalk.grey(
       'docs/maps.json'
     )}.`
   );
@@ -78,13 +81,13 @@ if (!!mapMissList.length) {
   console.log(
     `\n${chalk.red(
       'ERROR'
-    )} The \'map.json\' file is linking documenation files that do not exist.`
+    )} The \'map.json\' file is linking documentation files that do not exist.`
   );
   scriptError = true;
 } else {
   console.log(
     `${chalk.green(
-      '🗸'
+      '✓'
     )} The 'map.json' file and the documentation files are in sync.`
   );
 }

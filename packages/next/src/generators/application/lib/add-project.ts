@@ -2,39 +2,39 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addProjectConfiguration,
   joinPathFragments,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const nxConfig: NxJsonProjectConfiguration = {
-    tags: options.parsedTags,
-  };
-
   const targets: Record<string, any> = {};
 
   targets.build = {
     builder: '@nrwl/next:build',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       root: options.appProjectRoot,
       outputPath: joinPathFragments('dist', options.appProjectRoot),
     },
-    // This has to be here so `nx serve [app] --prod` will work. Otherwise
-    // a missing configuration error will be thrown.
     configurations: {
+      development: {},
       production: {},
     },
   };
 
   targets.serve = {
     builder: '@nrwl/next:server',
+    defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
       dev: true,
     },
     configurations: {
+      development: {
+        buildTarget: `${options.projectName}:build:development`,
+        dev: true,
+      },
       production: {
         buildTarget: `${options.projectName}:build:production`,
         dev: false,
@@ -61,6 +61,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     sourceRoot: options.appProjectRoot,
     projectType: 'application',
     targets,
+    tags: options.parsedTags,
   };
 
   addProjectConfiguration(
@@ -68,7 +69,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     options.projectName,
     {
       ...project,
-      ...nxConfig,
     },
     options.standaloneConfig
   );

@@ -6,7 +6,7 @@ We would love for you to contribute to Nx! Read this document to see how to do i
 
 Watch this 5-minute video:
 
-<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank">
+<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank" rel="noreferrer">
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute"></p>
 </a>
 
@@ -67,7 +67,7 @@ To publish packages to a local registry, do the following:
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to be logged in. You can use test/test/test@test.io.)
 - Run `yarn local-registry enable` in Terminal 2
 - Run `yarn nx-release 999.9.9 --local` in Terminal 2
-- Run `cd /tmp` in Terminal 2
+- Run `cd ./tmp` in Terminal 2
 - Run `npx create-nx-workspace@999.9.9` in Terminal 2
 
 If you have problems publishing, make sure you use Node 14 and NPM 6 instead of Node 15 and NPM 7.
@@ -107,7 +107,7 @@ nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qq
 To build Nx on Windows, you need to use WSL.
 
 - Run `yarn install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be compiled for Windows.
-- Run `yarn test` and other commands in WSL.
+- Run `nx affected --target=test` and other commands in WSL.
 
 ## Documentation Contributions
 
@@ -117,15 +117,14 @@ We would love for you to contribute to our documentation as well! Please feel we
 
 #### Documentation Pages
 
-Our documentation pages can be found within this repo under the `docs` directory. Pages that we consider framework specific are nested in their own subdirectories - otherwise they should be nested within the `docs/shared` directory.
+Our documentation pages can be found within this repo under the `docs` directory.
 
 The `docs/map.json` file is considered our source of truth for our site's structure, and should be updated when adding a new page to our documentation to ensure that it is included in the documentation site. We also run automated scripts based on this `map.json` data to safeguard against common human errors that could break our site.
 
 #### Nx-Dev Application
 
 Our public `nx.dev` documentation site is a [Next.js](https://nextjs.org/) application, that can be found in the `nx-dev` directory of this repo.
-
-The `nx-dev/nx-dev/public/documentation` directory contains `.md` files that are generated from the `docs` directory when new releases are cut. As such, these should not be changed when submitting a change to existing docs.
+The documentation site is consuming the `docs/` directly by copy-ing its content while deploying, so the website is always in sync and reflects the latest version of `docs/`.
 
 Jump to [Running the Documentation Site Locally](#running-the-documentation-site-locally) to see how to preview your changes while serving.
 
@@ -153,15 +152,21 @@ npx nx serve nx-dev
 
 You can then access the application locally at `localhost:4200`.
 
-By default, the site displays the `Latest` cut release of the docs. To see your current changes in the docs be sure to select `Preview` from the version selection box of the site.
+#### Troubleshooting: `JavaScript heap out of memory`
 
-<img src="https://raw.githubusercontent.com/nrwl/nx/master/images/selecting-preview-from-version-selection-box.png" width="600" alt="Selecting Preview from Version Selection box">
+If you see an error that states: `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`, you need to [increase the max memory size of V8's old memory section](https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes):
+
+```bash
+export NODE_OPTIONS="--max-old-space-size=4096"
+```
+
+After configuring this, try to run `npx nx serve nx-dev` again.
 
 ### PR Preview
 
 When submitting a PR, this repo will automatically generate a preview of the `nx-dev` application based on the contents of your pull request.
 
-Once the preview site is launched, a comment will automatically be added to your PR with the link your your PR's preview. To check your docs changes, make sure to select `Preview` from the version selection box of the site.
+Once the preview site is launched, a comment will automatically be added to your PR with the link your PR's preview. To check your docs changes, make sure to select `Preview` from the version selection box of the site.
 
 ## Submission Guidelines
 
@@ -177,7 +182,7 @@ We want to fix all the issues as soon as possible, but before fixing a bug we ne
 
 A minimal reproduction allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.
 
-We will be insisting on a minimal reproduction in order to save maintainers time and ultimately be able to fix more bugs. Interestingly, from our experience, users often find coding problems themselves while preparing a minimal repository. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base but we really need to isolate the problem before we can fix it.
+We will be insisting on a minimal reproduction in order to save maintainers time and ultimately be able to fix more bugs. Interestingly, from our experience, users often find coding problems themselves while preparing a minimal repository. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base, but we really need to isolate the problem before we can fix it.
 
 You can file new issues by filling out our [issue form](https://github.com/nrwl/nx/issues/new).
 
@@ -185,9 +190,9 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 
 Please follow the following guidelines:
 
-- Make sure unit tests pass (`yarn test`)
+- Make sure unit tests pass (`nx affected --target=test`)
   - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
-  - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-utils.spec.ts`) with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
+  - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-command-line-utils.spec.ts`) with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
   - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
@@ -202,7 +207,7 @@ Please follow the following guidelines:
 
 The commit message should follow the following format:
 
-```
+```plain
 type(scope): subject
 BLANK LINE
 body
@@ -224,18 +229,24 @@ The scope must be one of the following:
 
 - angular - anything Angular specific
 - core - anything Nx core specific
-- nxdev - anything related to docs infrastructure
-- nextjs - anything Next specific
-- nest - anything Nest specific
-- node - anything Node specific
-- linter - anything Linter specific
-- react - anything React specific
-- web - anything Web specific
-- storybook - anything Storybook specific
-- testing - anything testing specific (e.g., jest or cypress)
-- repo - anything related to managing the repo itself
-- misc - misc stuff
+- dep-graph - anything dep-graph app specific
+- detox - anything Detox specific
 - devkit - devkit-related changes
+- express - anything Express specific
+- js - anything related to @nrwl/js package or general js/ts support
+- linter - anything Linter specific
+- nest - anything Nest specific
+- nextjs - anything Next specific
+- nxdev - anything related to docs infrastructure
+- nx-plugin - anything Nx Plugin specific
+- node - anything Node specific
+- react - anything React specific
+- react-native - anything React Native specific
+- repo - anything related to managing the Nx repo itself
+- storybook - anything Storybook specific
+- testing - anything testing specific (e.g., Jest or Cypress)
+- web - anything Web specific
+- misc - misc stuff
 
 ##### Subject and Body
 
@@ -245,8 +256,8 @@ Including the issue number that the PR relates to also helps with tracking.
 
 #### Example
 
-```
-feat(generators): add an option to generate lazy-loadable modules
+```plain
+feat(angular): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
 

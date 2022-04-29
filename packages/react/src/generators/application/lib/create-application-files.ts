@@ -9,6 +9,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 function updateTsConfig(host: Tree, options: NormalizedSchema) {
   updateJson(
@@ -20,6 +21,8 @@ function updateTsConfig(host: Tree, options: NormalizedSchema) {
           ...json.compilerOptions,
           forceConsistentCasingInFileNames: true,
           strict: true,
+          noImplicitOverride: true,
+          noPropertyAccessFromIndexSignature: true,
           noImplicitReturns: true,
           noFallthroughCasesInSwitch: true,
         };
@@ -49,6 +52,10 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     ...options,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(
+      host,
+      options.appProjectRoot
+    ),
   };
 
   generateFiles(

@@ -3,17 +3,16 @@
 exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1`] = `
 "module.exports = {
   displayName: 'my-lib',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
-  testEnvironment: 'node',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+    '^.+\\\\\\\\.[tj]s$': 'ts-jest'
   },
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/my-lib'
 };
 "
@@ -22,7 +21,7 @@ exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1
 exports[`lib --testEnvironment should set target jest testEnvironment to node by default 1`] = `
 "module.exports = {
   displayName: 'my-lib',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -30,9 +29,9 @@ exports[`lib --testEnvironment should set target jest testEnvironment to node by
   },
   testEnvironment: 'node',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+    '^.+\\\\\\\\.[tj]s$': 'ts-jest'
   },
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/my-lib'
 };
 "
@@ -40,6 +39,9 @@ exports[`lib --testEnvironment should set target jest testEnvironment to node by
 
 exports[`lib --unit-test-runner none should not generate test configuration 1`] = `
 Object {
+  "compilerOptions": Object {
+    "module": "commonjs",
+  },
   "extends": "../../tsconfig.base.json",
   "files": Array [],
   "include": Array [],
@@ -59,11 +61,17 @@ Object {
       "libs/my-lib/**/*.ts",
     ],
   },
+  "outputs": Array [
+    "{options.outputFile}",
+  ],
 }
 `;
 
 exports[`lib nested should create a local tsconfig.json 1`] = `
 Object {
+  "compilerOptions": Object {
+    "module": "commonjs",
+  },
   "extends": "../../../tsconfig.base.json",
   "files": Array [],
   "include": Array [],
@@ -93,6 +101,9 @@ export class MyLibModule {}
 
 exports[`lib not nested should create a local tsconfig.json 1`] = `
 Object {
+  "compilerOptions": Object {
+    "module": "commonjs",
+  },
   "extends": "../../tsconfig.base.json",
   "files": Array [],
   "include": Array [],

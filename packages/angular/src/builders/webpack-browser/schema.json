@@ -1,8 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "title": "Webpack browser schema for Build Facade.",
-  "description": "Browser target options",
+  "title": "Schema for Webpack Browser",
+  "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
+  "examplesFile": "../../../docs/webpack-browser-examples.md",
   "type": "object",
+  "presets": [
+    {
+      "name": "Custom Webpack Configuration",
+      "keys": [
+        "outputs",
+        "outputPath",
+        "index",
+        "main",
+        "polyfills",
+        "tsConfig",
+        "assets",
+        "styles",
+        "scripts",
+        "customWebpackConfig"
+      ]
+    }
+  ],
   "properties": {
     "assets": {
       "type": "array",
@@ -108,7 +126,7 @@
                   "properties": {
                     "inline": {
                       "type": "boolean",
-                      "description": "Reduce render blocking requests by inlining external Google fonts and icons CSS definitions in the application's HTML index file. This option requires internet access. `HTTPS_PROXY` environment variable can be used to specify a proxy server.",
+                      "description": "Reduce render blocking requests by inlining external Google Fonts and Adobe Fonts CSS definitions in the application's HTML index file. This option requires internet access. `HTTPS_PROXY` environment variable can be used to specify a proxy server.",
                       "default": true
                     }
                   },
@@ -137,7 +155,7 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project."
+      "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
     },
     "resourcesOutputPath": {
       "type": "string",
@@ -201,7 +219,8 @@
     },
     "deployUrl": {
       "type": "string",
-      "description": "URL where files will be deployed."
+      "description": "URL where files will be deployed.",
+      "x-deprecated": "Use `baseHref` option, `APP_BASE_HREF` DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
     },
     "verbose": {
       "type": "boolean",
@@ -216,6 +235,12 @@
     "i18nMissingTranslation": {
       "type": "string",
       "description": "How to handle missing translations for i18n.",
+      "enum": ["warning", "error", "ignore"],
+      "default": "warning"
+    },
+    "i18nDuplicateTranslation": {
+      "type": "string",
+      "description": "How to handle duplicate translations for i18n.",
       "enum": ["warning", "error", "ignore"],
       "default": "warning"
     },
@@ -236,12 +261,6 @@
           }
         }
       ]
-    },
-    "extractCss": {
-      "type": "boolean",
-      "description": "Extract CSS from global styles into '.css' files instead of '.js'.",
-      "default": true,
-      "x-deprecated": "Deprecated since version 11.0. No longer required to disable CSS extraction for HMR."
     },
     "watch": {
       "type": "boolean",
@@ -370,6 +389,11 @@
         }
       },
       "additionalProperties": false
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
     }
   },
   "additionalProperties": false,

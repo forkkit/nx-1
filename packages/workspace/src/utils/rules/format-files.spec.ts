@@ -3,12 +3,21 @@ import { Tree } from '@angular-devkit/schematics';
 
 import * as prettier from 'prettier';
 import * as path from 'path';
+import * as nxWorkspace from 'nx/src/config/workspaces';
+
 import { formatFiles } from './format-files';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { workspaceRoot } from '@nrwl/devkit';
 
 describe('formatFiles', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
+
+  beforeAll(() => {
+    jest
+      .spyOn(nxWorkspace, 'workspaceConfigName')
+      .mockReturnValue('workspace.json');
+  });
+
   beforeEach(() => {
     schematicRunner = new SchematicTestRunner(
       '@nrwl/workspace',
@@ -18,6 +27,27 @@ describe('formatFiles', () => {
       .spyOn(prettier, 'format')
       .mockImplementation((input) => `formatted :: ${input}`);
     tree = Tree.empty();
+
+    tree.create(
+      'workspace.json',
+      `{
+      "version": 1,
+      "projects": {
+        "app1": {
+          "projectType": "application",
+          "schematics": {},
+          "root": "apps/app1",
+          "sourceRoot": "apps/app1/src",
+          "prefix": "nx",
+          "architect": {}
+        }
+      },
+      "cli": {
+        "defaultCollection": "@nrwl/angular"
+      },
+      "defaultProject": "app1"
+    }`
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -34,7 +64,7 @@ describe('formatFiles', () => {
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
       printWidth: 80,
-      filepath: path.join(appRootPath, 'a.ts'),
+      filepath: path.join(workspaceRoot, 'a.ts'),
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=a');
   });
@@ -64,7 +94,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=b', {
-      filepath: path.join(appRootPath, 'a.ts'),
+      filepath: path.join(workspaceRoot, 'a.ts'),
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=b');
   });
@@ -79,9 +109,21 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
-      filepath: path.join(appRootPath, 'b.ts'),
+      filepath: path.join(workspaceRoot, 'b.ts'),
     });
     expect(result.read('b.ts').toString()).toEqual('formatted :: const a=a');
+  });
+
+  it('should have a readable error when workspace file cannot be formatted', async () => {
+    tree.overwrite('workspace.json', '{ invalidJson: true');
+
+    const errorSpy = jest.spyOn(console, 'error');
+
+    await schematicRunner.callRule(formatFiles(), tree).toPromise();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Failed to format workspace config: workspace.json'
+    );
   });
 
   describe('--skip-format', () => {
@@ -102,7 +144,7 @@ describe('formatFiles', () => {
         .toPromise();
       expect(prettier.format).not.toHaveBeenCalledWith('const a=a', {
         printWidth: 80,
-        filepath: `${appRootPath}/a.ts`,
+        filepath: `${workspaceRoot}/a.ts`,
       });
       expect(result.read('a.ts').toString()).toEqual('const a=a');
     });

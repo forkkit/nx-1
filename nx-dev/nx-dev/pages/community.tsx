@@ -1,9 +1,17 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui/common';
-import React from 'react';
-import { useStorage } from '../lib/use-storage';
-import Head from 'next/head';
+import {
+  BeakerIcon,
+  ChatIcon,
+  ClipboardListIcon,
+} from '@heroicons/react/solid';
+import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import {
+  ConnectWithUs,
+  CreateNxPlugin,
+  PluginDirectory,
+} from '@nrwl/nx-dev/ui-community';
+import { NextSeo } from 'next-seo';
+import { useRouter } from 'next/router';
+import { ReactComponentElement } from 'react';
 
 declare const fetch: any;
 
@@ -12,6 +20,7 @@ interface CommunityProps {
     description: string;
     name: string;
     url: string;
+    isOfficial: boolean;
   }[];
 }
 
@@ -22,307 +31,243 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   const pluginList = await res.json();
   return {
     props: {
-      pluginList,
+      pluginList: pluginList.map((plugin) => ({
+        ...plugin,
+        isOfficial: false,
+      })),
     },
   };
 }
 
-export function Community(props: CommunityProps) {
-  const { value: storedFlavor } = useStorage('flavor');
-  const { value: storedVersion } = useStorage('version');
+export function Community(props: CommunityProps): ReactComponentElement<any> {
+  const firstPartyPlugins = [
+    {
+      description:
+        'Integration with libraries such as Storybook, Jest, Cypress, NgRx, Micro-frontend...',
+      name: '@nrwl/angular',
+      url: 'https://nx.dev/angular/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Cypress is an e2e test runner built for modern web.',
+      name: '@nrwl/cypress',
+      url: 'https://nx.dev/cypress/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Detox is gray box end-to-end testing and automation library for mobile apps.',
+      name: '@nrwl/detox',
+      url: 'https://nx.dev/detox/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.',
+      name: '@nrwl/devkit',
+      url: 'https://nx.dev/nx-devkit/index',
+      isOfficial: true,
+    },
+    {
+      description:
+        'ESLint is powerful linter by itself, able to work on the syntax of your source files and assert things about based on the rules you configure.',
+      name: '@nrwl/eslint-plugin-nx',
+      url: 'https://nx.dev/guides/eslint#using-eslint-in-nx-workspaces',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Express is mature, minimal, and an open source web framework for making web applications and apis.',
+      name: '@nrwl/express',
+      url: 'https://nx.dev/express/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Jest is an open source test runner created by Facebook.',
+      name: '@nrwl/jest',
+      url: 'https://nx.dev/jest/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.',
+      name: '@nrwl/js',
+      url: 'https://nx.dev/js/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.',
+      name: '@nrwl/linter',
+      url: 'https://nx.dev/linter/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Nest.js is a framework designed for building scalable server-side applications.',
+      name: '@nrwl/nest',
+      url: 'https://nx.dev/nest/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace.',
+      name: '@nrwl/next',
+      url: 'https://nx.dev/next/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains generators and executors to manage Node applications within an Nx workspace.',
+      name: '@nrwl/node',
+      url: 'https://nx.dev/node/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Distributed caching and analytics for your Nx Workspace.',
+      name: '@nrwl/nx-cloud',
+      url: 'https://nx.app/',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors and generators for managing React applications and libraries within an Nx workspace.',
+      name: '@nrwl/react',
+      url: 'https://nx.dev/react/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        "React Native brings React's declarative UI framework to iOS and Android.",
+      name: '@nrwl/react-native',
+      url: 'https://nx.dev/react-native/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Storybook is a development environment for UI components.',
+      name: '@nrwl/storybook',
+      url: 'https://nx.dev/storybook/overview-react',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains generators for managing Web Component applications and libraries within an Nx workspace.',
+      name: '@nrwl/web',
+      url: 'https://nx.dev/web/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.',
+      name: '@nrwl/workspace',
+      url: 'https://nx.dev/workspace/nrwl-workspace-overview',
+      isOfficial: true,
+    },
+  ];
+  const router = useRouter();
 
   return (
     <>
-      <Head>
-        <title>Nx Community and Plugin Listing</title>
-        <meta name="description" content="Nx Community and Plugin Listing" />
-        <meta name="twitter:title" content="Nx Community and Plugin Listing" />
-        <meta
-          name="twitter:description"
-          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/community" />
-        <meta
-          property="og:description"
-          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
-        />
-        <meta property="og:title" content="Nx Community and Plugin Listing" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
-      <Header
-        useDarkBackground={false}
-        showSearch={false}
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
+      <NextSeo
+        title="Nx Community and Plugin Listing"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter"
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx Community and Plugin Listing',
+          description:
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Fast and Extensible Build System',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
         }}
       />
-      <main>
+      <Header useDarkBackground={false} />
+      <main id="main" role="main">
         <div className="w-full">
-          {/*Intro component*/}
-          <div className="bg-gray-50">
-            <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-              <div className="mt-40">
-                <h1 className="text-4xl sm:text-6xl lg:text-7xl leading none font-extrabold tracking-tight text-gray-900 mt-10 mb-8 sm:mt-14 sm:mb-10">
-                  It's always better when we're together.
+          <article
+            id="getting-started"
+            className="relative bg-gray-50 pt-16 sm:pt-24 lg:pt-32"
+          >
+            <header className="mx-auto max-w-prose px-4 text-center sm:max-w-3xl sm:px-6 lg:px-8">
+              <div>
+                <h1 className="text-blue-nx-base text-base font-semibold uppercase tracking-wider">
+                  <span className="sr-only">Nx has </span> A strong and dynamic
+                  community
                 </h1>
-                <p className="max-w-screen-lg text-lg sm:text-2xl sm:leading-10 font-medium mb-10 sm:mb-11">
-                  There are many ways you can connect with the open-source Nx
-                  community. Below, you’ll find details about various connection
-                  points.
+                <p className="mt-2 text-4xl font-extrabold tracking-tight text-gray-800 sm:text-6xl">
+                  It's always better when we're together.
                 </p>
               </div>
-            </div>
-          </div>
-          {/*Community*/}
-          <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-            <div className="mt-32 flex md:flex-row flex-col justify-center">
-              <div className="w-full md:w-1/2 flex flex-col justify-between items-start md:pb-0 pb-10 mt-8 md:mt-0">
-                <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  GitHub & Slack
-                </h2>
+            </header>
 
-                <p className="sm:text-lg mb-6">
-                  At the <a href="https://github.com/nrwl/nx">Nx GitHub repo</a>
-                  , you can file issues or contribute code back to the project.
-                </p>
-                <p className="sm:text-lg mb-6">
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    title="Join the Nx Community Slack"
-                    href="http://go.nrwl.io/join-slack"
-                    rel="noreferrer"
-                  >
-                    Join the Nx Community Slack
-                  </a>{' '}
-                  to meet a friendly community of Nx users. This is a perfect
-                  place to ask clarifying questions or to talk through new ideas
-                  that you want to try with Nx. There's also a channel dedicated
-                  to sharing articles about Nx and most of the authors of
-                  community plugins can be reached there.
-                </p>
-
-                <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  Office Hours & Twitter
-                </h2>
-                <p className="sm:text-lg mb-6">
-                  Our live Nx Office Hours take place every second and fourth
-                  Monday, from 1:00 - 2:00 PM EST on the{' '}
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    href="https://www.youtube.com/nrwl_io"
-                    rel="noreferrer"
-                  >
-                    Nrwl YouTube channel
-                  </a>
-                  . Info about upcoming Office Hours sessions is shared on the{' '}
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    href="https://twitter.com/NxDevTools"
-                    rel="noreferrer"
-                  >
-                    @NxDevTools
-                  </a>{' '}
-                  Twitter account and the Nrwl+Nx Newsletter. You can find past
-                  live-streams on the{' '}
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    rel="noreferrer"
-                    href="https://www.youtube.com/watch?v=JS3m1wIwRBg&list=PLakNactNC1dH8LCp2mvx5lbO6maNrlBVN"
-                  >
-                    'Nx Office Hours' Youtube Playlist
-                  </a>
-                  .
-                </p>
-
-                <p className="sm:text-lg mb-6">
-                  In each session, members of the Nx core team answer your
-                  questions, help get you up and running with Nx, and address
-                  particular challenges. If you have a question or topic you’d
-                  like to see covered in Nx Office Hours, you can{' '}
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Nx Office Hours Questions and Suggestions Form"
-                    title="Nx Office Hours Questions and Suggestions Form"
-                    href="https://forms.gle/ehzCjzcF1xxNaviC7"
-                  >
-                    submit them here
-                  </a>
-                </p>
-
-                <p className="sm:text-lg mb-6">
-                  For the latest news about Nx,{' '}
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    rel="noreferrer"
-                    href="https://twitter.com/NxDevTools"
-                  >
-                    follow @NxDevTools on Twitter
-                  </a>
-                  .
-                </p>
-
-                <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  We also have a newsletter
-                </h2>
-                <p className="sm:text-lg mb-6">
-                  You can also{' '}
-                  <a
-                    className="underline cursor-pointer"
-                    target="_blank"
-                    rel="noreferrer"
-                    href="https://go.nrwl.io/nx-newsletter"
-                  >
-                    subscribe to the Nx Newsletter
-                  </a>
-                  : a monthly email digest from the Nx core team at Nrwl.
-                  Subscribers receive news about Nx releases, posts about new Nx
-                  features, details about new plugins, links to community
-                  resources, and additional Nx content.
-                </p>
-              </div>
-              <div className="w-full md:w-1/2 flex flex-col justify-between items-start md:pl-16 md:pb-0 pb-10 mt-8 md:mt-0">
-                <Image src="/images/community.svg" width={555} height={735} />
-              </div>
-            </div>
-          </div>
-          {/*How to plugin*/}
-          <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-            <div className="my-32 flex flex-col  md:flex-row items-start justify-center">
-              <div className="w-full lg:w-2/5 flex flex-col justify-between items-start md:pb-0 pb-10 mt-8 md:mt-0">
-                <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  Community plugin
-                </h2>
-                <p className="sm:text-lg mb-6">
-                  Core Nx plugins are created and maintained by the Nx team at
-                  Nrwl and you can see all the available plugins when you run
-                  the{' '}
-                  <code className="text-sm bg-gray-50 text-gray-600 font-mono leading-6 px-2 py-1 border border-gray-200 rounded">
-                    nx list
-                  </code>{' '}
-                  command in your workspace.
-                </p>
-                <p className="sm:text-lg mb-6">
-                  <b>The community plugins listed below</b> are created and
-                  maintained by members of the Nx community, will allow you to
-                  use the full power of the workspace while using different
-                  technologies!
-                </p>
-                <div className="inline-flex rounded-md shadow mb-6">
-                  <a
-                    href="#community-plugin-list"
-                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
-                  >
-                    Check the community plugins right now!
+            <div className="mx-auto px-4 py-16 lg:px-8 lg:py-32 xl:max-w-7xl">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="hover:border-green-nx-base relative rounded-lg border-2 border-white bg-white p-5 shadow-sm transition">
+                  <ChatIcon className="text-green-nx-base mb-5 inline-block h-10 w-10" />
+                  <h4 className="mb-2 text-lg font-bold">Community</h4>
+                  <a className="focus:outline-none" href="#community">
+                    <span className="absolute inset-0" aria-hidden="true" />
+                    <p className="leading-relaxed text-gray-600">
+                      There are many ways you can connect with the open-source
+                      Nx community: Slack, Youtube, Twitter and email newsletter
+                      are available to keep you on top of all the Nx things!
+                    </p>
                   </a>
                 </div>
-                <h3 className="text-xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  How to Install
-                </h3>
-                <p className="sm:text-lg mb-6">
-                  Each of the plugins listed below have a yarn and an npm icon.
-                  Clicking on either of these copies the relevant command to
-                  install the dependency for your project.
-                </p>
-              </div>
-              <div className="w-full lg:w-3/5 flex flex-col justify-between items-start md:pl-16 pb-10 mt-8 md:mt-0">
-                <div className="py-4 px-6 bg-gray-50 border border-gray-100">
-                  <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                    How to Create Your Own
-                  </h3>
-                  <p className="sm:text-lg mb-6">
-                    Check out the{' '}
-                    <a
-                      className="underline cursor-pointer"
-                      target="_blank"
-                      rel="noreferrer"
-                      href="https://go.nrwl.io/nx-newsletter"
-                    >
-                      subscribe to the Nx Newsletter
-                    </a>{' '}
-                    Nx Plugin guide to learn how to get started with building
-                    your own plugin!
-                  </p>
-                  <iframe
-                    width="560"
-                    height="315"
-                    title="YouTube video player"
-                    src="https://www.youtube.com/embed/XYO689PAhow"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full"
-                  />
+                <div className="relative rounded-lg border-2 border-white bg-white p-5 shadow-sm transition hover:border-blue-500">
+                  <BeakerIcon className="mb-5 inline-block h-10 w-10 text-blue-500" />
+                  <h4 className="mb-2 text-lg font-bold">
+                    Create and Share your own{' '}
+                    <span className="sr-only">Nx plugin</span>
+                  </h4>
+                  <a className="focus:outline-none" href="#create-nx-plugin">
+                    <span className="absolute inset-0" aria-hidden="true" />
+                    <p className="leading-relaxed text-gray-600">
+                      Core Nx plugins are created and maintained by the Nx team
+                      at Nrwl but you can easily create your own! Follow our
+                      documentation on how to create your own plugin.
+                    </p>
+                  </a>
+                </div>
+                <div className="relative rounded-lg border-2 border-white bg-white p-5 shadow-sm transition hover:border-pink-500 sm:col-span-2 lg:col-span-1">
+                  <ClipboardListIcon className="mb-5 inline-block h-10 w-10 text-pink-500" />
+                  <h4 className="mb-2 text-lg font-bold">
+                    Browse the community plugin directory
+                  </h4>
+                  <a className="focus:outline-none" href="#plugin-directory">
+                    <span className="absolute inset-0" aria-hidden="true" />
+                    <p className="leading-relaxed text-gray-600">
+                      Check all the community plugins available for Nx! These
+                      plugins have been approved by the Nx core team, are well
+                      maintained and regularly updated to make sure they work
+                      with the latest versions.
+                    </p>
+                  </a>
                 </div>
               </div>
             </div>
+          </article>
+
+          <div id="connect-with-us" className="relative overflow-hidden py-24">
+            <ConnectWithUs />
           </div>
-          {/*Call out*/}
-          <div className="bg-gray-50">
-            <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                <span className="block">Ready to dive in?</span>
-                <span className="block text-blue-nx-base">
-                  Start using Nx with Node today.
-                </span>
-              </h2>
-              <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-                <div className="inline-flex rounded-md shadow">
-                  <Link href="/latest/node/getting-started/intro">
-                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base">
-                      Get started with Node
-                    </a>
-                  </Link>
-                </div>
-              </div>
-            </div>
+
+          <div id="create-nx-plugin" className="relative overflow-hidden py-24">
+            <CreateNxPlugin />
           </div>
-          {/*Plugins*/}
-          <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-            <div className="my-12 flex sm:flex-row flex-col justify-center">
-              <div className="w-full py-6 mt-8">
-                <h2
-                  id="community-plugin-list"
-                  className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4 text-center"
-                >
-                  Community Plugins Directory
-                </h2>
-              </div>
-            </div>
-            <div className="my-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {props.pluginList.map((plugin) => (
-                <PluginCard
-                  key={plugin.name}
-                  name={plugin.name}
-                  description={plugin.description}
-                  url={plugin.url}
-                />
-              ))}
-            </div>
+
+          <div id="plugin-directory" className="relative overflow-hidden py-24">
+            <PluginDirectory
+              pluginList={firstPartyPlugins.concat(props.pluginList)}
+            />
           </div>
         </div>
       </main>

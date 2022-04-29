@@ -1,10 +1,11 @@
 {
   "name": "@nrwl/react",
   "version": "0.0.1",
-  "description": "React Plugin for Nx",
+  "description": "The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/react"
   },
   "keywords": [
     "Monorepo",
@@ -22,6 +23,7 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
+  "builders": "./executors.json",
   "schematics": "./generators.json",
   "ng-update": {
     "requirements": {},
@@ -33,21 +35,23 @@
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
+    "@nrwl/js": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
     "@nrwl/web": "*",
     "@nrwl/workspace": "*",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
-    "@svgr/webpack": "^5.5.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
+    "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
-    "eslint-plugin-react": "^7.23.1",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "react-refresh": "^0.9.0",
-    "url-loader": "^3.0.0",
-    "webpack": "4.46.0",
-    "webpack-merge": "4.2.1",
-    "@storybook/node-logger": "6.1.20"
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "react-refresh": "^0.10.0",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.58.1",
+    "webpack-merge": "^5.8.0",
+    "@storybook/node-logger": "6.1.20",
+    "semver": "7.3.4"
   }
 }

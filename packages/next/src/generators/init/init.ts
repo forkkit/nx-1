@@ -19,13 +19,6 @@ import {
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree) {
-  updateJson(host, 'package.json', (json) => {
-    if (json.dependencies && json.dependencies['@nrwl/gatsby']) {
-      delete json.dependencies['@nrwl/gatsby'];
-    }
-    return json;
-  });
-
   return addDependenciesToPackageJson(
     host,
     {
@@ -47,11 +40,11 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   setDefaultCollection(host, '@nrwl/next');
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, {});
+    const jestTask = jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(host);
+    const cypressTask = cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }
 

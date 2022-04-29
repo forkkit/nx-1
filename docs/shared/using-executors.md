@@ -9,43 +9,37 @@ There are two main differences between an executor and a shell script or an npm 
 
 ## Executor definitions
 
-The executors that are available for each project are defined and configured in the `/workspace.json` file.
+The executors that are available for each project are defined and configured in the project's `project.json` file.
 
 ```json
 {
-  "projects": {
-    "cart": {
-      "root": "apps/cart",
-      "sourceRoot": "apps/cart/src",
-      "projectType": "application",
-      "generators": {},
-      "targets": {
-        "build": {
-          "executor": "@nrwl/web:build",
-          "options": {
-            "outputPath": "dist/apps/cart",
-            ...
-          },
-          "configurations": {
-            "production": {
-              "sourceMap": false,
-              ...
-            }
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            ...
-          }
+  "root": "apps/cart",
+  "sourceRoot": "apps/cart/src",
+  "projectType": "application",
+  "generators": {},
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "options": {
+        "outputPath": "dist/apps/cart",
+        ...
+      },
+      "configurations": {
+        "production": {
+          "sourceMap": false,
+          ...
         }
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        ...
       }
     }
   }
 }
 ```
-
-> Note: There are a few property keys in `workspace.json` that have interchangeable aliases. You can replace `generators` with `schematics`, `targets` with `architect` or `executor` with `builder`.
 
 Each project has its executors defined in the `targets` property. In this snippet, `cart` has two executors defined - `build` and `test`.
 
@@ -53,13 +47,13 @@ Each project has its executors defined in the `targets` property. In this snippe
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
-- `executor` is a string of the from `[package name]:[executor name]`. For the `build` executor, the package name is `@nrwl/web` and the executor name is `build`.
+- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nrwl/web` and the executor name is `webpack`.
 - `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
 - `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
 
 ## Running executors
 
-The [`nx run`](/{{framework}}/cli/run) cli command (or the shorthand versions) can be used to run executors.
+The [`nx run`](/cli/run) cli command (or the shorthand versions) can be used to run executors.
 
 ```bash
 nx run [project]:[command]
@@ -245,7 +239,7 @@ The `runExecutor` utility will find the target in the configuration, find the ex
 - `readTargetOptions` -- Reads and combines options for a given target.
 - `runExecutor` -- Constructs options and invokes an executor.
 
-See more helper functions in the [Devkit API Docs](/{{framework}}/nx-devkit/index#functions)
+See more helper functions in the [Devkit API Docs](/nx-devkit/index#functions)
 
 ## Using RxJS observables
 
@@ -265,7 +259,7 @@ You can use the [`rxjs-for-await`](https://www.npmjs.com/package/rxjs-for-await)
 
 ```ts
 import { of } from 'rxjs';
-import { eachValueFrom } from 'rxjs-for-await-async';
+import { eachValueFrom } from 'rxjs-for-await';
 
 export default async function (opts) {
   return eachValueFrom(of({ success: true }));
@@ -274,5 +268,5 @@ export default async function (opts) {
 
 ## See Also
 
-- [`nx affected`](/{{framework}}/cli/affected)
-- [`nx run-many`](/{{framework}}/cli/run-many)
+- [`nx affected`](/cli/affected)
+- [`nx run-many`](/cli/run-many)

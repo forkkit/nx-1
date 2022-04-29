@@ -1,5 +1,3 @@
-import { logger } from '@nrwl/devkit';
-import { copy } from 'fs-extra';
 import * as glob from 'glob';
 import { basename, join } from 'path';
 
@@ -10,6 +8,7 @@ export type FileInputOutput = {
 export type AssetGlob = FileInputOutput & {
   glob: string;
   ignore: string[];
+  dot?: boolean;
 };
 
 export function assetGlobsToFiles(
@@ -19,10 +18,16 @@ export function assetGlobsToFiles(
 ): FileInputOutput[] {
   const files: FileInputOutput[] = [];
 
-  const globbedFiles = (pattern: string, input = '', ignore: string[] = []) => {
+  const globbedFiles = (
+    pattern: string,
+    input = '',
+    ignore: string[] = [],
+    dot: boolean = false
+  ) => {
     return glob.sync(pattern, {
       cwd: input,
       nodir: true,
+      dot,
       ignore,
     });
   };
@@ -39,7 +44,8 @@ export function assetGlobsToFiles(
       globbedFiles(
         asset.glob,
         join(rootDir, asset.input),
-        asset.ignore
+        asset.ignore,
+        asset.dot ?? false
       ).forEach((globbedFile) => {
         files.push({
           input: join(rootDir, asset.input, globbedFile),
@@ -50,26 +56,4 @@ export function assetGlobsToFiles(
   });
 
   return files;
-}
-
-export function copyAssets(
-  assets: Array<AssetGlob | string>,
-  rootDir: string,
-  outDir: string
-): Promise<{ success: boolean; error?: string }> {
-  const files = assetGlobsToFiles(assets, rootDir, outDir);
-  return copyAssetFiles(files);
-}
-
-export async function copyAssetFiles(
-  files: FileInputOutput[]
-): Promise<{ success: boolean; error?: string }> {
-  logger.info('Copying asset files...');
-  try {
-    await Promise.all(files.map((file) => copy(file.input, file.output)));
-    logger.info('Done copying asset files.');
-    return { success: true };
-  } catch (err) {
-    return { error: err.message, success: false };
-  }
 }

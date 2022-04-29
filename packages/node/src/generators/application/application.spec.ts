@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { NxJsonConfiguration, readJson, Tree, getProjects } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -38,12 +38,13 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
         expect.objectContaining({
           build: {
-            builder: '@nrwl/node:build',
+            builder: '@nrwl/node:webpack',
             outputs: ['{options.outputPath}'],
             options: {
               outputPath: 'dist/apps/my-node-app',
@@ -66,7 +67,7 @@ describe('app', () => {
             },
           },
           serve: {
-            builder: '@nrwl/node:execute',
+            builder: '@nrwl/node:node',
             options: {
               buildTarget: 'my-node-app:build',
             },
@@ -75,22 +76,23 @@ describe('app', () => {
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['apps/my-node-app/**/*.ts'],
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
-      expect(workspaceJson.defaultProject).toEqual('my-node-app');
+      expect(nxJson.defaultProject).toEqual('my-node-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-node-app': {
           tags: ['one', 'two'],
         },
@@ -102,7 +104,7 @@ describe('app', () => {
         name: 'myNodeApp',
         standaloneConfig: false,
       });
-      expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`apps/my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
       const tsconfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
@@ -125,7 +127,11 @@ describe('app', () => {
       const tsconfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-
+      expect(tsconfigApp.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+      ]);
       const eslintrc = readJson(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
         Object {
@@ -163,6 +169,18 @@ describe('app', () => {
         }
       `);
     });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        standaloneConfig: false,
+      });
+
+      const tsconfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../tsconfig.json');
+    });
   });
 
   describe('nested', () => {
@@ -173,6 +191,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
@@ -182,24 +201,25 @@ describe('app', () => {
         workspaceJson.projects['my-dir-my-node-app'].architect.lint
       ).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['apps/my-dir/my-node-app/**/*.ts'],
         },
       });
 
       expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
-      expect(workspaceJson.defaultProject).toEqual('my-dir-my-node-app');
+      expect(nxJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-node-app': {
           tags: ['one', 'two'],
         },
@@ -220,7 +240,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        `apps/my-dir/my-node-app/jest.config.js`,
+        `apps/my-dir/my-node-app/jest.config.ts`,
         'apps/my-dir/my-node-app/src/main.ts',
       ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
@@ -239,6 +259,11 @@ describe('app', () => {
           expectedValue: ['node'],
         },
         {
+          path: 'apps/my-dir/my-node-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['jest.config.ts', '**/*.spec.ts', '**/*.test.ts'],
+        },
+        {
           path: 'apps/my-dir/my-node-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
           expectedValue: ['../../../.eslintrc.json'],
@@ -254,11 +279,11 @@ describe('app', () => {
         unitTestRunner: 'none',
         standaloneConfig: false,
       });
-      expect(tree.exists('jest.config.js')).toBeFalsy();
+      expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('apps/my-node-app/jest.config.js')).toBeFalsy();
+      expect(tree.exists('apps/my-node-app/jest.config.ts')).toBeFalsy();
       const workspaceJson = readJson(tree, 'workspace.json');
       expect(
         workspaceJson.projects['my-node-app'].architect.test
@@ -272,6 +297,9 @@ describe('app', () => {
               "apps/my-node-app/**/*.ts",
             ],
           },
+          "outputs": Array [
+            "{options.outputFile}",
+          ],
         }
       `);
     });
@@ -344,16 +372,16 @@ describe('app', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`apps/my-node-app/jest.config.js`, 'utf-8'))
+      expect(tree.read(`apps/my-node-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-node-app',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
-            moduleFileExtensions: ['ts', 'js', 'html'],
+          moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-node-app'
         };
         "
@@ -377,7 +405,13 @@ describe('app', () => {
 
       const tsConfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
-      expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+      expect(tsConfigApp.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.js',
+        '**/*.test.js',
+      ]);
     });
 
     it('should update workspace.json', async () => {

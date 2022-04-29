@@ -7,7 +7,9 @@ import { join } from 'path';
  * we duplicate the helper functions from @nrwl/workspace in this file.
  */
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
+
+export type PackageManager = typeof packageManagerList[number];
 
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
@@ -44,8 +46,8 @@ export function getPackageManagerCommand(
     case 'yarn':
       return {
         install: 'yarn',
-        add: 'yarn add',
-        addDev: 'yarn add -D',
+        add: 'yarn add -W',
+        addDev: 'yarn add -D -W',
         rm: 'yarn remove',
         exec: 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
@@ -53,12 +55,17 @@ export function getPackageManagerCommand(
       };
 
     case 'pnpm':
+      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
+      let useExec = false;
+      if (+major >= 6 && +minor >= 13) {
+        useExec = true;
+      }
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         add: 'pnpm add',
         addDev: 'pnpm add -D',
         rm: 'pnpm rm',
-        exec: 'pnpx',
+        exec: useExec ? 'pnpm exec' : 'pnpx',
         run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
         list: 'pnpm ls --depth 100',
       };
@@ -82,4 +89,33 @@ export function getPackageManagerVersion(
   packageManager: PackageManager
 ): string {
   return execSync(`${packageManager} --version`).toString('utf-8').trim();
+}
+
+/**
+ * Detects which package manager was used to invoke create-nx-{plugin|workspace} command
+ * based on the main Module process that invokes the command
+ * - npx returns 'npm'
+ * - pnpx returns 'pnpm'
+ * - yarn create returns 'yarn'
+ *
+ * Default to 'npm'
+ */
+export function detectInvokedPackageManager(): PackageManager {
+  let detectedPackageManager: PackageManager = 'npm';
+  // mainModule is deprecated since Node 14, fallback for older versions
+  const invoker = require.main || process['mainModule'];
+
+  // default to `npm`
+  if (!invoker) {
+    return detectedPackageManager;
+  }
+  console.log(invoker.path);
+  for (const pkgManager of packageManagerList) {
+    if (invoker.path.includes(pkgManager)) {
+      detectedPackageManager = pkgManager;
+      break;
+    }
+  }
+
+  return detectedPackageManager;
 }

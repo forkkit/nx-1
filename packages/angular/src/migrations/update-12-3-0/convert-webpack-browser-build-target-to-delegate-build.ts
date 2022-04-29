@@ -1,7 +1,6 @@
 import {
   formatFiles,
   getProjects,
-  NxJsonProjectConfiguration,
   parseTargetString,
   ProjectConfiguration,
   Target,
@@ -17,7 +16,7 @@ export default async function convertWebpackBrowserBuildTargetToDelegateBuild(
   const projects = getProjects(host);
 
   for (const [projectName, project] of projects) {
-    const webpackBrowserTargets = Object.values(project.targets).filter(
+    const webpackBrowserTargets = Object.values(project.targets || {}).filter(
       (target) => target.executor === '@nrwl/angular:webpack-browser'
     );
     for (const target of webpackBrowserTargets) {
@@ -104,7 +103,7 @@ function getTargetConfigurationOptions(
 }
 
 function updateTargetsConfigurations(
-  project: ProjectConfiguration & NxJsonProjectConfiguration,
+  project: ProjectConfiguration,
   projectName: string,
   target: TargetConfiguration,
   buildTargetName: string,
@@ -144,7 +143,7 @@ function updateTargetsConfigurations(
 }
 
 function updateTargetsOptions(
-  project: ProjectConfiguration & NxJsonProjectConfiguration,
+  project: ProjectConfiguration,
   target: TargetConfiguration,
   buildTargetName: string
 ) {

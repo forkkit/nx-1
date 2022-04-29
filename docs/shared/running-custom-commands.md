@@ -19,30 +19,28 @@ hello:
   echo "Hello, world!"
 ```
 
-##### 2. Update `workspace.json`
+##### 2. Update `project.json`
 
-For each project for which you want to enable `make`, add a target in `workspace.json`:
+For each project for which you want to enable `make`, add a target in its `project.json`:
 
 ```json
 // ...
-"my-app": {
-    "targets": {
-        "make": {
-            "executor": "@nrwl/workspace:run-commands",
-                "options": {
-                "commands": [
-                    {
-                        "command": "make hello"
-                    }
-                ]
-            }
+"targets": {
+    "make": {
+        "executor": "@nrwl/workspace:run-commands",
+            "options": {
+            "commands": [
+                {
+                    "command": "make hello"
+                }
+            ]
         }
-        // ...
     }
+    // ...
 }
 ```
 
-For more information, see the [run-commands api doc](/{{framework}}/workspace/run-commands-executor).
+For more information, see the [run-commands api doc](/workspace/run-commands-executor).
 
 ##### 3. Trigger the executor from the terminal
 
@@ -58,4 +56,4 @@ To run the executor for all affected projects:
 nx affected --target=make
 ```
 
-For more information, see the [nx affected](/{{framework}}/cli/affected).
+For more information, see the [nx affected](/cli/affected).

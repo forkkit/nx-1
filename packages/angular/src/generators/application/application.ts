@@ -1,36 +1,32 @@
-import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-
 import {
-  readJson,
-  getWorkspacePath,
-  moveFilesToNewDirectory,
   formatFiles,
   installPackagesTask,
+  moveFilesToNewDirectory,
+  Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
-
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { UnitTestRunner } from '../../utils/test-runners';
-import init from '../init/init';
-
+import { angularInitGenerator } from '../init/init';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
-  createFiles,
-  normalizeOptions,
-  updateComponentStyles,
-  updateComponentTemplate,
-  updateConfigFiles,
   addE2e,
-  updateComponentSpec,
-  addRouterRootConfiguration,
-  updateEditorTsConfig,
-  addProxyConfig,
-  enableStrictTypeChecking,
-  setApplicationStrictDefault,
   addLinting,
   addMfe,
+  addProxyConfig,
+  addRouterRootConfiguration,
+  addUnitTestRunner,
+  createFiles,
+  enableStrictTypeChecking,
+  normalizeOptions,
+  setApplicationStrictDefault,
+  updateAppComponentTemplate,
+  updateComponentSpec,
+  updateConfigFiles,
+  updateEditorTsConfig,
+  updateNxComponentTemplate,
 } from './lib';
-import { addUnitTestRunner } from './lib/add-unit-test-runner';
+import type { Schema } from './schema';
 
 export async function applicationGenerator(
   host: Tree,
@@ -38,18 +34,7 @@ export async function applicationGenerator(
 ) {
   const options = normalizeOptions(host, schema);
 
-  // Determine the roots where @schematics/angular will place the projects
-  // This is not where the projects actually end up
-  const workspaceJson = readJson(host, getWorkspacePath(host));
-
-  const appProjectRoot = workspaceJson.newProjectRoot
-    ? `${workspaceJson.newProjectRoot}/${options.name}`
-    : options.name;
-  const e2eProjectRoot = workspaceJson.newProjectRoot
-    ? `${workspaceJson.newProjectRoot}/${options.e2eProjectName}`
-    : `${options.name}/e2e`;
-
-  await init(host, {
+  await angularInitGenerator(host, {
     ...options,
     skipFormat: true,
   });
@@ -68,15 +53,46 @@ export async function applicationGenerator(
     viewEncapsulation: options.viewEncapsulation,
     routing: false,
     skipInstall: true,
-    skipPackageJson: false,
+    skipPackageJson: options.skipPackageJson,
   });
 
-  createFiles(host, options, appProjectRoot);
+  if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
+    moveFilesToNewDirectory(
+      host,
+      options.ngCliSchematicAppRoot,
+      options.appProjectRoot
+    );
+  }
 
-  moveFilesToNewDirectory(host, appProjectRoot, options.appProjectRoot);
+  createFiles(host, options);
   updateConfigFiles(host, options);
-  updateComponentTemplate(host, options);
-  updateComponentStyles(host, options);
+  updateAppComponentTemplate(host, options);
+
+  // Create the NxWelcomeComponent
+  const angularComponentSchematic = wrapAngularDevkitSchematic(
+    '@schematics/angular',
+    'component'
+  );
+  await angularComponentSchematic(host, {
+    name: 'NxWelcome',
+    inlineTemplate: true,
+    inlineStyle: true,
+    prefix: options.prefix,
+    skipTests: true,
+    style: options.style,
+    flat: true,
+    viewEncapsulation: 'None',
+    project: options.name,
+  });
+  updateNxComponentTemplate(host, options);
+
+  if (options.addTailwind) {
+    await setupTailwindGenerator(host, {
+      project: options.name,
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+    });
+  }
 
   if (options.unitTestRunner !== UnitTestRunner.None) {
     updateComponentSpec(host, options);
@@ -88,7 +104,7 @@ export async function applicationGenerator(
 
   addLinting(host, options);
   await addUnitTestRunner(host, options);
-  await addE2e(host, options, e2eProjectRoot);
+  await addE2e(host, options);
   updateEditorTsConfig(host, options);
 
   if (options.backendProject) {

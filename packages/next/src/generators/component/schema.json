@@ -3,15 +3,16 @@
   "cli": "nx",
   "$id": "NxNextReactComponent",
   "title": "Create a React Component for Next",
+  "description": "Create a React Component for Next.",
   "type": "object",
   "examples": [
     {
-      "command": "g component my-component --project=mylib",
-      "description": "Generate a component in the mylib library"
+      "command": "nx g component my-component --project=mylib",
+      "description": "Generate a component in the `mylib` library"
     },
     {
-      "command": "g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the mylib library"
+      "command": "nx g component my-component --project=mylib --classComponent",
+      "description": "Generate a class component in the `mylib` library"
     }
   ],
   "properties": {
@@ -72,13 +73,13 @@
     },
     "skipTests": {
       "type": "boolean",
-      "description": "When true, does not create \"spec.ts\" test files for the new component.",
+      "description": "When true, does not create `spec.ts` test files for the new component.",
       "default": false
     },
     "directory": {
       "type": "string",
       "description": "Create the component under this directory (can be nested).",
-      "alias": "d"
+      "alias": "dir"
     },
     "export": {
       "type": "boolean",

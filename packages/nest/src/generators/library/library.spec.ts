@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -27,6 +27,7 @@ describe('lib', () => {
       ).toBeUndefined();
       expect(workspaceJson.projects[libFileName].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${libFileName}/**/*.ts`],
         },
@@ -35,7 +36,7 @@ describe('lib', () => {
         builder: '@nrwl/jest:jest',
         outputs: [`coverage/libs/${libFileName}`],
         options: {
-          jestConfig: `libs/${libFileName}/jest.config.js`,
+          jestConfig: `libs/${libFileName}/jest.config.ts`,
           passWithNoTests: true,
         },
       });
@@ -110,14 +111,14 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, { name: libName, tags: 'one,two' });
 
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        [libFileName]: {
+      const projects = Object.fromEntries(devkit.getProjects(tree));
+      expect(projects).toEqual({
+        [libFileName]: expect.objectContaining({
           tags: ['one', 'two'],
-        },
+        }),
       });
     });
 
@@ -155,12 +156,17 @@ describe('lib', () => {
         `libs/${libFileName}/tsconfig.lib.json`
       );
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+      expect(tsconfigJson.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+      ]);
     });
 
     it('should generate files', async () => {
       await libraryGenerator(tree, { name: libName });
 
-      expect(tree.exists(`libs/${libFileName}/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/${libFileName}/jest.config.ts`)).toBeTruthy();
       expect(tree.exists(`libs/${libFileName}/src/index.ts`)).toBeTruthy();
       expect(
         tree.exists(`libs/${libFileName}/src/lib/${libFileName}.spec.ts`)
@@ -176,16 +182,16 @@ describe('lib', () => {
     const dirFileName = 'my-dir';
     const nestedLibFileName = `${dirFileName}-${libFileName}`;
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, {
         name: libName,
         directory: dirName,
         tags: 'one,two',
       });
 
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        [nestedLibFileName]: { tags: ['one', 'two'] },
+      const projects = Object.fromEntries(devkit.getProjects(tree));
+      expect(projects).toEqual({
+        [nestedLibFileName]: expect.objectContaining({ tags: ['one', 'two'] }),
       });
     });
 
@@ -193,7 +199,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName, directory: dirName });
 
       expect(
-        tree.exists(`libs/${dirFileName}/${libFileName}/jest.config.js`)
+        tree.exists(`libs/${dirFileName}/${libFileName}/jest.config.ts`)
       ).toBeTruthy();
       expect(
         tree.exists(`libs/${dirFileName}/${libFileName}/src/index.ts`)
@@ -212,6 +218,7 @@ describe('lib', () => {
       expect(project.root).toEqual(`libs/${dirFileName}/${libFileName}`);
       expect(project.targets.lint).toEqual({
         executor: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${dirFileName}/${libFileName}/**/*.ts`],
         },
@@ -282,7 +289,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName, unitTestRunner: 'none' });
 
       expect(tree.exists(`libs/${libFileName}/tsconfig.spec.json`)).toBeFalsy();
-      expect(tree.exists(`libs/${libFileName}/jest.config.js`)).toBeFalsy();
+      expect(tree.exists(`libs/${libFileName}/jest.config.ts`)).toBeFalsy();
       expect(
         tree.exists(`libs/${libFileName}/lib/${libFileName}.spec.ts`)
       ).toBeFalsy();
@@ -355,7 +362,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName });
 
       expect(
-        tree.read(`libs/${libFileName}/jest.config.js`, 'utf-8')
+        tree.read(`libs/${libFileName}/jest.config.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -363,7 +370,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName, testEnvironment: 'jsdom' });
 
       expect(
-        tree.read(`libs/${libFileName}/jest.config.js`, 'utf-8')
+        tree.read(`libs/${libFileName}/jest.config.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
   });

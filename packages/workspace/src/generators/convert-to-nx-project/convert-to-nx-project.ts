@@ -7,8 +7,7 @@ import {
   getProjects,
   getWorkspacePath,
   logger,
-  NxJsonConfiguration,
-  NxJsonProjectConfiguration,
+  normalizePath,
   ProjectConfiguration,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -59,7 +58,7 @@ To upgrade change the version number at the top of ${getWorkspacePath(
     ? getProjects(host).entries()
     : ([[schema.project, readProjectConfiguration(host, schema.project)]] as [
         string,
-        ProjectConfiguration & NxJsonProjectConfiguration
+        ProjectConfiguration
       ][]);
 
   for (const [project, configuration] of projects) {
@@ -69,20 +68,19 @@ To upgrade change the version number at the top of ${getWorkspacePath(
       continue;
     }
 
+    delete configuration.root;
+
     writeJson(host, configPath, configuration);
 
     updateJson(host, getWorkspacePath(host), (value) => {
-      value.projects[project] = dirname(configPath);
-      return value;
-    });
-
-    updateJson(host, 'nx.json', (value: NxJsonConfiguration) => {
-      delete value.projects[project];
+      value.projects[project] = normalizePath(dirname(configPath));
       return value;
     });
   }
 
-  await formatFiles(host);
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default convertToNxProjectGenerator;

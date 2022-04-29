@@ -19,4 +19,6 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   strict?: boolean;
   standaloneConfig?: boolean;
+  setParserOptionsProject?: boolean;
+  compiler: 'tsc' | 'swc';
 }

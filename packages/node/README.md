@@ -1,19 +1,11 @@
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Extensible Build Framework"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Fast and Extensible Build System"></p>
 
 {{links}}
 
 <hr>
 
-# NodeJS Plugin for Nx
+# Nx: Smart, Fast and Extensible Build System
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-## What is It?
-
-Executors and generators adding basic functionality for building, testing and linting node applications and libraries.
-
-## How to Use
-
-This package is used by the `@nrwl/express`, and `@nrwl/next`. See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more information.
-
-{{resources}}
+{{content}}

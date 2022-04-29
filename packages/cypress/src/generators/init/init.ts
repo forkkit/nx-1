@@ -1,31 +1,32 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  removeDependenciesFromPackageJson,
   Tree,
-  updateJson,
 } from '@nrwl/devkit';
-
-import { cypressVersion, nxVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  nxVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
+import { Schema } from './schema';
 
 function updateDependencies(host: Tree) {
-  updateJson(host, 'package.json', (json) => {
-    json.dependencies = json.dependencies || {};
-    delete json.dependencies['@nrwl/cypress'];
+  removeDependenciesFromPackageJson(host, ['@nrwl/cypress'], []);
 
-    return json;
-  });
   return addDependenciesToPackageJson(
     host,
     {},
     {
       ['@nrwl/cypress']: nxVersion,
       cypress: cypressVersion,
+      '@types/node': typesNodeVersion,
     }
   );
 }
 
-export function cypressInitGenerator(host: Tree) {
-  return updateDependencies(host);
+export function cypressInitGenerator(host: Tree, options: Schema) {
+  return !options.skipPackageJson ? updateDependencies(host) : () => {};
 }
 
 export default cypressInitGenerator;

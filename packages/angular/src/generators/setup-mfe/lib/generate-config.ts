@@ -1,13 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from '../schema';
 import { generateFiles, joinPathFragments, logger } from '@nrwl/devkit';
-
-const SHARED_SINGLETON_LIBRARIES = [
-  '@angular/core',
-  '@angular/common',
-  '@angular/common/http',
-  '@angular/router',
-];
+import type { Schema } from '../schema';
 
 export function generateWebpackConfig(
   host: Tree,
@@ -16,6 +9,7 @@ export function generateWebpackConfig(
   remotesWithPorts: { remoteName: string; port: number }[]
 ) {
   if (
+    host.exists(`${appRoot}/module-federation.config.js`) ||
     host.exists(`${appRoot}/webpack.config.js`) ||
     host.exists(`${appRoot}/webpack.prod.config.js`)
   ) {
@@ -24,6 +18,7 @@ export function generateWebpackConfig(
       If this was not the outcome you expected, you can discard the changes we have made, create a backup of your current webpack config, and run the command again.`
     );
   }
+
   generateFiles(
     host,
     joinPathFragments(__dirname, '../files/webpack'),
@@ -33,8 +28,7 @@ export function generateWebpackConfig(
       type: options.mfeType,
       name: options.appName,
       remotes: remotesWithPorts ?? [],
-      sourceRoot: appRoot,
-      sharedLibraries: SHARED_SINGLETON_LIBRARIES,
+      projectRoot: appRoot,
     }
   );
 }

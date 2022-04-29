@@ -1,27 +1,47 @@
 import { execSync } from 'child_process';
-import { removeSync, readFileSync, writeFileSync } from 'fs-extra';
-import { readdirSync } from 'fs';
+import { readFileSync, writeFileSync, remove } from 'fs-extra';
+import { existsSync, readdirSync } from 'fs';
 import {
   prettierVersion,
   typescriptVersion,
 } from '../packages/workspace/src/utils/versions';
+import { stripIndent } from 'nx/src/utils/logger';
 
 process.env.PUBLISHED_VERSION = `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
-function buildPackagePublishAndCleanPorts() {
-  removeSync('./build');
-  removeSync('./tmp/nx/proj-backup');
-  removeSync('./tmp/angular/proj-backup');
-  removeSync('./tmp/local-registry');
-
-  build(process.env.PUBLISHED_VERSION);
-  try {
-    updateVersionsAndPublishPackages();
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
+async function buildPackagePublishAndCleanPorts() {
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP) {
+    if (!process.env.CI) {
+      console.log(
+        stripIndent(`
+  Did you know that you can run the command with:
+    > NX_E2E_SKIP_BUILD_CLEANUP - saves time by reusing the previously built local packages
+    > CI - simulate the CI environment settings
+    
+  If you change create-nx-workspace or create-nx-plugin, make sure to remove your npx cache.
+  Otherwise the changes won't be reflected in the tests. 
+  \n`)
+      );
+    }
+    await Promise.all([
+      remove('./build'),
+      remove('/tmp/nx-e2e/nx/proj-backup'),
+      remove('/tmp/nx-e2e/angular/proj-backup'),
+      remove('./tmp/local-registry'),
+    ]);
+  }
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP || !existsSync('./build')) {
+    build(process.env.PUBLISHED_VERSION);
+    try {
+      await updateVersionsAndPublishPackages();
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
+  } else {
+    console.log(`\n⏩ Project building skipped. Reusing the existing packages`);
   }
 }
 
@@ -30,16 +50,20 @@ const getDirectories = (source: string) =>
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-function updateVersionsAndPublishPackages() {
+async function updateVersionsAndPublishPackages() {
   const npmMajorVersion = execSync(`npm --version`)
     .toString('utf-8')
     .trim()
     .split('.')[0];
 
-  getDirectories('./build/packages').map((pkg) => {
-    updateVersion(`./build/packages/${pkg}`);
-    publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
-  });
+  const directories = getDirectories('./build/packages');
+
+  await Promise.all(
+    directories.map(async (pkg) => {
+      updateVersion(`./build/packages/${pkg}`);
+      publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
+    })
+  );
 }
 
 function updateVersion(packagePath: string) {
@@ -48,7 +72,7 @@ function updateVersion(packagePath: string) {
   });
 }
 
-function publishPackage(packagePath: string, npmMajorVersion: number) {
+async function publishPackage(packagePath: string, npmMajorVersion: number) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -61,7 +85,7 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
 
     // NPM@7 requires a token to publish, thus, is just a matter of fake a token to bypass npm.
     // See: https://twitter.com/verdaccio_npm/status/1357798427283910660
-    if (npmMajorVersion === 7) {
+    if (npmMajorVersion >= 7) {
       writeFileSync(
         `${packagePath}/.npmrc`,
         `registry=${
@@ -80,16 +104,47 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
     });
   } catch (e) {
     console.log(e);
+    process.exit(1);
   }
 }
 
 function build(nxVersion: string) {
   try {
-    execSync('npx nx run-many --target=build --all', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-  } catch {
-    console.log('Build failed');
+    const b = new Date();
+    const projectsToExclude = [
+      'docs',
+      'nx-dev-data-access-documents',
+      'nx-dev-e2e',
+      'nx-dev',
+      'nx-dev-feature-analytics',
+      'nx-dev-feature-conf',
+      'nx-dev-feature-doc-viewer',
+      'nx-dev-feature-search',
+      'nx-dev-feature-storage',
+      'nx-dev-feature-versions-and-flavors',
+      'nx-dev-ui-commands',
+      'nx-dev-ui-common',
+      'nx-dev-ui-home',
+      'nx-dev-ui-member-card',
+      'nx-dev-ui-sponsor-card',
+      'typedoc-theme',
+    ].join(',');
+    execSync(
+      `npx nx run-many --target=build --all --parallel=8 --exclude=${projectsToExclude}`,
+      {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, NX_CLOUD: 'true' },
+      }
+    );
+    const a = new Date();
+    console.log(
+      `\n> Packages built successfully in ${
+        (a.getTime() - b.getTime()) / 1000
+      }s\n`
+    );
+  } catch (e) {
+    console.log(e.output.toString());
+    console.log('Build failed. See error above.');
     process.exit(1);
   }
 
@@ -99,7 +154,6 @@ function build(nxVersion: string) {
     ...[
       'react',
       'next',
-      'gatsby',
       'web',
       'jest',
       'node',
@@ -109,31 +163,41 @@ function build(nxVersion: string) {
       'storybook',
       'angular',
       'workspace',
+      'react-native',
+      'detox',
+      'js',
+      'nx',
     ].map((f) => `${f}/src/utils/versions.js`),
     ...[
-      'react',
-      'next',
-      'gatsby',
-      'web',
-      'jest',
-      'node',
-      'express',
-      'nest',
-      'cypress',
-      'storybook',
+      'add-nx-to-monorepo',
       'angular',
-      'workspace',
       'cli',
-      'linter',
-      'tao',
+      'cra-to-nx',
+      'create-nx-plugin',
+      'create-nx-workspace',
+      'cypress',
+      'detox',
       'devkit',
       'eslint-plugin-nx',
-      'create-nx-workspace',
-      'create-nx-plugin',
+      'express',
+      'jest',
+      'js',
+      'linter',
+      'make-angular-cli-faster',
+      'nest',
+      'next',
+      'node',
       'nx-plugin',
+      'react-native',
+      'react',
+      'storybook',
+      'tao',
+      'web',
+      'workspace',
     ].map((f) => `${f}/package.json`),
     'create-nx-workspace/bin/create-nx-workspace.js',
     'create-nx-plugin/bin/create-nx-plugin.js',
+    'add-nx-to-monorepo/src/add-nx-to-monorepo.js',
   ].map((f) => `${BUILD_DIR}/${f}`);
 
   files.forEach((f) => {
@@ -150,4 +214,6 @@ function build(nxVersion: string) {
   });
 }
 
-buildPackagePublishAndCleanPorts();
+(async () => {
+  await buildPackagePublishAndCleanPorts();
+})();

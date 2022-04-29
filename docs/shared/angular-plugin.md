@@ -2,139 +2,86 @@
 
 ![Angular logo](/shared/angular-logo.png)
 
-The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
+The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:
 
-- Integration with libraries such as Jest, Cypress, Karma, Protractor, and Storybook.
-- Helper services, and functions to use along with NgRx libraries.
-- Scaffolding for upgrading AngularJS applications.
-- Scaffolding for creating buildable libraries that can be published to npm.
+- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.
+- Generators to help scaffold code quickly, including:
+  - Micro Frontends
+  - Libraries, both internal to your codebase and publishable to npm
+  - Upgrading AngularJS applications
+  - Single Component Application Modules (SCAMs)
+- NgRx helpers.
 - Utilities for automatic workspace refactoring.
 
-## Adding the Angular plugin
+## Setting up the Angular plugin
 
-Adding the Angular plugin to a workspace can be done with the following:
+Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
 ```bash
-#yarn
 yarn add -D @nrwl/angular
 ```
 
 ```bash
-#npm
 npm install -D @nrwl/angular
 ```
 
-## Angular Projects in an Nx Workspace
+## Using the Angular Plugin
 
-Building Angular applications within an Nx workspace is similar to building within a vanilla Angular CLI workspace, with a few differences.
+### Generating an application
 
-- ESLint is used as the default linter, configurable in the generators section of the workspace configuration.
-- Jest is used as the default unit test runner, configurable in the generators section of the workspace configuration.
-- Cypress is used as the default E2E test runner, configurable in the generators section of the workspace configuration.
-- E2E tests are included in a separate project from the Angular application itself.
-- The Nx CLI delegates common commands such as build, serve, test, lint, and e2e to the Angular CLI.
+It's straightforward to generate an Angular application:
 
-The file structure for an Angular application looks like:
-
-```treeview
-myorg/
-├── apps/
-│   ├── myapp/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   │   ├── app.component.html
-│   │   │   │   ├── app.component.scss
-│   │   │   │   ├── app.component.spec.ts
-│   │   │   │   ├── app.component.ts
-│   │   │   │   └── app.module.ts
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   │   ├── environment.prod.ts
-│   │   │   │   └── environment.ts
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.scss
-│   │   │   └── test-setup.ts
-│   │   ├── .browserslistrc
-│   │   ├── .eslintrc.json
-│   │   ├── jest.config.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.editor.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── myapp-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── .eslintrc.json
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
-├── libs/
-├── tools/
-│   ├── generators/
-│   └── tsconfig.tools.json
-├── .editorconfig
-├── .eslintrc.json
-├── .gitignore
-├── .prettierignore
-├── .prettierrc
-├── angular.json
-├── decorate-angular-cli.js
-├── jest.config.js
-├── jest.preset.js
-├── nx.json
-├── package.json
-├── README.md
-└── tsconfig.base.json
+```bash
+nx g @nrwl/angular:app appName
 ```
 
-## See Also
+By default, the application will be generated with:
 
-- [Using DataPersistence](/{{version}}/angular/guides/misc-data-persistence)
-- [Using NgRx](/{{version}}/angular/guides/misc-ngrx)
-- [Upgrading an AngularJS application to Angular](/{{version}}/angular/guides/misc-upgrade)
+- ESLint as the linter.
+- Jest as the unit test runner.
+- Cypress as the E2E test runner.
 
-## Executors / Builders
+We can then serve, build, test, lint, and run e2e tests on the application with the following commands:
 
-- [delegate-build](/{{framework}}/angular/delegate-build) - Delegates the build to a different target while supporting incremental builds.
-- [ng-packagr-lite](/{{framework}}/angular/ng-packagr-lite) - Builds a library with support for incremental builds.
-- [package](/{{framework}}/angular/package) - Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
-- [webpack-browser](/{{framework}}/angular/webpack-browser) - Builds a browser application with support for incremental builds and custom webpack configuration.
+```bash
+nx serve appName
+nx build appName
+nx test appName
+nx lint appName
+nx e2e appName
+```
 
-## Generators
+### Generating a library
 
-- [application](/{{framework}}/angular/application) - Creates an Angular application.
-- [convert-tslint-to-eslint](/{{framework}}/angular/convert-tslint-to-eslint) - Converts a project from TSLint to ESLint.
-- [downgrade-module](/{{framework}}/angular/downgrade-module) - Sets up a Downgrade Module.
-- [karma](/{{framework}}/angular/karma) - Adds Karma configuration to a workspace.
-- [karma-project](/{{framework}}/angular/karma-project) - Adds Karma configuration to a project.
-- [library](/{{framework}}/angular/library) - Creates an Angular library.
-- [move](/{{framework}}/angular/move) - Moves an Angular application or library to another folder within the workspace and updates the project configuration.
-- [ngrx](/{{framework}}/angular/ngrx) - Adds NgRx support to an application or library.
-- [setup-mfe](/{{framework}}/angular/setup-mfe) - Generate a Module Federation configuration for a given Angular application.
-- [stories](/{{framework}}/angular/stories) - Creates stories/specs for all components declared in a project.
-- [storybook-configuration](/{{framework}}/angular/storybook-configuration) - Adds Storybook configuration to a project.
-- [storybook-migrate-defaults-5-to-6](/{{framework}}/angular/storybook-migrate-defaults-5-to-6) - Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
-- [storybook-migrate-stories-to-6-2](/{{framework}}/angular/storybook-migrate-stories-to-6-2) - Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.
-- [upgrade-module](/{{framework}}/angular/upgrade-module) - Sets up an Upgrade Module.
-- [web-worker](/{{framework}}/angular/web-worker) - Creates a Web Worker.
+Generating an Angular library is very similar to generating an application:
 
-## Public API
+```bash
+nx g @nrwl/angular:lib libName
+```
 
-- `DataPersistence` - Angular Service that provides convenience methods for common operations of persisting data.
-- `fetch` - Handles data fetching, and correct ordering of fetching using NgRx Effects.
-- `navigation` - Handles data fetching based on navigating to a certain component using NgRx Effects.
-- `optimisticUpdate` - Handles optimistic updates (updating the client first) using NgRx Effects.
-- `pessimisticUpdate` - Handles pessimistic updates (updating the server first) using NgRx Effects.
-- `NxModule` - An NgModule used to register the Angular providers, including DataPersistence.
+By default, the library will be generated with:
+
+- ESLint as the linter.
+- Jest as the unit test runner.
+
+We can then test and lint the library with the following commands:
+
+```bash
+nx test libName
+nx lint libName
+```
+
+Read more about:
+
+- [Creating Libraries](/structure/creating-libraries)
+- [Library Types](/structure/library-types)
+- [Buildable and Publishable Libraries](/structure/buildable-and-publishable-libraries)
+
+## More Documentation
+
+- [Angular Nx Tutorial](/angular-tutorial/01-create-application)
+- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)
+- [Using NgRx](/guides/misc-ngrx)
+- [Using DataPersistence](/guides/misc-data-persistence)
+- [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)
+- [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxWorkspaceNew",
   "title": "Create an empty workspace",
+  "description": "Create an empty workspace.",
   "type": "object",
   "cli": "nx",
   "properties": {
@@ -15,7 +16,7 @@
       "x-prompt": "What name would you like to use for the workspace?"
     },
     "cli": {
-      "description": "CLI used for generating code and running tasks",
+      "description": "CLI used for generating code and running tasks.",
       "type": "string",
       "enum": ["nx", "angular"],
       "default": "nx"
@@ -31,8 +32,7 @@
     },
     "defaultBase": {
       "type": "string",
-      "description": "Default base branch for affected.",
-      "default": "master"
+      "description": "Default base branch for affected."
     },
     "skipInstall": {
       "description": "Skip installing dependency packages.",
@@ -71,7 +71,7 @@
       "default": true
     },
     "preset": {
-      "description": "What to create in the new workspace",
+      "description": "What to create in the new workspace.",
       "type": "string"
     },
     "appName": {
@@ -79,7 +79,7 @@
       "description": "Application name."
     },
     "nxCloud": {
-      "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud",
+      "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud.",
       "type": "boolean",
       "default": false
     },
@@ -94,5 +94,6 @@
       "type": "string",
       "enum": ["npm", "yarn", "pnpm"]
     }
-  }
+  },
+  "additionalProperties": true
 }

@@ -6,17 +6,16 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/node/jest.config.js",
+        "jestConfig": "packages/node/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/node"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/node",
         "tsConfig": "packages/node/tsconfig.lib.json",
-        "packageJson": "packages/node/package.json",
         "main": "packages/node/index.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
@@ -33,12 +32,13 @@
           {
             "input": "packages/node",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
             "input": "packages/node",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -46,7 +46,11 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -68,9 +72,12 @@
           "packages/node/**/*.spec.tsx",
           "packages/node/**/*.spec.js",
           "packages/node/**/*.spec.jsx",
-          "packages/node/**/*.d.ts"
+          "packages/node/**/*.d.ts",
+          "packages/node/**/executors/**/schema.json",
+          "packages/node/**/generators/**/schema.json"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

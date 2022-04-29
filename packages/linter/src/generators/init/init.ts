@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  removeDependenciesFromPackageJson,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
@@ -16,6 +17,7 @@ import { Linter } from '../utils/linter';
 
 export interface LinterInitOptions {
   linter?: Linter;
+  skipPackageJson?: boolean;
 }
 
 const globalTsLintConfiguration = {
@@ -144,34 +146,32 @@ const globalEsLintConfiguration = {
   ],
 };
 
-function initTsLint(tree: Tree): GeneratorCallback {
+function initTsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   if (tree.exists('/tslint.json')) {
     return () => {};
   }
   writeJson(tree, 'tslint.json', globalTsLintConfiguration);
 
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      tslint: tslintVersion,
-      '@angular-devkit/build-angular': buildAngularVersion,
-    }
-  );
+  return !options.skipPackageJson
+    ? addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          tslint: tslintVersion,
+          '@angular-devkit/build-angular': buildAngularVersion,
+        }
+      )
+    : () => {};
 }
 
-function initEsLint(tree: Tree): GeneratorCallback {
+function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   if (tree.exists('/.eslintrc.json')) {
     return () => {};
   }
 
-  updateJson(tree, 'package.json', (json) => {
-    json.dependencies ||= {};
-
-    delete json.dependencies['@nrwl/linter'];
-
-    return json;
-  });
+  if (!options.skipPackageJson) {
+    removeDependenciesFromPackageJson(tree, ['@nrwl/linter'], []);
+  }
 
   writeJson(tree, '.eslintrc.json', globalEsLintConfiguration);
 
@@ -186,24 +186,26 @@ function initEsLint(tree: Tree): GeneratorCallback {
     });
   }
 
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@nrwl/linter': nxVersion,
-      '@nrwl/eslint-plugin-nx': nxVersion,
-      '@typescript-eslint/parser': typescriptESLintVersion,
-      '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-      eslint: eslintVersion,
-      'eslint-config-prettier': eslintConfigPrettierVersion,
-    }
-  );
+  return !options.skipPackageJson
+    ? addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@nrwl/linter': nxVersion,
+          '@nrwl/eslint-plugin-nx': nxVersion,
+          '@typescript-eslint/parser': typescriptESLintVersion,
+          '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+          eslint: eslintVersion,
+          'eslint-config-prettier': eslintConfigPrettierVersion,
+        }
+      )
+    : () => {};
 }
 
 export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {
   if (!options.linter || options.linter === Linter.EsLint) {
-    return initEsLint(tree);
+    return initEsLint(tree, options);
   } else if (options.linter === Linter.TsLint) {
-    return initTsLint(tree);
+    return initTsLint(tree, options);
   }
 }

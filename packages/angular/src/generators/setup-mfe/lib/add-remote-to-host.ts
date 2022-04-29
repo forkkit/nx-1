@@ -1,41 +1,43 @@
-import type { Tree } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
 import { readProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { ObjectLiteralExpression } from 'typescript';
-import { addRoute } from '../../../utils/nx-devkit/ast-utils';
+import { ArrayLiteralExpression } from 'typescript';
+import {
+  addImportToModule,
+  addRoute,
+} from '../../../utils/nx-devkit/ast-utils';
 
 import * as ts from 'typescript';
+import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 
-export function addRemoteToHost(host: Tree, options: Schema) {
+export function checkIsCommaNeeded(mfeRemoteText: string) {
+  const remoteText = mfeRemoteText.replace(/\s+/g, '');
+  return !remoteText.endsWith(',]')
+    ? remoteText === '[]'
+      ? false
+      : true
+    : false;
+}
+
+export function addRemoteToHost(tree: Tree, options: Schema) {
   if (options.mfeType === 'remote' && options.host) {
-    const hostProject = readProjectConfiguration(host, options.host);
-    const hostWebpackPath =
-      hostProject.targets['build'].options.customWebpackConfig?.path;
+    const hostProject = readProjectConfiguration(tree, options.host);
+    const pathToMFManifest = joinPathFragments(
+      hostProject.sourceRoot,
+      'assets/module-federation.manifest.json'
+    );
+    const hostFederationType = determineHostFederationType(
+      tree,
+      pathToMFManifest
+    );
 
-    if (!hostWebpackPath || !host.exists(hostWebpackPath)) {
-      throw new Error(
-        `The selected host application, ${options.host}, does not contain a webpack.config.js. Are you sure it has been set up as a host application?`
-      );
+    if (hostFederationType === 'static') {
+      addRemoteToStaticHost(tree, options, hostProject);
+    } else if (hostFederationType === 'dynamic') {
+      addRemoteToDynamicHost(tree, options, pathToMFManifest);
     }
-
-    const hostWebpackConfig = host.read(hostWebpackPath, 'utf-8');
-    const webpackAst = tsquery.ast(hostWebpackConfig);
-    const mfRemotesNode = tsquery(
-      webpackAst,
-      'Identifier[name=remotes] ~ ObjectLiteralExpression',
-      { visitAllChildren: true }
-    )[0] as ObjectLiteralExpression;
-
-    const endOfPropertiesPos = mfRemotesNode.properties.end;
-
-    const updatedConfig = `${hostWebpackConfig.slice(0, endOfPropertiesPos)}
-    \t\t"${options.appName}": '${options.appName}@http://localhost:${
-      options.port ?? 4200
-    }/remoteEntry.js',${hostWebpackConfig.slice(endOfPropertiesPos)}`;
-
-    host.write(hostWebpackPath, updatedConfig);
 
     const declarationFilePath = joinPathFragments(
       hostProject.sourceRoot,
@@ -43,24 +45,82 @@ export function addRemoteToHost(host: Tree, options: Schema) {
     );
 
     const declarationFileContent =
-      (host.exists(declarationFilePath)
-        ? host.read(declarationFilePath, 'utf-8')
+      (tree.exists(declarationFilePath)
+        ? tree.read(declarationFilePath, 'utf-8')
         : '') + `\ndeclare module '${options.appName}/Module';`;
-    host.write(declarationFilePath, declarationFileContent);
+    tree.write(declarationFilePath, declarationFileContent);
 
-    addLazyLoadedRouteToHostAppModule(host, options);
+    addLazyLoadedRouteToHostAppModule(tree, options, hostFederationType);
   }
 }
 
+function determineHostFederationType(
+  tree: Tree,
+  pathToMfeManifest: string
+): 'dynamic' | 'static' {
+  return tree.exists(pathToMfeManifest) ? 'dynamic' : 'static';
+}
+
+function addRemoteToStaticHost(
+  tree: Tree,
+  options: Schema,
+  hostProject: ProjectConfiguration
+) {
+  const hostMFConfigPath = joinPathFragments(
+    hostProject.root,
+    'module-federation.config.js'
+  );
+
+  if (!hostMFConfigPath || !tree.exists(hostMFConfigPath)) {
+    throw new Error(
+      `The selected host application, ${options.host}, does not contain a module-federation.config.js or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
+    );
+  }
+
+  const hostMFConfig = tree.read(hostMFConfigPath, 'utf-8');
+  const webpackAst = tsquery.ast(hostMFConfig);
+  const mfRemotesNode = tsquery(
+    webpackAst,
+    'Identifier[name=remotes] ~ ArrayLiteralExpression',
+    { visitAllChildren: true }
+  )[0] as ArrayLiteralExpression;
+
+  const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;
+  const isCommaNeeded = checkIsCommaNeeded(mfRemotesNode.getText());
+
+  const updatedConfig = `${hostMFConfig.slice(0, endOfPropertiesPos)}${
+    isCommaNeeded ? ',' : ''
+  }'${options.appName}',${hostMFConfig.slice(endOfPropertiesPos)}`;
+
+  tree.write(hostMFConfigPath, updatedConfig);
+}
+
+function addRemoteToDynamicHost(
+  tree: Tree,
+  options: Schema,
+  pathToMfeManifest: string
+) {
+  updateJson(tree, pathToMfeManifest, (manifest) => {
+    return {
+      ...manifest,
+      [options.appName]: `http://localhost:${options.port}`,
+    };
+  });
+}
+
 // TODO(colum): future work: allow dev to pass to path to routing module
-function addLazyLoadedRouteToHostAppModule(host: Tree, options: Schema) {
-  const hostAppConfig = readProjectConfiguration(host, options.host);
+function addLazyLoadedRouteToHostAppModule(
+  tree: Tree,
+  options: Schema,
+  hostFederationType: 'dynamic' | 'static'
+) {
+  const hostAppConfig = readProjectConfiguration(tree, options.host);
   const pathToHostAppModule = `${hostAppConfig.sourceRoot}/app/app.module.ts`;
-  if (!host.exists(pathToHostAppModule)) {
+  if (!tree.exists(pathToHostAppModule)) {
     return;
   }
 
-  const hostAppModule = host.read(pathToHostAppModule, 'utf-8');
+  const hostAppModule = tree.read(pathToHostAppModule, 'utf-8');
   if (!hostAppModule.includes('RouterModule.forRoot(')) {
     return;
   }
@@ -72,13 +132,27 @@ function addLazyLoadedRouteToHostAppModule(host: Tree, options: Schema) {
     true
   );
 
+  if (hostFederationType === 'dynamic') {
+    sourceFile = insertImport(
+      tree,
+      sourceFile,
+      pathToHostAppModule,
+      'loadRemoteModule',
+      '@nrwl/angular/mfe'
+    );
+  }
+  const routeToAdd =
+    hostFederationType === 'dynamic'
+      ? `loadRemoteModule('${options.appName}', './Module')`
+      : `import('${options.appName}/Module')`;
+
   sourceFile = addRoute(
-    host,
+    tree,
     pathToHostAppModule,
     sourceFile,
     `{
          path: '${options.appName}', 
-         loadChildren: () => import('${options.appName}/Module').then(m => m.RemoteEntryModule)
+         loadChildren: () => ${routeToAdd}.then(m => m.RemoteEntryModule)
      }`
   );
 }

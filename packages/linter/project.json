@@ -6,17 +6,16 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/linter/jest.config.js",
+        "jestConfig": "packages/linter/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/linter"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/linter",
         "tsConfig": "packages/linter/tsconfig.lib.json",
-        "packageJson": "packages/linter/package.json",
         "main": "packages/linter/index.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
@@ -33,12 +32,13 @@
           {
             "input": "packages/linter",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
             "input": "packages/linter",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -46,7 +46,11 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -68,9 +72,12 @@
           "packages/linter/**/*.spec.tsx",
           "packages/linter/**/*.spec.js",
           "packages/linter/**/*.spec.jsx",
-          "packages/linter/**/*.d.ts"
+          "packages/linter/**/*.d.ts",
+          "packages/linter/**/executors/**/schema.json",
+          "packages/linter/**/generators/**/schema.json"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["eslint-plugin-nx"]

@@ -6,10 +6,10 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { jestConfigObject } from '../../utils/config/functions';
 
 import { jestProjectGenerator } from './jest-project';
 import { JestProjectSchema } from './schema.d';
-import { jestConfigObject } from '../../utils/config/functions';
 
 describe('jestProject', () => {
   let tree: Tree;
@@ -19,8 +19,8 @@ describe('jestProject', () => {
     skipSerializers: false,
     testEnvironment: 'jsdom',
     setupFile: 'none',
-    babelJest: false,
     skipFormat: false,
+    compiler: 'tsc',
   };
 
   beforeEach(async () => {
@@ -51,8 +51,17 @@ describe('jestProject', () => {
       setupFile: 'angular',
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/src/test-setup.ts')).toBeTruthy();
-    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();
     expect(tree.exists('libs/lib1/tsconfig.spec.json')).toBeTruthy();
+  });
+
+  it('should generate files w/babel-jest', async () => {
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      babelJest: true,
+    } as JestProjectSchema);
+    expect(tree.exists('babel.config.json')).toBeTruthy();
   });
 
   it('should alter workspace.json', async () => {
@@ -66,7 +75,7 @@ describe('jestProject', () => {
       executor: '@nrwl/jest:jest',
       outputs: ['coverage/libs/lib1'],
       options: {
-        jestConfig: 'libs/lib1/jest.config.js',
+        jestConfig: 'libs/lib1/jest.config.ts',
         passWithNoTests: true,
       },
     });
@@ -75,12 +84,12 @@ describe('jestProject', () => {
     );
   });
 
-  it('should create a jest.config.js', async () => {
+  it('should create a jest.config.ts', async () => {
     await jestProjectGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
     } as JestProjectSchema);
-    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add a reference to solution tsconfig.json', async () => {
@@ -109,7 +118,7 @@ describe('jestProject', () => {
         types: ['jest', 'node'],
       },
       files: ['src/test-setup.ts'],
-      include: ['**/*.spec.ts', '**/*.d.ts'],
+      include: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts', '**/*.d.ts'],
     });
   });
 
@@ -120,7 +129,7 @@ describe('jestProject', () => {
         project: 'lib1',
       } as JestProjectSchema);
       expect(tree.exists('src/test-setup.ts')).toBeFalsy();
-      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).not.toContain(
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).not.toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
     });
@@ -131,7 +140,7 @@ describe('jestProject', () => {
         project: 'lib1',
         setupFile: 'web-components',
       } as JestProjectSchema);
-      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
     });
@@ -143,7 +152,7 @@ describe('jestProject', () => {
         setupFile: 'angular',
       } as JestProjectSchema);
 
-      const jestConfig = tree.read('libs/lib1/jest.config.js', 'utf-8');
+      const jestConfig = tree.read('libs/lib1/jest.config.ts', 'utf-8');
       expect(jestConfig).toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
@@ -203,13 +212,13 @@ describe('jestProject', () => {
   });
 
   describe('--skip-serializers', () => {
-    it('should not list the serializers in jest.config.js', async () => {
+    it('should not list the serializers in jest.config.ts', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         skipSerializers: true,
       } as JestProjectSchema);
-      const jestConfig = tree.read('libs/lib1/jest.config.js', 'utf-8');
+      const jestConfig = tree.read('libs/lib1/jest.config.ts', 'utf-8');
       expect(jestConfig).not.toContain(`
       snapshotSerializers: [
         'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js,
@@ -227,7 +236,7 @@ describe('jestProject', () => {
         project: 'lib1',
         supportTsx: true,
       } as JestProjectSchema);
-      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.js');
+      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
       expect(jestConfig.transform).toEqual({
         '^.+\\.[tj]sx?$': 'ts-jest',
       });
@@ -239,7 +248,7 @@ describe('jestProject', () => {
         project: 'lib1',
         supportTsx: true,
       } as JestProjectSchema);
-      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.js');
+      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
       expect(jestConfig.moduleFileExtensions).toEqual([
         'ts',
         'tsx',
@@ -249,6 +258,45 @@ describe('jestProject', () => {
     });
   });
 
+  it('should create jest.config.js with --js flag', async () => {
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
+    expect(tree.exists('jest.config.js')).toBeTruthy();
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      "preset: '../../jest.preset.js',"
+    );
+  });
+
+  it('should use jest.config.js in project config with --js flag', async () => {
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(
+      readProjectConfiguration(tree, 'lib1').targets['test']
+    ).toMatchSnapshot();
+  });
+
+  it('should use the jest.preset.ts when preset with --js', async () => {
+    tree.write('jest.preset.ts', '');
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      "preset: '../../jest.preset.ts',"
+    );
+  });
+
   describe('--babelJest', () => {
     it('should have globals.ts-jest configured when babelJest is false', async () => {
       await jestProjectGenerator(tree, {
@@ -256,7 +304,7 @@ describe('jestProject', () => {
         project: 'lib1',
         babelJest: false,
       } as JestProjectSchema);
-      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.js');
+      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
 
       expect(jestConfig.globals).toEqual({
         'ts-jest': {
@@ -271,14 +319,14 @@ describe('jestProject', () => {
         project: 'lib1',
         babelJest: true,
       } as JestProjectSchema);
-      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.js');
+      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
 
       expect(jestConfig.globals).not.toEqual({
         'ts-jest': {
           tsConfig: '<rootDir>/tsconfig.spec.json',
         },
       });
-      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should generate proper jest.transform when babelJest and supportTsx is true', async () => {
@@ -288,7 +336,17 @@ describe('jestProject', () => {
         babelJest: true,
         supportTsx: true,
       } as JestProjectSchema);
-      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should generate proper jest.transform when --compiler=swc and supportTsx is true', async () => {
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+        compiler: 'swc',
+        supportTsx: true,
+      } as JestProjectSchema);
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 });

@@ -52,6 +52,23 @@ describe('normalizeBuildOptions', () => {
     expect(result.main).toEqual('/root/apps/nodeapp/src/main.ts');
   });
 
+  it('should resolve additional entries from root', () => {
+    const result = normalizeBuildOptions(
+      {
+        ...testOptions,
+        additionalEntryPoints: [
+          { entryName: 'test', entryPath: 'some/path.ts' },
+        ],
+      },
+      root,
+      sourceRoot,
+      projectRoot
+    );
+    expect(result.additionalEntryPoints[0].entryPath).toEqual(
+      '/root/some/path.ts'
+    );
+  });
+
   it('should resolve the output path', () => {
     const result = normalizeBuildOptions(
       testOptions,
@@ -126,5 +143,25 @@ describe('normalizeBuildOptions', () => {
         with: '/root/module2.ts',
       },
     ]);
+  });
+
+  it('should resolve outputFileName correctly', () => {
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
+    expect(result.outputFileName).toEqual('main.js');
+  });
+
+  it('should resolve outputFileName to "main.js" if not passed in', () => {
+    const result = normalizeBuildOptions(
+      { ...testOptions, outputFileName: 'index.js' },
+      root,
+      sourceRoot,
+      projectRoot
+    );
+    expect(result.outputFileName).toEqual('index.js');
   });
 });

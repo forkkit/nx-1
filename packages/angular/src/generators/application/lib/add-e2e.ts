@@ -8,28 +8,15 @@ import { E2eTestRunner } from '../../../utils/test-runners';
 import { addProtractor } from './add-protractor';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
 import { updateE2eProject } from './update-e2e-project';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { joinPathFragments } from '@nrwl/devkit';
+import { getWorkspaceLayout, joinPathFragments } from '@nrwl/devkit';
 
-/**
- * Add E2E Config
- *
- * @param tree Nx Devkit Virtual Tree
- * @param options Normalized Schema
- * @param e2eProjectRoot Raw E2E Project Root that Angular tries to write to
- *
- * @returns Function to run to add Cypres config after intial app files have been moved to correct location
- */
-export async function addE2e(
-  tree: Tree,
-  options: NormalizedSchema,
-  e2eProjectRoot: string
-) {
+export async function addE2e(tree: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
     await addProtractor(tree, options);
   } else {
-    removeScaffoldedE2e(tree, options, e2eProjectRoot);
+    removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
   }
 
   if (options.e2eTestRunner === 'cypress') {
@@ -40,13 +27,17 @@ export async function addE2e(
       linter: options.linter,
       skipFormat: options.skipFormat,
       standaloneConfig: options.standaloneConfig,
+      skipPackageJson: options.skipPackageJson,
     });
   }
 
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
     updateE2eProject(tree, options);
-    if (options.standaloneConfig) {
-      convertToNxProjectGenerator(tree, {
+    if (
+      options.standaloneConfig ??
+      getWorkspaceLayout(tree).standaloneAsDefault
+    ) {
+      await convertToNxProjectGenerator(tree, {
         project: `${options.e2eProjectName}`,
       });
     }
@@ -58,6 +49,8 @@ export async function addE2e(
           joinPathFragments(options.e2eProjectRoot, '**/*.ts'),
         ],
         skipFormat: true,
+        setParserOptionsProject: options.setParserOptionsProject,
+        skipPackageJson: options.skipPackageJson,
       });
     }
   }

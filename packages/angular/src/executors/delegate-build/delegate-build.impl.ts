@@ -4,7 +4,7 @@ import {
   parseTargetString,
   runExecutor,
 } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -17,7 +17,7 @@ export async function* delegateBuildExecutor(
   context: ExecutorContext
 ) {
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph('4.0'),
+    readCachedProjectGraph(),
     context.root,
     context.projectName,
     context.targetName,

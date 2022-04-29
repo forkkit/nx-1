@@ -1,33 +1,32 @@
-import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
-import { renameSync } from 'fs';
 import {
   newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   tmpProjPath,
   uniq,
   updateFile,
-  workspaceConfigName,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { renameSync } from 'fs';
+import { packagesWeCareAbout } from 'nx/src/command-line/report';
 
 describe('Cli', () => {
   beforeEach(() => newProject());
 
-  it('should execute long running tasks', () => {
+  it('should execute long running tasks', async () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
-
-    updateFile(workspaceConfigName(), (c) => {
-      const w = JSON.parse(c);
-      w.projects[myapp].targets['counter'] = {
+    updateProjectConfig(myapp, (c) => {
+      c.targets['counter'] = {
         executor: '@nrwl/workspace:counter',
         options: {
           to: 2,
         },
       };
-      return JSON.stringify(w);
+      return c;
     });
 
     const success = runCLI(`counter ${myapp} --result=true`);
@@ -41,21 +40,20 @@ describe('Cli', () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
 
-    updateFile(workspaceConfigName(), (c) => {
-      const j = JSON.parse(c);
-      delete j.projects[mylib].targets;
-      return JSON.stringify(j);
+    updateProjectConfig(mylib, (j) => {
+      delete j.targets;
+      return j;
     });
 
     updateFile(
       `libs/${mylib}/package.json`,
       JSON.stringify({
         name: 'mylib1',
-        scripts: { echo: `echo ECHOED` },
+        scripts: { 'echo:dev': `echo ECHOED` },
       })
     );
 
-    const { stdout } = await runCLIAsync(`echo ${mylib} --a=123`, {
+    const { stdout } = await runCLIAsync(`echo:dev ${mylib} --a=123`, {
       silent: true,
     });
     expect(stdout).toMatch(/ECHOED "?--a=123"?/);
@@ -67,22 +65,24 @@ describe('Cli', () => {
 
     let mainHelp = runCLI(`--help`);
     expect(mainHelp).toContain('Run a target for a project');
-    expect(mainHelp).toContain('Run task for affected projects');
+    expect(mainHelp).toContain('Run target for affected projects');
 
     mainHelp = runCLI(`help`);
     expect(mainHelp).toContain('Run a target for a project');
-    expect(mainHelp).toContain('Run task for affected projects');
+    expect(mainHelp).toContain('Run target for affected projects');
 
     const genHelp = runCLI(`g @nrwl/web:app --help`);
     expect(genHelp).toContain(
-      'The file extension to be used for style files. (default: css)'
+      'Find more information and examples at: https://nx.dev/packages/web/generators/application'
     );
 
     const buildHelp = runCLI(`build ${myapp} --help`);
-    expect(buildHelp).toContain('The name of the main entry-point file.');
+    expect(buildHelp).toContain(
+      'Find more information and examples at: https://nx.dev/packages/web/executors/webpack'
+    );
 
     const affectedHelp = runCLI(`affected --help`);
-    expect(affectedHelp).toContain('Run task for affected projects');
+    expect(affectedHelp).toContain('Run target for affected projects');
 
     const version = runCLI(`--version`);
     expect(version).toContain('9999.0.2'); // stub value
@@ -107,7 +107,7 @@ describe('list', () => {
   it(`should work`, async () => {
     let listOutput = runCLI('list');
 
-    expect(listOutput).toContain('NX  Installed plugins');
+    expect(listOutput).toContain('NX   Installed plugins');
 
     // just check for some, not all
     expect(listOutput).toContain('@nrwl/angular');
@@ -119,7 +119,7 @@ describe('list', () => {
     );
 
     listOutput = runCLI('list');
-    expect(listOutput).toContain('NX  Also available');
+    expect(listOutput).toContain('NX   Also available');
 
     // look for specific plugin
     listOutput = runCLI('list @nrwl/workspace');
@@ -128,8 +128,8 @@ describe('list', () => {
 
     // check for schematics
     expect(listOutput).toContain('workspace');
-    expect(listOutput).toContain('ng-add');
     expect(listOutput).toContain('library');
+    expect(listOutput).toContain('workspace-generator');
 
     // check for builders
     expect(listOutput).toContain('run-commands');
@@ -138,14 +138,14 @@ describe('list', () => {
     listOutput = runCLI('list @nrwl/angular');
 
     expect(listOutput).toContain(
-      'NX   NOTE  @nrwl/angular is not currently installed'
+      'NX   @nrwl/angular is not currently installed'
     );
 
     // look for an unknown plugin
     listOutput = runCLI('list @wibble/fish');
 
     expect(listOutput).toContain(
-      'NX   NOTE  @wibble/fish is not currently installed'
+      'NX   @wibble/fish is not currently installed'
     );
 
     // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
@@ -157,9 +157,9 @@ describe('list', () => {
 });
 
 describe('migrate', () => {
-  beforeEach(() => newProject());
+  beforeEach(() => {
+    newProject();
 
-  it('should run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
@@ -213,15 +213,13 @@ describe('migrate', () => {
       })
     );
 
-    updateFile(
-      './node_modules/@nrwl/tao/src/commands/migrate.js',
-      (content) => {
-        const start = content.indexOf('// testing-fetch-start');
-        const end = content.indexOf('// testing-fetch-end');
+    updateFile('./node_modules/nx/src/command-line/migrate.js', (content) => {
+      const start = content.indexOf('// testing-fetch-start');
+      const end = content.indexOf('// testing-fetch-end');
 
-        const before = content.substring(0, start);
-        const after = content.substring(end);
-        const newFetch = `
+      const before = content.substring(0, start);
+      const after = content.substring(end);
+      const newFetch = `
              function createFetcher(logger) {
               return function fetch(packageName) {
                 if (packageName === 'migrate-parent-package') {
@@ -253,10 +251,11 @@ describe('migrate', () => {
             }
             `;
 
-        return `${before}${newFetch}${after}`;
-      }
-    );
+      return `${before}${newFetch}${after}`;
+    });
+  });
 
+  it('should run migrations', () => {
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
@@ -315,5 +314,92 @@ describe('migrate', () => {
     });
     expect(readFile('file-11')).toEqual('content11');
     expect(readFile('file-20')).toEqual('content20');
+  });
+
+  it('should run migrations and create individual git commits when createCommits is enabled', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // runs migrations with createCommits enabled
+    runCLI('migrate --run-migrations=migrations.json --create-commits', {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+
+    expect(recentCommits).toContain('chore: [nx migration] run11');
+    expect(recentCommits).toContain('chore: [nx migration] run20');
+  });
+
+  it('should run migrations and create individual git commits using a provided custom commit prefix', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
+    runCLI(
+      `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
+  });
+
+  it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
+    const output = runCLI(
+      `migrate --run-migrations=migrations.json --commit-prefix CUSTOM_PREFIX`,
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+        silenceError: true,
+      }
+    );
+
+    expect(output).toContain(
+      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
+    );
   });
 });

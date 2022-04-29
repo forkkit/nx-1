@@ -1,6 +1,5 @@
 import {
   formatFiles,
-  getWorkspaceLayout,
   installPackagesTask,
   moveFilesToNewDirectory,
   Tree,
@@ -8,40 +7,43 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
-
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import init from '../../generators/init/init';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
-
+import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
+import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
-import { normalizeOptions } from './lib/normalize-options';
-import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
-import { updateProject } from './lib/update-project';
-import { updateTsConfig } from './lib/update-tsconfig';
 import {
   enableStrictTypeChecking,
   setLibraryStrictDefault,
 } from './lib/enable-strict-type-checking';
+import { normalizeOptions } from './lib/normalize-options';
 import { NormalizedSchema } from './lib/normalized-schema';
+import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
+import { updateProject } from './lib/update-project';
+import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
 export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   // Do some validation checks
-  const options = normalizeOptions(host, schema);
-  if (!options.routing && options.lazy) {
-    throw new Error(`To use --lazy option, --routing must also be set.`);
+  if (!schema.routing && schema.lazy) {
+    throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
   }
 
-  if (options.enableIvy === true && !options.buildable) {
-    throw new Error('enableIvy must only be used with buildable.');
-  }
-
-  if (options.publishable === true && !options.importPath) {
+  if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
+
+  if (schema.addTailwind && !schema.buildable && !schema.publishable) {
+    throw new Error(
+      `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
+    );
+  }
+
+  const options = normalizeOptions(host, schema);
 
   await init(host, {
     ...options,
@@ -60,7 +62,13 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     skipTsConfig: true,
   });
 
-  moveFilesToNewDirectory(host, options.name, options.projectRoot);
+  if (options.ngCliSchematicLibRoot !== options.projectRoot) {
+    moveFilesToNewDirectory(
+      host,
+      options.ngCliSchematicLibRoot,
+      options.projectRoot
+    );
+  }
   await updateProject(host, options);
   updateTsConfig(host, options);
   await addUnitTestRunner(host, options);
@@ -69,10 +77,22 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   setStrictMode(host, options);
   await addLinting(host, options);
 
+  if (options.addTailwind) {
+    await setupTailwindGenerator(host, {
+      project: options.name,
+      skipFormat: true,
+    });
+  }
+
+  if (options.buildable || options.publishable) {
+    addBuildableLibrariesPostCssDependencies(host);
+  }
+
   if (options.standaloneConfig) {
     await convertToNxProjectGenerator(host, {
       project: options.name,
       all: false,
+      skipFormat: true,
     });
   }
 
@@ -92,10 +112,12 @@ async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       setupFile: 'angular',
       supportTsx: false,
       skipSerializers: false,
+      skipFormat: true,
     });
   } else if (options.unitTestRunner === 'karma') {
     await karmaProjectGenerator(host, {
       project: options.name,
+      skipFormat: true,
     });
   }
 }
@@ -125,6 +147,8 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     projectName: options.name,
     projectRoot: options.projectRoot,
     prefix: options.prefix,
+    setParserOptionsProject: options.setParserOptionsProject,
+    skipFormat: true,
   });
 }
 

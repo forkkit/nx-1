@@ -1,10 +1,11 @@
 {
   "name": "@nrwl/nest",
   "version": "0.0.1",
-  "description": "Nest Plugin for Nx",
+  "description": "The Nx Plugin for Nest that contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nest"
   },
   "keywords": [
     "Monorepo",
@@ -31,7 +32,8 @@
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
     "@nrwl/node": "*",
+    "@nrwl/js": "*",
     "@nrwl/jest": "*",
-    "@nestjs/schematics": "^7.0.0"
+    "@nestjs/schematics": "^8.0.0"
   }
 }

@@ -1,4 +1,6 @@
+import { cypressProjectGenerator } from '@nrwl/cypress';
 import {
+  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   formatFiles,
@@ -7,7 +9,6 @@ import {
   getWorkspaceLayout,
   joinPathFragments,
   names,
-  NxJsonProjectConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
   readWorkspaceConfiguration,
@@ -15,16 +16,18 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { jestProjectGenerator } from '@nrwl/jest';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { join } from 'path';
 
-import { webInitGenerator } from '../init/init';
-import { cypressProjectGenerator } from '@nrwl/cypress';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
+import { WebWebpackExecutorOptions } from '../../executors/webpack/webpack.impl';
+import { swcLoaderVersion } from '../../utils/versions';
 
-import { WebBuildBuilderOptions } from '../../executors/build/build.impl';
+import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
@@ -41,6 +44,10 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
     ...names(options.name),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(
+      tree,
+      options.appProjectRoot
+    ),
   });
   if (options.unitTestRunner === 'none') {
     tree.delete(join(options.appProjectRoot, './src/app/app.element.spec.ts'));
@@ -51,9 +58,11 @@ function addBuildTarget(
   project: ProjectConfiguration,
   options: NormalizedSchema
 ): ProjectConfiguration {
-  const buildOptions: WebBuildBuilderOptions = {
+  const buildOptions: WebWebpackExecutorOptions = {
     outputPath: joinPathFragments('dist', options.appProjectRoot),
+    compiler: options.compiler ?? 'babel',
     index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
+    baseHref: '/',
     main: joinPathFragments(options.appProjectRoot, 'src/main.ts'),
     polyfills: joinPathFragments(options.appProjectRoot, 'src/polyfills.ts'),
     tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
@@ -66,7 +75,7 @@ function addBuildTarget(
     ],
     scripts: [],
   };
-  const productionBuildOptions: Partial<WebBuildBuilderOptions> = {
+  const productionBuildOptions: Partial<WebWebpackExecutorOptions> = {
     fileReplacements: [
       {
         replace: joinPathFragments(
@@ -82,17 +91,9 @@ function addBuildTarget(
     optimization: true,
     outputHashing: 'all',
     sourceMap: false,
-    extractCss: true,
     namedChunks: false,
     extractLicenses: true,
     vendorChunk: false,
-    budgets: [
-      {
-        type: 'initial',
-        maximumWarning: '2mb',
-        maximumError: '5mb',
-      },
-    ],
   };
 
   return {
@@ -100,8 +101,9 @@ function addBuildTarget(
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/web:build',
+        executor: '@nrwl/web:webpack',
         outputs: ['{options.outputPath}'],
+        defaultConfiguration: 'production',
         options: buildOptions,
         configurations: {
           production: productionBuildOptions,
@@ -138,7 +140,7 @@ function addServeTarget(
 
 function addProject(tree: Tree, options: NormalizedSchema) {
   const targets: Record<string, TargetConfiguration> = {};
-  let project: ProjectConfiguration & NxJsonProjectConfiguration = {
+  let project: ProjectConfiguration = {
     projectType: 'application',
     root: options.appProjectRoot,
     sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
@@ -224,9 +226,18 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',
-      babelJest: options.babelJest,
+      compiler: options.compiler,
     });
     tasks.push(jestTask);
+  }
+
+  if (options.compiler === 'swc') {
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      {},
+      { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
+    );
+    tasks.push(installTask);
   }
 
   setDefaults(host, options);
@@ -247,8 +258,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
 
-  const appProjectRoot = `${appsDir}/${appDirectory}`;
-  const e2eProjectRoot = `${appsDir}/${appDirectory}-e2e`;
+  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
+  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

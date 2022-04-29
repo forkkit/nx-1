@@ -1,11 +1,13 @@
-import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
+import { importConstants } from './require-shim';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+
+const { PHASE_PRODUCTION_BUILD } = importConstants();
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('next/dist/next-server/server/config', () => ({
+jest.mock('next/dist/server/config', () => ({
   __esModule: true,
   default: () => ({
     webpack: () => ({}),
@@ -75,7 +77,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       const svgrRule = config.module.rules.find(
-        (rule) => rule.test.toString() === String(/\.svg$/)
+        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
       );
       expect(svgrRule).toBeTruthy();
     });
@@ -95,7 +97,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       const svgrRule = config.module.rules.find(
-        (rule) => rule.test.toString() === String(/\.svg$/)
+        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
       );
       expect(svgrRule).toBeFalsy();
     });
@@ -111,7 +113,8 @@ describe('Next.js webpack config builder', () => {
           fileReplacements: [],
         },
         { root: '/root' } as any,
-        []
+        [],
+        ''
       );
 
       expect(config).toEqual(
@@ -135,11 +138,11 @@ describe('Next.js webpack config builder', () => {
           customValue: 'test',
         } as NextBuildBuilderOptions,
         { root: rootPath } as any,
-        []
+        [],
+        ''
       );
 
       expect(config).toMatchObject({
-        myPhase: 'phase-production-build',
         myCustomValue: 'test',
       });
     });
@@ -156,7 +159,8 @@ describe('Next.js webpack config builder', () => {
             customValue: 'test',
           } as NextBuildBuilderOptions,
           { root: '/root' } as any,
-          []
+          [],
+          ''
         )
       ).rejects.toThrow(/Could not find file/);
     });
@@ -173,7 +177,8 @@ describe('Next.js webpack config builder', () => {
             customValue: 'test',
           } as NextBuildBuilderOptions,
           { root: '/root' } as any,
-          []
+          [],
+          ''
         )
       ).rejects.toThrow(/option does not export a function/);
     });

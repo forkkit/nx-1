@@ -1,9 +1,10 @@
+import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
+import { SearchIcon } from '@heroicons/react/solid';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
 
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
@@ -16,18 +17,11 @@ function Hit({ hit, children }) {
   );
 }
 
-export interface AlgoliaSearchProps {
-  flavorId: string;
-  versionId: string;
-}
-export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
-  const frameworkFilter = `framework:${flavorId}`;
-  const versionFilter = `version:${versionId}`;
-
+export function AlgoliaSearch() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
-  const [initialQuery, setInitialQuery] = useState(null);
+  const [initialQuery, setInitialQuery] = useState('');
   const [browserDetected, setBrowserDetected] = useState(false);
   const [actionKey, setActionKey] = useState(ACTION_KEY_DEFAULT);
 
@@ -68,8 +62,6 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
   return (
     <>
       <Head>
-        <meta name="docsearch:version" content={versionId} />
-        <meta name="docsearch:framework" content={flavorId} />
         <link
           rel="preconnect"
           href="https://BH4D9OD16A-dsn.algolia.net"
@@ -80,23 +72,15 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
         type="button"
         ref={searchButtonRef}
         onClick={handleOpen}
-        className="group leading-6 font-medium flex items-center space-x-3 sm:space-x-4 text-white opacity-90 hover:opacity-100 transition-colors duration-200 w-full py-2"
+        className="flex w-full items-center rounded-md py-1.5 pl-2 pr-3 text-sm leading-6 text-slate-300 ring-1 ring-slate-600 transition hover:text-slate-200 hover:ring-slate-500"
       >
-        <svg width="24" height="24" fill="none" className="text-white">
-          <path
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span>
-          <span className="hidden sm:inline">Quick </span>search
+        <SearchIcon className="mr-3 h-4 w-4 flex-none" />
+        <span className="mx-3">
+          <span className="hidden lg:inline">Quick </span>search
         </span>
         <span
           style={{ opacity: browserDetected ? '1' : '0' }}
-          className="hidden sm:block text-sm leading-5 py-0.5 px-1.5 border border-white rounded-md"
+          className="ml-auto hidden flex-none pl-3 text-xs font-semibold md:block"
         >
           <span className="sr-only">Press </span>
           <kbd className="font-sans">
@@ -112,31 +96,36 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
       {isOpen &&
         createPortal(
           <DocSearchModal
-            initialQuery={initialQuery}
-            initialScrollY={window.scrollY}
             searchParameters={{
-              facetFilters: [frameworkFilter, versionFilter],
-              distinct: 1,
+              facetFilters: ['language:en'],
             }}
+            initialQuery={initialQuery}
+            placeholder="Search documentation"
+            initialScrollY={window.scrollY}
             onClose={handleClose}
-            indexName="nx"
-            apiKey="0c9c3fb22624056e7475eddcbcbfbe91"
-            appId="BH4D9OD16A"
+            indexName="nx-production"
+            apiKey="f49a1eb671385f0472a7285556168930"
+            appId="PCTGM1JTQL"
             navigator={{
-              navigate({ suggestionUrl }) {
+              navigate({ itemUrl }) {
                 setIsOpen(false);
-                router.push(suggestionUrl);
+                router.push(itemUrl);
               },
             }}
             hitComponent={Hit}
             transformItems={(items) => {
-              return items.map((item) => {
-                // We transform the absolute URL into a relative URL to
-                // leverage Next's preloading.
+              return items.map((item, index) => {
                 const a = document.createElement('a');
                 a.href = item.url;
 
                 const hash = a.hash === '#content-wrapper' ? '' : a.hash;
+
+                if (item.hierarchy?.lvl0) {
+                  item.hierarchy.lvl0 = item.hierarchy.lvl0.replace(
+                    /&amp;/g,
+                    '&'
+                  );
+                }
 
                 return {
                   ...item,

@@ -1,6 +1,6 @@
 import type { Observable } from 'rxjs';
-import type { Executor, ExecutorContext } from '@nrwl/tao/src/shared/workspace';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/config/workspaces';
+import { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -10,9 +10,8 @@ import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
-    const workspaceConfig = new Workspaces(
-      builderContext.workspaceRoot
-    ).readWorkspaceConfiguration();
+    const workspaces = new Workspaces(builderContext.workspaceRoot);
+    const workspaceConfig = workspaces.readWorkspaceConfiguration();
     const context: ExecutorContext = {
       root: builderContext.workspaceRoot,
       projectName: builderContext.target.project,

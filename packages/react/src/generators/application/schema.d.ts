@@ -8,7 +8,10 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner: 'jest' | 'none';
-  babelJest: boolean;
+  /**
+   * @deprecated
+   */
+  babelJest?: boolean;
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;
@@ -20,6 +23,9 @@ export interface Schema {
   strict?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  compiler?: 'babel' | 'swc';
+  remotes?: string[];
+  devServerPort?: number;
 }
 
 export interface NormalizedSchema extends Schema {

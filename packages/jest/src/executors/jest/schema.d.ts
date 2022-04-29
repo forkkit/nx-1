@@ -2,6 +2,8 @@ export interface JestExecutorOptions {
   codeCoverage?: boolean;
   config?: string;
   detectOpenHandles?: boolean;
+  logHeapUsage?: boolean;
+  detectLeaks?: boolean;
   jestConfig: string;
   testFile?: string;
   setupFile?: string;
@@ -13,12 +15,14 @@ export interface JestExecutorOptions {
   json?: boolean;
   maxWorkers?: number | string;
   onlyChanged?: boolean;
+  changedSince?: string;
   outputFile?: string;
   passWithNoTests?: boolean;
   runInBand?: boolean;
   showConfig?: boolean;
   silent?: boolean;
   testNamePattern?: string;
+  testPathIgnorePatterns?: string[];
   testPathPattern?: string[];
   colors?: boolean;
   reporters?: string[];

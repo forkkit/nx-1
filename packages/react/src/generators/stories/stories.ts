@@ -1,6 +1,9 @@
 import componentStoryGenerator from '../component-story/component-story';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
-import { getComponentName } from '../../utils/ast-utils';
+import {
+  findExportDeclarationsForJsx,
+  getComponentNode,
+} from '../../utils/ast-utils';
 import * as ts from 'typescript';
 import {
   convertNxGenerator,
@@ -37,7 +40,7 @@ export function projectRootPath(
   return joinPathFragments(sourceRoot, projectDir);
 }
 
-function containsComponentDeclaration(
+export function containsComponentDeclaration(
   tree: Tree,
   componentPath: string
 ): boolean {
@@ -53,7 +56,10 @@ function containsComponentDeclaration(
     true
   );
 
-  return !!getComponentName(sourceFile);
+  return !!(
+    getComponentNode(sourceFile) ||
+    findExportDeclarationsForJsx(sourceFile)?.length
+  );
 }
 
 export async function createAllStories(
@@ -76,7 +82,12 @@ export async function createAllStories(
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
       (path.endsWith('.jsx') && !path.endsWith('.spec.jsx'))
     ) {
-      componentPaths.push(path);
+      const ext = path.slice(path.lastIndexOf('.'));
+      const storyPath = `${path.split(ext)[0]}.stories${ext}`;
+      // only add component if a stories file doesnt already exist
+      if (!tree.exists(storyPath)) {
+        componentPaths.push(path);
+      }
     }
   });
 

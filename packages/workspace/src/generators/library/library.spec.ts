@@ -1,6 +1,11 @@
-import { readJson, Tree, updateJson } from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  getProjects,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { NxJsonConfiguration } from '@nrwl/devkit';
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
@@ -16,13 +21,65 @@ describe('lib', () => {
     testEnvironment: 'jsdom',
     js: false,
     pascalCaseFiles: false,
-    strict: false,
-    standaloneConfig: false,
+    strict: true,
   };
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });
+
+  describe('workspace v2', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace(2);
+    });
+
+    it('should default to standalone project for first project', async () => {
+      await libraryGenerator(tree, { ...defaultOptions, name: 'my-lib' });
+      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
+        'my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(workspaceJsonEntry).toEqual('libs/my-lib');
+    });
+
+    it('should obey standalone === false for first project', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        standaloneConfig: false,
+      });
+      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
+        'my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+    });
+  });
+
+  // describe('workspace v1', () => {
+  //   beforeEach(() => {
+  //     tree = createTreeWithEmptyWorkspace(1);
+  //   });
+  //
+  //   it('should default to inline project for first project', async () => {
+  //     await libraryGenerator(tree, { ...defaultOptions, name: 'my-lib' });
+  //     const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
+  //       .projects['my-lib'];
+  //     const projectConfig = readProjectConfiguration(tree, 'my-lib');
+  //     expect(projectConfig.root).toEqual('libs/my-lib');
+  //     expect(projectConfig).toMatchObject(workspaceJsonEntry);
+  //   });
+  //
+  //   it('should throw for standaloneConfig === true', async () => {
+  //     const promise = libraryGenerator(tree, {
+  //       standaloneConfig: true,
+  //       name: 'my-lib',
+  //     });
+  //     await expect(promise).rejects.toThrow();
+  //   });
+  // });
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
@@ -36,23 +93,34 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib',
         tags: 'one,two',
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-lib': {
           tags: ['one', 'two'],
         },
       });
     });
 
-    it('should update root tsconfig.json', async () => {
+    it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'libs/my-lib/src/index.ts',
+      ]);
+    });
+
+    it('should update root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
+
+      const tsconfigJson = readJson(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -76,6 +144,12 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
         Object {
+          "compilerOptions": Object {
+            "forceConsistentCasingInFileNames": true,
+            "noFallthroughCasesInSwitch": true,
+            "noImplicitReturns": true,
+            "strict": true,
+          },
           "extends": "../../tsconfig.base.json",
           "files": Array [],
           "include": Array [],
@@ -89,6 +163,15 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
+
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
+      expect(tsconfigJson.extends).toBe('../../tsconfig.json');
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -109,21 +192,21 @@ describe('lib', () => {
         name: 'myLib',
       });
 
-      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
-      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
+      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           globals: {
             'ts-jest': {
               tsconfig: '<rootDir>/tsconfig.spec.json',
             }
           },
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+            '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
           },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "
@@ -151,7 +234,7 @@ describe('lib', () => {
         };"
       `;
 
-      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(
+      expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(
         expectedRootJestConfig
       );
       await libraryGenerator(tree, {
@@ -159,22 +242,22 @@ describe('lib', () => {
         name: 'myLib2',
       });
 
-      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(
+      expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(
         expectedRootJestConfig
       );
     });
   });
 
   describe('nested', () => {
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib',
         directory: 'myDir',
         tags: 'one',
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      let projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-lib': {
           tags: ['one'],
         },
@@ -187,8 +270,8 @@ describe('lib', () => {
         tags: 'one,two',
         simpleModuleName: true,
       });
-      const nxJson2 = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson2.projects).toEqual({
+      projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-lib': {
           tags: ['one'],
         },
@@ -204,7 +287,7 @@ describe('lib', () => {
         name: 'myLib',
         directory: 'myDir',
       });
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
@@ -230,19 +313,38 @@ describe('lib', () => {
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
         },
       });
     });
 
-    it('should update tsconfig.json', async () => {
+    it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib',
         directory: 'myDir',
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
+        ['libs/my-dir/my-lib/src/index.ts']
+      );
+      expect(
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+      ).toBeUndefined();
+    });
+
+    it('should update root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        directory: 'myDir',
+      });
+
+      const tsconfigJson = readJson(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['libs/my-dir/my-lib/src/index.ts']
       );
@@ -259,6 +361,7 @@ describe('lib', () => {
       });
 
       const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(tsconfigJson.extends).toBe('../../../tsconfig.base.json');
       expect(tsconfigJson.references).toEqual([
         {
           path: './tsconfig.lib.json',
@@ -267,6 +370,19 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        directory: 'myDir',
+      });
+
+      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(tsconfigJson.extends).toBe('../../../tsconfig.json');
     });
   });
 
@@ -296,6 +412,7 @@ describe('lib', () => {
           const workspaceJson = readJson(tree, 'workspace.json');
           expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
             builder: '@nrwl/linter:eslint',
+            outputs: ['{options.outputFile}'],
             options: {
               lintFilePatterns: ['libs/my-lib/**/*.ts'],
             },
@@ -360,6 +477,7 @@ describe('lib', () => {
             workspaceJson.projects['my-dir-my-lib'].architect.lint
           ).toEqual({
             builder: '@nrwl/linter:eslint',
+            outputs: ['{options.outputFile}'],
             options: {
               lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
             },
@@ -484,7 +602,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
 
       const workspaceJson = readJson(tree, 'workspace.json');
@@ -498,19 +616,39 @@ describe('lib', () => {
               "libs/my-lib/**/*.ts",
             ],
           },
+          "outputs": Array [
+            "{options.outputFile}",
+          ],
         }
       `);
     });
   });
 
   describe('--strict', () => {
-    it('should update the projects tsconfig with strict true', async () => {
+    it('should update the projects tsconfig with strict false', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib',
-        strict: true,
+        strict: false,
       });
-      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.lib.json');
+      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.json');
+
+      expect(tsconfigJson.compilerOptions?.strict).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions?.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions?.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions?.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
+    });
+
+    it('should default to strict true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+      });
+      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.json');
 
       expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
       expect(
@@ -520,23 +658,6 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).toBeTruthy();
-    });
-
-    it('should default to strict false', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        name: 'myLib',
-      });
-      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.lib.json');
-
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
     });
   });
 
@@ -598,6 +719,10 @@ describe('lib', () => {
       expect(
         readJson(tree, 'libs/my-lib/tsconfig.json').compilerOptions
       ).toEqual({
+        forceConsistentCasingInFileNames: true,
+        noFallthroughCasesInSwitch: true,
+        noImplicitReturns: true,
+        strict: true,
         allowJs: true,
       });
     });
@@ -702,15 +827,15 @@ describe('lib', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
+      expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "
@@ -776,7 +901,7 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeTruthy();
       expect(workspaceJson.projects['my-lib'].architect.build.builder).toBe(
-        '@nrwl/workspace:tsc'
+        '@nrwl/js:tsc'
       );
     });
 

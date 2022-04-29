@@ -3,7 +3,6 @@ import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '../../executors/jest/schema';
-import { getJestObject } from '../update-10-0-0/require-jest-config';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
@@ -19,9 +18,10 @@ function updateJestConfig(tree: Tree) {
       }
 
       const jestConfigPath = options.jestConfig;
-      const jestConfig = getJestObject(
-        join(tree.root, jestConfigPath)
-      ) as PartialJestConfig;
+      const jestConfig = require(join(
+        tree.root,
+        jestConfigPath
+      )) as PartialJestConfig;
 
       if (!usesJestPresetAngular(jestConfig)) {
         return;
@@ -73,8 +73,8 @@ export function updateTransform(
   jestConfigPath: string,
   jestConfig: PartialJestConfig
 ) {
+  removePropertyFromJestConfig(tree, jestConfigPath, 'transform');
   addPropertyToJestConfig(tree, jestConfigPath, 'transform', {
-    ...jestConfig.transform,
     '^.+\\.(ts|js|html)$': 'jest-preset-angular',
   });
 }
@@ -134,8 +134,8 @@ export function transformerIsFromJestPresetAngular(
   transformer: ASTTransformer | string
 ) {
   return typeof transformer === 'string'
-    ? transformer.startsWith('jest-preset-angular')
-    : transformer.path.startsWith('jest-preset-angular');
+    ? transformer.includes('jest-preset-angular')
+    : transformer.path.includes('jest-preset-angular');
 }
 
 export function usesJestPresetAngular(jestConfig: PartialJestConfig) {

@@ -27,8 +27,9 @@ If you are using [VSCode](https://code.visualstudio.com/), you can install the [
 ### WebStorm
 
 If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can install one of the available plugins:
-[nx-webstorm](https://plugins.jetbrains.com/plugin/15000-nx-webstorm)
-[Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
+
+- [nx-webstorm](https://plugins.jetbrains.com/plugin/15000-nx-webstorm)
+- [Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
 
 These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
 
@@ -55,47 +56,47 @@ Even though we started building Nx Console as a tool for experts, we also aimed 
 
 The `Generate` action allows you to choose a generator and then opens a form listing out all the options for that generator. As you make changes to the form, the generator is executed in `--dry-run` mode in a terminal so you can preview the results of running the generator in real time.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/-nUr66MWRiE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/-nUr66MWRiE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 **From the Command Palette**
 
 You can also launch the `Generate` action from the Command Palette (`⇧⌘P`) by selecting `nx: generate (ui)`.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/Sk2XjFwF8Zo?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/Sk2XjFwF8Zo?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/q5NTTqRYq9c?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/q5NTTqRYq9c?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 #### Run
 
 The `Run` action allows you to choose an executor command and then opens a form listing out all the options for that executor. The frequently used executor commands `build`, `serve`, `test`, `e2e` and `lint` also have their own dedicated actions.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/rNImFxo9gYs?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/rNImFxo9gYs?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 **From the Command Palette**
 
 You can also construct the executor command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the executor command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/CsUkSyQcxwQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/CsUkSyQcxwQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 #### Common Nx Commands
 
 You can also launch other common Nx commands with the options listed out in the Command Palette.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/v6Tso0lB6S4?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/v6Tso0lB6S4?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 #### Projects
 
-Clicking on the name of any project navigates to that project's definition in the `workspace.json` (or `angular.json`) file. Clicking on the name of any executor command navigates to that executor command's definition in the `workspace.json` (or `angular.json`) file.
+Clicking on the name of any project navigates to that project's `project.json` file. Clicking on the name of any executor command navigates to that executor command's definition in the `project.json` file.
 
-Clicking the ![refresh-light.svg](./refresh-light.svg) icon next to the `PROJECTS` header repopulates the Projects pane from the `workspace.json` (or `angular.json`) file.
+Clicking the ![refresh-light.svg](./refresh-light.svg) icon next to the `PROJECTS` header repopulates the Projects pane from the `project.json` files.
 
 Clicking the ![folder-light.svg](./folder-light.svg) icon next to a project reveals that project's folder in the VSCode Explorer pane.
 
 Clicking the ![continue-light.svg](./continue-light.svg) icon next to an executor command executes that command without prompting for options.
 
-<iframe width="560" height="420" src="https://www.youtube.com/embed/ve_N3unDqAg?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/ve_N3unDqAg?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 #### Streamlining
 

@@ -8,56 +8,36 @@
         {
           "target": "build-base",
           "projects": "self"
-        },
-        {
-          "target": "copy-preview",
-          "projects": "self"
-        },
-        {
-          "target": "sitemap",
-          "projects": "self"
         }
       ],
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "root": "nx-dev/nx-dev",
         "outputPath": "dist/nx-dev/nx-dev",
-        "command": "echo Build complete!"
+        "command": "nx run nx-dev:sitemap"
       }
     },
     "sitemap": {
-      "dependsOn": [
-        {
-          "target": "copy-preview",
-          "projects": "self"
-        }
-      ],
       "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/nx-dev/nx-dev/public"],
+      "outputs": [],
       "options": {
-        "command": "npx next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
+        "command": "yarn next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
       }
     },
-    "copy-preview": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ],
+    "sync-documentation": {
       "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/nx-dev/nx-dev/public"],
+      "outputs": ["nx-dev/nx-dev/public/documentation"],
       "options": {
-        "command": "rm -rf dist/nx-dev/nx-dev/public/documentation/preview && cp -r docs dist/nx-dev/nx-dev/public/documentation/preview"
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts"
+      }
+    },
+    "generate-og-images": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["nx-dev/nx-dev/public/images/open-graph"],
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
       }
     },
     "build-base": {
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "executor": "@nrwl/next:build",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -65,20 +45,44 @@
         "outputPath": "dist/nx-dev/nx-dev"
       },
       "configurations": {
+        "development": {},
         "production": {}
       }
     },
     "serve": {
       "executor": "@nrwl/next:server",
       "options": {
-        "buildTarget": "nx-dev:build",
+        "buildTarget": "nx-dev:build-base",
         "dev": true
       },
       "configurations": {
         "production": {
-          "buildTarget": "nx-dev:build:production",
+          "buildTarget": "nx-dev:build-base:production",
           "dev": false
+        },
+        "development": {
+          "buildTarget": "nx-dev:build-base:development",
+          "dev": true
         }
+      },
+      "defaultConfiguration": "development"
+    },
+    "deploy-build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["nx-dev/nx-dev/public/documentation"],
+      "options": {
+        "commands": [
+          {
+            "command": "nx run nx-dev:generate-og-images",
+            "description": "OG images generation"
+          },
+          {
+            "command": "nx run nx-dev:build",
+            "description": "NextJs build step"
+          }
+        ],
+        "color": true,
+        "parallel": true
       }
     },
     "export": {
@@ -91,13 +95,14 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": ["nx-dev/nx-dev/**/*.{ts,tsx,js,jsx}"]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/nx-dev"],
       "options": {
-        "jestConfig": "nx-dev/nx-dev/jest.config.js",
+        "jestConfig": "nx-dev/nx-dev/jest.config.ts",
         "passWithNoTests": true
       }
     }

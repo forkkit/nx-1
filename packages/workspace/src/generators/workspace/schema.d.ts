@@ -7,6 +7,7 @@ export interface Schema {
   style?: string;
   commit?: { name: string; email: string; message?: string };
   cli: 'nx' | 'angular';
-  layout: 'apps-and-libs' | 'packages';
+  preset: string;
   defaultBase: string;
+  packageManager?: string;
 }

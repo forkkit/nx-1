@@ -1,24 +1,3 @@
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-
-import * as ts from 'typescript';
-import { assertValidStyle } from '../../utils/assertion';
-import {
-  addBrowserRouter,
-  addInitialRoutes,
-  addRoute,
-  findComponentImportPath,
-} from '../../utils/ast-utils';
-import {
-  extraEslintDependencies,
-  createReactEslintJson,
-} from '../../utils/lint';
-import {
-  reactDomVersion,
-  reactRouterDomVersion,
-  reactVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
-import { Schema } from './schema';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -37,11 +16,35 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import init from '../init/init';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
+import * as ts from 'typescript';
+import { assertValidStyle } from '../../utils/assertion';
+import {
+  addBrowserRouter,
+  addInitialRoutes,
+  addRoute,
+  findComponentImportPath,
+} from '../../utils/ast-utils';
+import {
+  createReactEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
+import {
+  reactDomVersion,
+  reactRouterDomVersion,
+  reactVersion,
+  typesReactRouterDomVersion,
+} from '../../utils/versions';
 import componentGenerator from '../component/component';
+import init from '../init/init';
+import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -87,11 +90,12 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await jestProjectGenerator(host, {
+      ...options,
       project: options.name,
       setupFile: 'none',
       supportTsx: true,
       skipSerializers: true,
-      babelJest: true,
+      compiler: options.compiler,
     });
     tasks.push(jestTask);
   }
@@ -121,7 +125,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       react: reactVersion,
       'react-dom': reactDomVersion,
     },
-    {}
+    options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {}
   );
   tasks.push(installTask);
 
@@ -182,7 +186,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     }
 
     targets.build = {
-      builder: '@nrwl/web:package',
+      builder: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -191,6 +195,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        compiler: options.compiler ?? 'babel',
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,
@@ -226,6 +231,8 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
           ...json.compilerOptions,
           forceConsistentCasingInFileNames: true,
           strict: true,
+          noImplicitOverride: true,
+          noPropertyAccessFromIndexSignature: true,
           noImplicitReturns: true,
           noFallthroughCasesInSwitch: true,
         };
@@ -237,7 +244,7 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
 }
 
 function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];
@@ -251,7 +258,10 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
     const { libsDir } = getWorkspaceLayout(host);
 
     c.paths[options.importPath] = [
-      maybeJs(options, `${libsDir}/${options.projectDirectory}/src/index.ts`),
+      maybeJs(
+        options,
+        joinPathFragments(libsDir, `${options.projectDirectory}/src/index.ts`)
+      ),
     ];
 
     return json;
@@ -268,6 +278,10 @@ function createFiles(host: Tree, options: NormalizedSchema) {
       ...names(options.name),
       tmpl: '',
       offsetFromRoot: offsetFromRoot(options.projectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        host,
+        options.projectRoot
+      ),
     }
   );
 
@@ -380,7 +394,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
   const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

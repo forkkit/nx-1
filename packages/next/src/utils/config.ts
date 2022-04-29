@@ -1,12 +1,18 @@
-import { ExecutorContext, offsetFromRoot } from '@nrwl/devkit';
 import {
+  ExecutorContext,
+  offsetFromRoot,
+  joinPathFragments,
+} from '@nrwl/devkit';
+// ignoring while we support both Next 11.1.0 and versions before it
+// @ts-ignore
+import type { NextConfig } from 'next/dist/server/config-shared';
+// @ts-ignore
+import type {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
   PHASE_PRODUCTION_BUILD,
   PHASE_PRODUCTION_SERVER,
-} from 'next/dist/next-server/lib/constants';
-import loadConfig from 'next/dist/next-server/server/config';
-import { NextConfig } from 'next/dist/next-server/server/config-shared';
+} from 'next/dist/shared/lib/constants';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
@@ -19,10 +25,11 @@ import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
 import { WithNxOptions } from '../../plugins/with-nx';
 import {
-  computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { importConfig } from './require-shim';
+const loadConfig = importConfig();
 
 export function createWebpackConfig(
   workspaceRoot: string,
@@ -30,7 +37,8 @@ export function createWebpackConfig(
   fileReplacements: FileReplacement[] = [],
   assets: any = null,
   nxConfigOptions: WebpackConfigOptions = {},
-  dependencies: DependentBuildableProjectNode[] = []
+  dependencies: DependentBuildableProjectNode[] = [],
+  libsDir = ''
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
@@ -67,7 +75,7 @@ export function createWebpackConfig(
         configFile: tsConfigPath,
         extensions,
         mainFields,
-      }),
+      }) as never, // TODO: Remove never type when 'tsconfig-paths-webpack-plugin' types fixed
     ];
 
     fileReplacements
@@ -82,6 +90,7 @@ export function createWebpackConfig(
 
     config.module.rules.push({
       test: /\.([jt])sx?$/,
+      include: [libsDir],
       exclude: /node_modules/,
       use: [defaultLoaders.babel],
     });
@@ -147,10 +156,12 @@ export async function prepareConfig(
     | typeof PHASE_PRODUCTION_SERVER,
   options: NextBuildBuilderOptions,
   context: ExecutorContext,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
+  libsDir: string
 ) {
   const config = (await loadConfig(phase, options.root, null)) as NextConfig &
     WithNxOptions;
+
   const userWebpack = config.webpack;
   const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
   // Yes, these do have different capitalisation...
@@ -158,7 +169,7 @@ export async function prepareConfig(
   config.distDir =
     config.distDir && config.distDir !== '.next'
       ? config.distDir
-      : join(config.outdir, '.next');
+      : joinPathFragments(config.outdir, '.next');
   config.webpack = (a, b) =>
     createWebpackConfig(
       context.root,
@@ -166,7 +177,8 @@ export async function prepareConfig(
       options.fileReplacements,
       options.assets,
       config.nx,
-      dependencies
+      dependencies,
+      libsDir
     )(userWebpack ? userWebpack(a, b) : a, b);
 
   if (typeof userNextConfig !== 'function') {

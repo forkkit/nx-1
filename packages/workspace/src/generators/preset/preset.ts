@@ -2,10 +2,13 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
+  generateFiles,
   installPackagesTask,
   names,
+  PackageManager,
   readWorkspaceConfiguration,
   Tree,
+  updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
@@ -14,6 +17,8 @@ import { libraryGenerator } from '../library/library';
 
 import { insertImport } from '../utils/insert-import';
 import { insertStatement } from '../utils/insert-statement';
+import { Preset } from '../utils/presets';
+import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
@@ -28,14 +33,16 @@ export const presetSchematic = convertNxGenerator(presetGenerator);
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (options.preset === 'empty') {
+  if (
+    options.preset === Preset.Empty ||
+    options.preset === Preset.Apps ||
+    options.preset === Preset.TS
+  ) {
     return;
-  } else if (options.preset === 'oss') {
-    return;
-  } else if (options.preset === 'angular') {
+  } else if (options.preset === Preset.Angular) {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/generators/application/application');
+    } = require('@nrwl' + '/angular/generators');
 
     await angularApplicationGenerator(tree, {
       name: options.name,
@@ -44,7 +51,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/angular');
-  } else if (options.preset === 'react') {
+  } else if (options.preset === Preset.React) {
     const {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
@@ -56,7 +63,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/react');
-  } else if (options.preset === 'next') {
+  } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
       '/next');
 
@@ -67,7 +74,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/next');
-  } else if (options.preset === 'web-components') {
+  } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
       '/web');
 
@@ -90,10 +97,10 @@ async function createPreset(tree: Tree, options: Schema) {
       ['@ungap/custom-elements']
     );
     setDefaultCollection(tree, '@nrwl/web');
-  } else if (options.preset === 'angular-nest') {
+  } else if (options.preset === Preset.AngularWithNest) {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/generators/application/application');
+    } = require('@nrwl' + '/angular/generators');
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 
@@ -118,7 +125,7 @@ async function createPreset(tree: Tree, options: Schema) {
     });
     setDefaultCollection(tree, '@nrwl/angular');
     connectAngularAndNest(tree, options);
-  } else if (options.preset === 'react-express') {
+  } else if (options.preset === Preset.ReactWithExpress) {
     const {
       applicationGenerator: expressApplicationGenerator,
     } = require('@nrwl' + '/express');
@@ -146,7 +153,7 @@ async function createPreset(tree: Tree, options: Schema) {
     });
     setDefaultCollection(tree, '@nrwl/react');
     connectReactAndExpress(tree, options);
-  } else if (options.preset === 'nest') {
+  } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 
@@ -155,7 +162,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
     setDefaultCollection(tree, '@nrwl/nest');
-  } else if (options.preset === 'express') {
+  } else if (options.preset === Preset.Express) {
     const {
       applicationGenerator: expressApplicationGenerator,
     } = require('@nrwl' + '/express');
@@ -165,25 +172,40 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/express');
-  } else if (options.preset === 'gatsby') {
-    const {
-      applicationGenerator: gatsbyApplicationGenerator,
-    } = require('@nrwl' + '/gatsby');
-    await gatsbyApplicationGenerator(tree, {
+  } else if (options.preset === 'react-native') {
+    const { reactNativeApplicationGenerator } = require('@nrwl' +
+      '/react-native');
+    await reactNativeApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      style: options.style,
       standaloneConfig: options.standaloneConfig,
+      e2eTestRunner: 'detox',
     });
-    setDefaultCollection(tree, '@nrwl/gatsby');
+    setDefaultCollection(tree, '@nrwl/react-native');
+  } else if (options.preset === Preset.Core || options.preset === Preset.NPM) {
+    setupPackageManagerWorkspaces(tree, options);
+    if (options.preset === Preset.Core) {
+      tree.delete('workspace.json');
+    }
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
 }
 
+function setupPackageManagerWorkspaces(tree: Tree, options: Schema) {
+  if (options.packageManager === 'pnpm') {
+    generateFiles(tree, join(__dirname, './files/pnpm-workspace'), '.', {});
+  } else {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/**'];
+      return json;
+    });
+  }
+}
+
 function connectAngularAndNest(host: Tree, options: Schema) {
   const { insertNgModuleImport } = require('@nrwl' +
-    '/angular/src/generators/utils/insert-ngmodule-import');
+    '/angular/src/generators/utils');
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`
@@ -246,7 +268,7 @@ describe('AppComponent', () => {
   <img
     width="450"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
-    alt="Nx - Smart, Extensible Build Framework"
+    alt="Nx - Smart, Fast and Extensible Build System"
   />
 </div>
 <div>Message: {{ (hello$|async)|json }}</div>
@@ -316,7 +338,7 @@ export const App = () => {
         <img
           width="450"
           src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
-          alt="Nx - Smart, Extensible Build Framework"
+          alt="Nx - Smart, Fast and Extensible Build System"
         />
       </div>
       <div>{m.message}</div>

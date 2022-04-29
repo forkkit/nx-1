@@ -1,10 +1,8 @@
-import { ExecutorContext } from '@nrwl/devkit';
-
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import type { ExecutorContext } from '@nrwl/devkit';
+import { writeJsonFile } from '@nrwl/devkit';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import { createPackageJson as generatePackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
-
-import { NextBuildBuilderOptions } from '../../../utils/types';
+import type { NextBuildBuilderOptions } from '../../../utils/types';
 
 export async function createPackageJson(
   options: NextBuildBuilderOptions,
@@ -25,8 +23,14 @@ export async function createPackageJson(
   const nrwlWorkspaceNode = depGraph.nodes['npm:@nrwl/workspace'];
 
   if (nrwlWorkspaceNode) {
-    packageJson.devDependencies['@nrwl/workspace'] =
+    packageJson.dependencies['@nrwl/workspace'] =
       nrwlWorkspaceNode.data.version;
   }
+
+  const typescriptNode = depGraph.nodes['npm:typescript'];
+  if (typescriptNode) {
+    packageJson.dependencies['typescript'] = typescriptNode.data.version;
+  }
+
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }

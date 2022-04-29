@@ -1,16 +1,13 @@
 export { readTsConfig } from './src/utilities/typescript';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
-  serializeJson,
   renameSync,
   updateJsonFile,
-  readJsonFile,
   copyFile,
   createDirectory,
 } from './src/utilities/fileutils';
 
-// TODO: vsavkin delete after Nx 12
-export * from './src/devkit-reexport';
+export { names } from '@nrwl/devkit';
 
 export {
   ExistingPrettierConfig,
@@ -18,15 +15,14 @@ export {
 } from './src/utilities/prettier';
 
 export { output } from './src/utilities/output';
-export { commandsObject } from './src/command-line/nx-commands';
-export { supportedNxCommands } from './src/command-line/supported-nx-commands';
 
 export {
   readWorkspaceJson,
   readNxJson,
   readWorkspaceConfig,
-} from './src/core/file-utils';
-export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
+  readPackageJson,
+} from 'nx/src/project-graph/file-utils';
+export { ProjectGraphCache } from 'nx/src/project-graph/nx-deps-cache';
 export {
   readJsonInTree,
   updateJsonInTree,
@@ -42,12 +38,10 @@ export {
   createOrUpdate,
   findNodes,
   updatePackageJsonDependencies,
-  getProjectGraphFromHost,
   readWorkspace,
   renameSyncInTree,
   renameDirSyncInTree,
   updateNxJsonInTree,
-  addProjectToNxJsonInTree,
   readNxJsonInTree,
   InsertChange,
   ReplaceChange,
@@ -63,7 +57,7 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
-export { unparse } from './src/tasks-runner/utils';
+export { unparse } from 'nx/src/tasks-runner/utils';
 
 export {
   getWorkspace,

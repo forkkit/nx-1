@@ -2,6 +2,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import { env as appendLocalEnv } from 'npm-run-path';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -211,7 +212,7 @@ function createProcess(
 function createSyncProcess(command: string, color: boolean, cwd: string) {
   execSync(command, {
     env: processEnv(color),
-    stdio: [0, 1, 2],
+    stdio: ['inherit', 'inherit', 'inherit'],
     maxBuffer: LARGE_BUFFER,
     cwd,
   });
@@ -227,7 +228,11 @@ function calculateCwd(
 }
 
 function processEnv(color: boolean) {
-  const env = { ...process.env };
+  const env = {
+    ...process.env,
+    ...appendLocalEnv(),
+  };
+
   if (color) {
     env.FORCE_COLOR = `${color}`;
   }
@@ -244,7 +249,11 @@ function transformCommand(
     return command.replace(regex, (_, group: string) => args[camelCase(group)]);
   } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
-      .map((a) => `--${a}=${args[a]}`)
+      .map((a) =>
+        typeof args[a] === 'string' && args[a].includes(' ')
+          ? `--${a}="${args[a].replace(/"/g, '"')}"`
+          : `--${a}=${args[a]}`
+      )
       .join(' ');
     return `${command} ${stringifiedArgs}`;
   } else {

@@ -6,17 +6,16 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/nx-plugin/jest.config.js",
+        "jestConfig": "packages/nx-plugin/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/nx-plugin"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/nx-plugin",
         "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
-        "packageJson": "packages/nx-plugin/package.json",
         "main": "packages/nx-plugin/index.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
@@ -33,12 +32,13 @@
           {
             "input": "packages/nx-plugin",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
             "input": "packages/nx-plugin",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -46,7 +46,11 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -68,9 +72,12 @@
           "packages/nx-plugin/**/*.spec.tsx",
           "packages/nx-plugin/**/*.spec.js",
           "packages/nx-plugin/**/*.spec.jsx",
-          "packages/nx-plugin/**/*.d.ts"
+          "packages/nx-plugin/**/*.d.ts",
+          "packages/nx-plugin/**/executors/**/schema.json",
+          "packages/nx-plugin/**/generators/**/schema.json"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

@@ -3,7 +3,8 @@
     "package.json": "*",
     ".eslintrc.json": "*",
     "scripts/vercel/*": ["nx-dev"],
-    ".circleci/config.yml": "*"
+    ".circleci/config.yml": "*",
+    "tools/eslint-rules/**/*": "*"
   },
   "affected": {
     "defaultBase": "master"
@@ -20,16 +21,15 @@
           "test",
           "lint",
           "e2e",
-          "copy-preview",
           "sitemap"
         ],
-        "canTrackAnalytics": false,
-        "showUsageWarnings": true,
+        "useDaemonProcess": true,
         "runtimeCacheInputs": [
           "echo $SELECTED_CLI",
           "echo $NX_E2E_CI_CACHE_KEY"
         ],
-        "cacheDirectory": "/tmp/nx-cache"
+        "cacheDirectory": "/tmp/nx-cache",
+        "parallel": 1
       }
     }
   },
@@ -51,5 +51,32 @@
     "libsDir": "",
     "appsDir": ""
   },
-  "projects": {}
+  "cli": {
+    "defaultCollection": "@nrwl/react"
+  },
+  "generators": {
+    "@nrwl/react": {
+      "application": {
+        "style": "css",
+        "linter": "eslint",
+        "babel": true
+      },
+      "component": {
+        "style": "css"
+      },
+      "library": {
+        "style": "css",
+        "linter": "eslint"
+      }
+    }
+  },
+  "pluginsConfig": {
+    "@nrwl/jest": {
+      "hashingExcludesTestsOfDeps": true
+    },
+    "@nrwl/cypress": {
+      "hashingExcludesTestsOfDeps": true
+    }
+  },
+  "defaultProject": "dep-graph-client"
 }

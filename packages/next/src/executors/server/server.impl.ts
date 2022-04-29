@@ -5,10 +5,6 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
-import {
-  PHASE_DEVELOPMENT_SERVER,
-  PHASE_PRODUCTION_SERVER,
-} from 'next/dist/next-server/lib/constants';
 
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
@@ -24,12 +20,16 @@ import {
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
+import { importConstants } from '../../utils/require-shim';
+import { workspaceLayout } from '@nrwl/devkit';
+
+const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_SERVER } = importConstants();
 
 const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
 const readyPrefix = `[ ${chalk.green('ready')} ]`;
@@ -38,11 +38,13 @@ export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
-  process.env.NODE_ENV = process.env.NODE_ENV
+  // Cast to any to overwrite NODE_ENV
+  (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
     : options.dev
     ? 'development'
     : 'production';
+
   let dependencies: DependentBuildableProjectNode[] = [];
   const buildTarget = parseTargetString(options.buildTarget);
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
@@ -52,9 +54,10 @@ export default async function* serveExecutor(
   );
 
   const root = resolve(context.root, buildOptions.root);
+  const libsDir = join(context.root, workspaceLayout().libsDir);
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph('4.0'),
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       'build', // should be generalized
@@ -69,7 +72,8 @@ export default async function* serveExecutor(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
     buildOptions,
     context,
-    dependencies
+    dependencies,
+    libsDir
   );
 
   const settings: NextServerOptions = {

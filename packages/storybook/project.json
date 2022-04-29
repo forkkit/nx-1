@@ -6,17 +6,16 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/storybook/jest.config.js",
+        "jestConfig": "packages/storybook/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/storybook"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/storybook",
         "tsConfig": "packages/storybook/tsconfig.lib.json",
-        "packageJson": "packages/storybook/package.json",
         "main": "packages/storybook/index.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
@@ -43,12 +42,13 @@
           {
             "input": "packages/storybook",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
             "input": "packages/storybook",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -56,7 +56,11 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -78,9 +82,12 @@
           "packages/storybook/**/*.spec.tsx",
           "packages/storybook/**/*.spec.js",
           "packages/storybook/**/*.spec.jsx",
-          "packages/storybook/**/*.d.ts"
+          "packages/storybook/**/*.d.ts",
+          "packages/storybook/**/executors/**/schema.json",
+          "packages/storybook/**/generators/**/schema.json"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

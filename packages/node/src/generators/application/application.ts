@@ -8,7 +8,6 @@ import {
   joinPathFragments,
   logger,
   names,
-  NxJsonProjectConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -29,6 +28,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 
 import { Schema } from './schema';
 import { initGenerator } from '../init/init';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -40,7 +40,7 @@ function getBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/node:build',
+    executor: '@nrwl/node:webpack',
     outputs: ['{options.outputPath}'],
     options: {
       outputPath: joinPathFragments('dist', options.appProjectRoot),
@@ -75,7 +75,7 @@ function getBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/node:execute',
+    executor: '@nrwl/node:node',
     options: {
       buildTarget: `${options.name}:build`,
     },
@@ -83,7 +83,7 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  const project: ProjectConfiguration & NxJsonProjectConfiguration = {
+  const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
     projectType: 'application',
@@ -114,6 +114,10 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
     name: options.name,
     root: options.appProjectRoot,
     offset: offsetFromRoot(options.appProjectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(
+      tree,
+      options.appProjectRoot
+    ),
   });
   if (options.js) {
     toJS(tree);
@@ -208,6 +212,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await jestProjectGenerator(tree, {
+      ...options,
       project: options.name,
       setupFile: 'none',
       skipSerializers: true,

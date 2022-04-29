@@ -1,10 +1,10 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  NxJsonConfiguration,
   readJson,
-  readWorkspaceConfiguration,
+  readProjectConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -146,7 +146,19 @@ describe('ProjectConverter', () => {
     ).toThrowErrorMatchingSnapshot();
   });
 
-  it('should throw if no project tslint.json is found', () => {
+  it('should not throw if no root tslint.json is found but ignore is set', () => {
+    expect(
+      () =>
+        new ProjectConverter({
+          host,
+          projectName,
+          ignoreExistingTslintConfig: true,
+          eslintInitializer: () => undefined,
+        })
+    ).not.toThrow();
+  });
+
+  it('should not throw if no project tslint.json is found', () => {
     writeJson(host, 'tslint.json', {});
 
     expect(
@@ -157,7 +169,7 @@ describe('ProjectConverter', () => {
           ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
-    ).toThrowErrorMatchingSnapshot();
+    ).not.toThrow();
   });
 
   it('should not throw when not in dry-run and config files successfully found', () => {
@@ -262,7 +274,7 @@ describe('ProjectConverter', () => {
   });
 
   describe('setDefaults()', () => {
-    it('should save in workspace.json', async () => {
+    it('should save in nx.json', async () => {
       writeJson(host, 'tslint.json', {});
       writeJson(host, `${projectRoot}/tslint.json`, {});
 
@@ -273,8 +285,8 @@ describe('ProjectConverter', () => {
         eslintInitializer: () => undefined,
       });
 
-      const workspace = readWorkspaceConfiguration(host);
-      workspace.generators = {
+      const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+      nxJson.generators = {
         '@nrwl/angular': {
           application: {
             linter: 'tslint',
@@ -284,10 +296,10 @@ describe('ProjectConverter', () => {
           },
         },
       };
-      updateWorkspaceConfiguration(host, workspace);
+      writeJson(host, 'nx.json', nxJson);
 
       // BEFORE - no entry for convert-tslint-to-eslint wthin @nrwl/angular generators
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
 
       projectConverter.setDefaults('@nrwl/angular', {
         ignoreExistingTslintConfig: true,
@@ -295,7 +307,7 @@ describe('ProjectConverter', () => {
       });
 
       // AFTER (1) - convert-tslint-to-eslint wthin @nrwl/angular generators has removeTSLintIfNoMoreTSLintTargets set to true
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
 
       projectConverter.setDefaults('@nrwl/angular', {
         ignoreExistingTslintConfig: false,
@@ -303,7 +315,7 @@ describe('ProjectConverter', () => {
       });
 
       // AFTER (2) - convert-tslint-to-eslint wthin @nrwl/angular generators has removeTSLintIfNoMoreTSLintTargets set to false
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
     });
   });
 
@@ -328,9 +340,9 @@ describe('ProjectConverter', () => {
         }
       )();
 
-      const workspace = readWorkspaceConfiguration(host);
+      const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
       // Not using shorthand syntax this time
-      workspace.generators = {
+      nxJson.generators = {
         '@nrwl/angular': {
           application: {
             linter: 'tslint',
@@ -340,21 +352,26 @@ describe('ProjectConverter', () => {
           },
         },
       };
-      updateWorkspaceConfiguration(host, workspace);
+      writeJson(host, 'nx.json', nxJson);
 
       // BEFORE - tslint and codelyzer are present
       expect(readJson(host, 'package.json')).toMatchSnapshot();
 
-      // BEFORE - tslint set as both global and project-level default linter for @nrwl/angular generators
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      // BEFORE - tslint set as both global linter for @nrwl/angular generators
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
+
+      expect(readProjectConfiguration(host, projectName)).toMatchSnapshot();
 
       await projectConverter.removeTSLintFromWorkspace()();
 
       // AFTER - it should remove tslint and codelyzer
       expect(readJson(host, 'package.json')).toMatchSnapshot();
 
-      // AFTER - generators config from global and project-level settings removed (because eslint is always default)
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      // AFTER - generators config from global project-level settings removed (because eslint is always default)
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
+
+      // AFTER - generators config from project-level settings removed (because eslint is always default)
+      expect(readProjectConfiguration(host, projectName)).toMatchSnapshot();
     });
 
     it('should remove the entry in generators for convert-tslint-to-eslint because it is no longer needed', async () => {
@@ -368,23 +385,23 @@ describe('ProjectConverter', () => {
         eslintInitializer: () => undefined,
       });
 
-      const workspace = readWorkspaceConfiguration(host);
-      workspace.generators = {
+      const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+      nxJson.generators = {
         '@nrwl/angular': {
           'convert-tslint-to-eslint': {
             removeTSLintIfNoMoreTSLintTargets: true,
           },
         },
       };
-      updateWorkspaceConfiguration(host, workspace);
+      writeJson(host, 'nx.json', nxJson);
 
       // BEFORE - convert-tslint-to-eslint wthin @nrwl/angular generators has a value for removeTSLintIfNoMoreTSLintTargets
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
 
       await projectConverter.removeTSLintFromWorkspace()();
 
       // AFTER - generators config no longer has a reference to convert-tslint-to-eslint
-      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+      expect(readJson(host, 'nx.json')).toMatchSnapshot();
     });
   });
 });

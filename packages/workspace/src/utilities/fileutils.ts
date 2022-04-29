@@ -1,27 +1,13 @@
 import {
+  createReadStream,
   createWriteStream,
   existsSync,
   mkdirSync,
-  statSync,
-  createReadStream,
-  writeFileSync,
   renameSync as fsRenameSync,
+  statSync,
 } from 'fs';
-import { ensureDirSync } from 'fs-extra';
-import { basename, dirname, resolve } from 'path';
-import {
-  parseJson,
-  serializeJson,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
-
-export { readJsonFile, writeJsonFile, serializeJson };
-
-export function writeToFile(filePath: string, str: string) {
-  ensureDirSync(dirname(filePath));
-  writeFileSync(filePath, str);
-}
+import { basename, resolve as pathResolve } from 'path';
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 
 /**
  * This method is specifically for updating a JSON file using the filesystem
@@ -40,7 +26,7 @@ export function updateJsonFile(path: string, callback: (a: any) => any) {
 export function copyFile(file: string, target: string) {
   const f = basename(file);
   const source = createReadStream(file);
-  const dest = createWriteStream(resolve(target, f));
+  const dest = createWriteStream(pathResolve(target, f));
   source.pipe(dest);
   source.on('error', (e) => console.error(e));
 }
@@ -62,7 +48,7 @@ export function fileExists(filePath: string): boolean {
 }
 
 export function createDirectory(directoryPath: string) {
-  const parentPath = resolve(directoryPath, '..');
+  const parentPath = pathResolve(directoryPath, '..');
   if (!directoryExists(parentPath)) {
     createDirectory(parentPath);
   }
@@ -84,7 +70,7 @@ export function renameSync(
     }
 
     // Make sure parent path exists
-    const parentPath = resolve(to, '..');
+    const parentPath = pathResolve(to, '..');
     createDirectory(parentPath);
 
     fsRenameSync(from, to);

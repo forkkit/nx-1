@@ -1,9 +1,16 @@
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { ChildProcess, exec, execSync } from 'child_process';
+import {
+  joinPathFragments,
+  parseJson,
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
+import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
   createFileSync,
   ensureDirSync,
+  existsSync,
   moveSync,
   readdirSync,
   readFileSync,
@@ -12,17 +19,28 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-import isCI = require('is-ci');
 import * as path from 'path';
-import { dirSync } from 'tmp';
-const kill = require('kill-port');
-const isWindows = require('is-windows');
+import { join } from 'path';
+import { coerce } from 'semver';
 import { check as portCheck } from 'tcp-port-used';
-import { parseJson } from '@nrwl/devkit';
-
-import chalk = require('chalk');
-import treeKill = require('tree-kill');
+import { dirSync } from 'tmp';
 import { promisify } from 'util';
+import chalk = require('chalk');
+import isCI = require('is-ci');
+import treeKill = require('tree-kill');
+import { Workspaces } from '../../packages/nx/src/config/workspaces';
+import { PackageManager } from 'nx/src/utils/package-manager';
+
+export function detectPackageManager(dir: string = ''): PackageManager {
+  return existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : 'npm';
+}
+
+const kill = require('kill-port');
+export const isWindows = require('is-windows');
 
 export const promisifiedTreeKill: (
   pid: number,
@@ -40,7 +58,10 @@ export function currentCli() {
   return process.env.SELECTED_CLI || 'nx';
 }
 
-export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
+export const e2eRoot = isCI
+  ? dirSync({ prefix: 'nx-e2e-' }).name
+  : '/tmp/nx-e2e';
+
 export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
@@ -55,11 +76,44 @@ export function workspaceConfigName() {
   return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
-export function updateWorkspaceConfig(
-  callback: (json: { [key: string]: any }) => Object
+export function updateProjectConfig(
+  projectName: string,
+  callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const file = workspaceConfigName();
-  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
+  const root = readJson(workspaceConfigName()).projects[projectName];
+  const path = join(root, 'project.json');
+  const current = readJson(path);
+  updateFile(path, JSON.stringify(callback(current), null, 2));
+}
+
+/**
+ * Use readProjectConfig or readInlineProjectConfig instead
+ * if you need a project's configuration.
+ */
+export function readWorkspaceConfig(): Omit<
+  WorkspaceJsonConfiguration,
+  'projects'
+> {
+  const w = readJson(workspaceConfigName());
+  delete w.projects;
+  return w;
+}
+
+export function readProjectConfig(projectName: string): ProjectConfiguration {
+  const root = readJson(workspaceConfigName()).projects[projectName];
+  const path = join(root, 'project.json');
+  return readJson(path);
+}
+
+export function createNonNxProjectDirectory(name = uniq('proj')) {
+  projName = name;
+  ensureDirSync(tmpProjPath());
+  createFile(
+    'package.json',
+    JSON.stringify({
+      name,
+    })
+  );
 }
 
 export function runCreateWorkspace(
@@ -72,6 +126,7 @@ export function runCreateWorkspace(
     packageManager,
     cli,
     extraArgs,
+    useDetectedPm = false,
   }: {
     preset: string;
     appName?: string;
@@ -80,6 +135,7 @@ export function runCreateWorkspace(
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     cli?: string;
     extraArgs?: string;
+    useDetectedPm?: boolean;
   }
 ) {
   projName = name;
@@ -100,7 +156,7 @@ export function runCreateWorkspace(
     command += ` --defaultBase="${base}"`;
   }
 
-  if (packageManager) {
+  if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
   }
 
@@ -124,7 +180,11 @@ export function packageInstall(
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const install = execSync(`${pm.addDev} ${pkg}@${version}`, {
+  const pkgsWithVersions = pkg
+    .split(' ')
+    .map((pgk) => `${pgk}@${version}`)
+    .join(' ');
+  const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
     cwd,
     stdio: [0, 1, 2],
     env: process.env,
@@ -133,35 +193,49 @@ export function packageInstall(
   return install ? install.toString() : '';
 }
 
-export function runNgNew(projectName: string): string {
+export function runNgNew(
+  projectName: string,
+  packageManager = getSelectedPackageManager()
+): string {
   projName = projectName;
-  return execSync(
-    `../../node_modules/.bin/ng new ${projName} --no-interactive`,
-    {
-      cwd: e2eCwd,
-      env: process.env,
-      encoding: 'utf-8',
-    }
-  ).toString();
+
+  // Use the latest version of the currently supported @angular/cli major version
+  // to cover existing usage out there while avoiding the tests to fail when a new
+  // major comes out and is still not supported
+  const ngCliMajorVersion = coerce(angularCliVersion).major;
+  const npmMajorVersion = getNpmMajorVersion();
+  const command = `npx ${
+    +npmMajorVersion >= 7 ? '--yes' : ''
+  } @angular/cli@${ngCliMajorVersion} new ${projectName} --package-manager=${packageManager}`;
+
+  return execSync(command, {
+    cwd: e2eCwd,
+    env: process.env,
+    encoding: 'utf-8',
+  }).toString();
 }
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
-  return process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm';
+  return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm') || 'npm';
 }
 
 /**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject({ name = uniq('proj') } = {}): string {
-  const packageManager = getSelectedPackageManager();
-
+export function newProject({
+  name = uniq('proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
   try {
     const useBackupProject = packageManager !== 'pnpm';
     const projScope = useBackupProject ? 'proj' : name;
 
     if (!useBackupProject || !directoryExists(tmpBackupProjPath())) {
-      runCreateWorkspace(projScope, { preset: 'empty', packageManager });
+      runCreateWorkspace(projScope, {
+        preset: 'empty',
+        packageManager,
+      });
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -172,8 +246,8 @@ export function newProject({ name = uniq('proj') } = {}): string {
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
-        `@nrwl/gatsby`,
         `@nrwl/jest`,
+        `@nrwl/js`,
         `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
@@ -182,6 +256,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
         `@nrwl/react`,
         `@nrwl/storybook`,
         `@nrwl/web`,
+        `@nrwl/react-native`,
       ];
       packageInstall(packages.join(` `), projScope);
 
@@ -193,6 +268,10 @@ export function newProject({ name = uniq('proj') } = {}): string {
     if (useBackupProject) {
       copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
     }
+
+    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+      console.log(`E2E test is creating a project: ${tmpProjPath()}`);
+    }
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
@@ -201,7 +280,8 @@ export function newProject({ name = uniq('proj') } = {}): string {
 }
 
 const KILL_PORT_DELAY = 5000;
-async function killPort(port: number): Promise<boolean> {
+
+export async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
     try {
       logInfo(`Attempting to close port ${port}`);
@@ -231,13 +311,12 @@ export async function killPorts(port?: number): Promise<boolean> {
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export async function removeProject({ onlyOnCI = false } = {}) {
-  if (onlyOnCI && !isCI) {
-    return;
+export async function cleanupProject() {
+  if (isCI) {
+    try {
+      removeSync(tmpProjPath());
+    } catch (e) {}
   }
-  try {
-    removeSync(tmpProjPath());
-  } catch (e) {}
 }
 
 export function runCypressTests() {
@@ -250,6 +329,14 @@ export function isNotWindows() {
 
 export function isOSX() {
   return process.platform === 'darwin';
+}
+
+export function isAndroid() {
+  return (
+    process.platform === 'linux' &&
+    process.env.ANDROID_HOME &&
+    process.env.ANDROID_SDK_ROOT
+  );
 }
 
 export function runCommandAsync(
@@ -267,7 +354,6 @@ export function runCommandAsync(
         env: {
           ...(opts.env || process.env),
           FORCE_COLOR: 'false',
-          NX_INVOKED_BY_RUNNER: undefined,
         },
         encoding: 'utf-8',
       },
@@ -295,7 +381,6 @@ export function runCommandUntil(
     env: {
       ...process.env,
       FORCE_COLOR: 'false',
-      NX_INVOKED_BY_RUNNER: undefined,
     },
     encoding: 'utf-8',
   });
@@ -339,7 +424,9 @@ export function runCLIAsync(
 }
 
 export function runNgAdd(
+  packageName: string,
   command?: string,
+  version: string = publishedVersion,
   opts: RunCmdOpts = {
     silenceError: false,
     env: null,
@@ -347,10 +434,11 @@ export function runNgAdd(
   }
 ): string {
   try {
-    packageInstall('@nrwl/workspace');
-    return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
+    const pmc = getPackageManagerCommand();
+    packageInstall(packageName, null, version);
+    return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
-      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      env: { ...(opts.env || process.env) },
       encoding: 'utf-8',
     })
       .toString()
@@ -383,12 +471,12 @@ export function runCLI(
     let r = stripConsoleColors(
       execSync(`${pm.runNx} ${command}`, {
         cwd: opts.cwd || tmpProjPath(),
-        env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+        env: { ...(opts.env || process.env) },
         encoding: 'utf-8',
         maxBuffer: 50 * 1024 * 1024,
       })
     );
-    if (process.env.VERBOSE_OUTPUT) {
+    if (process.env.NX_VERBOSE_LOGGING) {
       logInfo(`result of running: ${command}`, r);
     }
 
@@ -428,7 +516,10 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).not.toContain('fail');
 }
 
-export function runCommand(command: string): string {
+export function runCommand(
+  command: string,
+  options?: Partial<ExecSyncOptions>
+): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -436,18 +527,18 @@ export function runCommand(command: string): string {
       env: {
         ...process.env,
         FORCE_COLOR: 'false',
-        NX_INVOKED_BY_RUNNER: undefined,
       },
       encoding: 'utf-8',
+      ...options,
     }).toString();
-    if (process.env.VERBOSE_OUTPUT) {
+    if (process.env.NX_VERBOSE_LOGGING) {
       console.log(r);
     }
     return r;
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    return e.stdout.toString() + e.stderr.toString();
+    return e.stdout?.toString() + e.stderr?.toString();
   }
 }
 
@@ -459,21 +550,22 @@ export function runCommand(command: string): string {
  */
 function setMaxWorkers() {
   if (isCI) {
+    const ws = new Workspaces(tmpProjPath());
     const workspaceFile = workspaceConfigName();
-    const workspace = readJson(workspaceFile);
+    const workspaceFileExists = fileExists(tmpProjPath(workspaceFile));
+    const workspace = ws.readWorkspaceConfiguration();
+    const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
+    let requireWorkspaceFileUpdate = false;
 
     Object.keys(workspace.projects).forEach((appName) => {
       let project = workspace.projects[appName];
-      if (typeof project === 'string') {
-        project = readJson(path.join(project, 'project.json'));
-      }
-      const { build } = project.targets ?? project.architect;
+      const { build } = project.targets;
 
       if (!build) {
         return;
       }
 
-      const executor = build.builder ?? build.executor;
+      const executor = build.executor;
       if (
         executor.startsWith('@nrwl/node') ||
         executor.startsWith('@nrwl/web') ||
@@ -481,9 +573,22 @@ function setMaxWorkers() {
       ) {
         build.options.maxWorkers = 4;
       }
-    });
 
-    updateFile(workspaceFile, JSON.stringify(workspace));
+      if (
+        !workspaceFileExists ||
+        typeof rawWorkspace.projects[appName] === 'string'
+      ) {
+        updateFile(
+          join(project.root, 'project.json'),
+          JSON.stringify(project, null, 2)
+        );
+      } else {
+        requireWorkspaceFileUpdate = true;
+      }
+    });
+    if (workspaceFileExists && requireWorkspaceFileUpdate) {
+      updateFile(workspaceFile, JSON.stringify(workspace));
+    }
   }
 }
 
@@ -524,6 +629,16 @@ export function checkFilesExist(...expectedFiles: string[]) {
   });
 }
 
+export function updateJson<T extends object = any, U extends object = T>(
+  f: string,
+  updater: (value: T) => U
+) {
+  updateFile(f, (s) => {
+    const json = JSON.parse(s);
+    return JSON.stringify(updater(json), null, 2);
+  });
+}
+
 export function checkFilesDoNotExist(...expectedFiles: string[]) {
   expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
@@ -545,6 +660,11 @@ export function readJson(f: string): any {
 export function readFile(f: string) {
   const ff = f.startsWith('/') ? f : tmpProjPath(f);
   return readFileSync(ff, 'utf-8');
+}
+
+export function removeFile(f: string) {
+  const ff = f.startsWith('/') ? f : tmpProjPath(f);
+  removeSync(ff);
 }
 
 export function rmDist() {
@@ -618,46 +738,55 @@ export function logSuccess(title: string, body?: string) {
 export function getPackageManagerCommand({
   path = tmpProjPath(),
   packageManager = detectPackageManager(path),
-  scriptsPrependNodePath = true,
 } = {}): {
   createWorkspace: string;
+  run: (script: string, args: string) => string;
   runNx: string;
   runNxSilent: string;
+  runUninstalledPackage?: string | undefined;
   addDev: string;
   list: string;
 } {
-  const scriptsPrependNodePathFlag = scriptsPrependNodePath
-    ? ' --scripts-prepend-node-path '
-    : '';
-
-  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+  const npmMajorVersion = getNpmMajorVersion();
 
   return {
     npm: {
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
-      runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
-      runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
+      run: (script: string, args: string) => `npm run ${script} -- ${args}`,
+      runNx: `npx nx`,
+      runNxSilent: `npx nx`,
+      runUninstalledPackage: `npx`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
       createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
+      runUninstalledPackage: 'npx',
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
+    // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
-      runNx: `pnpm run nx --`,
-      runNxSilent: `pnpm run nx --silent --`,
+      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
+      run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
+      runNx: `pnpm exec nx`,
+      runNxSilent: `pnpm exec nx`,
+      runUninstalledPackage: 'pnpm dlx',
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
-  }[packageManager];
+  }[packageManager.trim()];
+}
+
+function getNpmMajorVersion(): string {
+  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+  return npmMajorVersion;
 }
 
 export const packageManagerLockFile = {
@@ -670,4 +799,39 @@ export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
   const result = runCommand(`${list} @angular-devkit/core`);
   expect(result).not.toContain('@angular-devkit/core');
+}
+
+export function expectNoTsJestInJestConfig(appName: string) {
+  const jestConfig = readFile(
+    joinPathFragments('apps', appName, 'jest.config.ts')
+  );
+  expect(jestConfig).not.toContain('ts-jest');
+}
+
+export function waitUntil(
+  predicate: () => boolean,
+  opts: { timeout: number; ms: number; allowError?: boolean } = {
+    timeout: 5000,
+    ms: 50,
+  }
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const t = setInterval(() => {
+      const run = () => {};
+      try {
+        run();
+        if (predicate()) {
+          clearInterval(t);
+          resolve();
+        }
+      } catch (e) {
+        if (opts.allowError) reject(e);
+      }
+    }, opts.ms);
+
+    setTimeout(() => {
+      clearInterval(t);
+      reject(new Error(`Timed out waiting for condition to return true`));
+    }, opts.timeout);
+  });
 }

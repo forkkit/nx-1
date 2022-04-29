@@ -1,18 +1,28 @@
-# Lerna/Yarn and Nx
+# Nx and Yarn/Lerna (Workspaces for Publishing NPM Packages)
 
-Nx has more in common with the build tools used at Google or Facebook (just made a lot more easily accessible for other companies) than with Lerna. When using the word "monorepo" in the context of say Google, we imagine a much richer dev experience, not simply collocating a few projects side-by-side.
+> In our teams we see a shift away from Lerna and a strong preference to use Nx for managing JavaScript-based monorepos.
+> [Thoughtworks Technology Radar 2021](https://www.thoughtworks.com/en-ca/radar/tools/nx)
 
-Lerna/Yarn/PNPM are package managers. When it comes to monorepos, they mainly perform `node_modules` deduping. So the choice isn't really between Nx or Lerna. It's between whether you want to have multiple `node_modules` folders (in this case use Nx with Lerna) or not (use Nx without Lerna).
+- Want to know how to create a **new** Nx workspace and use Lerna/Yarn with it, check out [Using Nx Core Without Plugins](/getting-started/nx-core).
+- Want to add Nx to an existing Lerna/Yarn/PNPM mononorepo, check out [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/migration/adding-to-monorepo).
+- Want to build a publishable TS/JS library, checkout [Nx and TypeScript](/getting-started/nx-and-typescript).
 
-The following video 10-min video walks you through the steps of adding Nx to a Lerna repo and showing many affordances Nx offers. Although the video uses Lerna, everything said applies to Yarn or PNPM. Basically, any time you hear "Lerna" you can substitute it for Yarn or PNPM.
+This guide clarifies some misconceptions about how Nx and Lerna/Yarn relate.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+## Nx and Lerna/Yarn Workspaces
 
-## Clarifying Misconceptions
+Nx has more in common with the build tools used at Google or Facebook (just made a lot more easily accessible for other
+companies) than with tools like Yarn Workspaces or Lerna. When using the word "monorepo" in the context of say Google,
+we imagine a much richer dev experience, not simply collocating a few projects side-by-side.
 
-### Misconception: You have to choose between Nx and Lerna.
+Lerna/Yarn/PNPM are package managers. When it comes to monorepos, they mainly perform `node_modules` deduping. So the
+choice isn't between Nx or Yarn Workspaces. It's between whether you want to have multiple `node_modules` folders (in
+this case use Nx with Yarn Workspaces) or not (use Nx without Yarn Workspaces).
 
-Lerna, Yarn workspaces, pnpm workspaces offer the following affordances for developing multiple projects in the same repo:
+### Misconception: You have to choose between Nx and Yarn Workspaces/Lerna.
+
+Lerna, Yarn workspaces, pnpm workspaces offer the following affordances for developing multiple projects in the same
+repo:
 
 - Deduping node_modules. If I use the same version of say Next.js in all the projects, the package is installed once.
 - Task orchestration. If I want to test all the projects, I can use a single command to do it.
@@ -30,24 +40,31 @@ This is what Nx offers:
 - Consistent dev experience for any framework
 - Automatic upgrade to the latest versions of all frameworks and tools
 
-As you can see, there is basically no overlap. Nx isn't a package manager (it's not a JS-only tool), so deduping `node_modules` isn't in that list. Nx doesn't care whether your repo has multiple node_modules folders or not, and whether you choose to dedup them or not. If you want to use Lerna to dedup `node_modules` in your Nx workspace, you can do it. Many companies do.
+As you can see, there is basically no overlap. Nx isn't a package manager (it's not a JS-only tool),
+so deduping `node_modules` isn't in that list. Nx doesn't care whether your repo has multiple node_modules folders or
+not, or whether you choose to dedupe them or not. In fact, many companies use Nx and Yarn Workspaces together to get
+the benefits of both. If you want to use Yarn Workspaces to dedupe `node_modules` in your Nx workspace, you can do it.
+Many companies do.
 
-What often happens though is when folks adopt Nx, they have better affordances for implementing a single-version policy (why this is a good idea is beyond the scope of this post, but you can read more about why Google does here). But it's important to stress that this isn't required by Nx. It's simply something that Nx can enable you to do at scale.
+What often happens though is when folks adopt Nx, they have better affordances for implementing a single-version
+policy (why this is a good idea is beyond the scope of this post, but you can read more about why Google does [here](https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/fulltext)). But
+it's important to stress that this isn't required by Nx. It's simply something that Nx can enable you to do at scale.
 
-### Misconception: Nx is for apps, Lerna is for libs.
+### Misconception: Nx is only for apps
 
-Although it's true to say that the Nx core doesn't care whether you publish your packages or not, there are Nx plugins (e.g., `@nrwl/node`) that help you bundle and package your modules.
+If you do something well, folks assume that the only thing you can do. Nx is equally suited for publishable npm packages
+as it is for applications.
 
-For instance, the Nx repo itself is built with Nx. It has 2 applications and a few dozen libraries. Those libraries are published to NPM. Many larger organizations using Nx publish a subset of their libraries to their registry.
+For instance, the Nx repo itself is built with Nx. It has 2 applications and a few dozen libraries. Those libraries are
+published to NPM.
+
+### Misconception: Nx is "all-in"
+
+While Nx does have many plugins, each of them is optional. If you check out [Using Nx Core Without Plugins](/getting-started/nx-core), you will see that Nx at its core is very minimal. Much like VS Code, Nx is very minimal but can easily be extended by adding plugins. Saying this is akin to saying that VS Code is "all in". The fullness and richness of the experience depends on how many plugins you choose to use. You could install a lot of Nx Plugins that will do a lot of the heavy lifting in, for instance, connecting your Next.js, Storybook and Cypress. You could but you don't have to.
 
 ### Misconception: Nx is configuration over convention
 
-As you saw in the video, the amount of the generated configuration is small. The `add-nx-to-monorepo` script generates the following per project:
+If you only use Nx core, the only extra piece configuration you get is `nx.json` at the root.
 
-```
-"header": { "type": "library", "root": "packages/header" }
-```
-
-That is it. If you have 200 projects in your workspace, you will see 200 lines specifying projects' roots. Practically everything else you see is optional. You can choose to configure your executors instead of using npm scripts, or configure generator defaults, and so forth. When you configure the @nrwl/web:dev-server executor, though, you aren't just adding a chunk of json config into workspace.json, you are also removing the configuration files you used to implement the same functionality (start scripts, Webpack config files etc.) So the total amount of configuration is decreasing, and, often, by a lot.
-
-We came from Google, so we take the toolability very seriously. Nx plugins provide metadata to be understood by the Nx CLI and editors. The configuration of your workspace is also statically analyzable (in opposite to say the Webpack config files). In addition to enabling good VSCode and WebStorm support, it allows us to update your configuration automatically as you upgrade your version of Nx. Other than the toolability aspect we try to keep the config as short as possible and rely on conventions.
+Everything else you see in guides is optional. You can choose to configure your executors instead of using npm scripts, or configure generator defaults, and so forth. When you configure the `@nrwl/web:dev-server` executor, though, you aren't just adding a chunk of json config into `project.json`, you are also removing the configuration files you used to implement the same functionality (start
+scripts, Webpack config files etc.) So the total amount of configuration is decreasing, and, often, by a lot.

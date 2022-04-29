@@ -1,3 +1,4 @@
+import { ProjectConfiguration } from '@nrwl/devkit';
 import {
   checkFilesExist,
   expectTestsPass,
@@ -5,14 +6,23 @@ import {
   killPorts,
   newProject,
   readJson,
+  readProjectConfig,
   runCLI,
   runCLIAsync,
   uniq,
-  workspaceConfigName,
+  updateFile,
+  createFile,
+  readFile,
+  removeFile,
 } from '@nrwl/e2e/utils';
 
+import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
+
 describe('Nx Plugin', () => {
-  beforeEach(() => newProject());
+  let npmScope: string;
+  beforeEach(() => {
+    npmScope = newProject();
+  });
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
@@ -38,17 +48,15 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/src/executors/build/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/build/schema.json`
     );
-    const nxJson = readJson('nx.json');
-    expect(nxJson).toMatchObject({
-      projects: expect.objectContaining({
-        [plugin]: {
-          tags: [],
-        },
-        [`${plugin}-e2e`]: {
-          tags: [],
-          implicitDependencies: [`${plugin}`],
-        },
-      }),
+    const project = readJson(`libs/${plugin}/project.json`);
+    expect(project).toMatchObject({
+      tags: [],
+    });
+    const e2eProject = readJson(`apps/${plugin}-e2e/project.json`);
+
+    expect(e2eProject).toMatchObject({
+      tags: [],
+      implicitDependencies: [`${plugin}`],
     });
   }, 90000);
 
@@ -62,7 +70,7 @@ describe('Nx Plugin', () => {
 
     if (isNotWindows()) {
       const e2eResults = runCLI(`e2e ${plugin}-e2e`);
-      expect(e2eResults).toContain('Running target "e2e" succeeded');
+      expect(e2eResults).toContain('Successfully ran target e2e');
       expect(await killPorts()).toBeTruthy();
     }
   }, 250000);
@@ -73,7 +81,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nrwl/nx-plugin:migration --project=${plugin} --version=${version} --packageJsonUpdates=false`
+      `generate @nrwl/nx-plugin:migration --project=${plugin} --packageVersion=${version} --packageJsonUpdates=false`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -142,7 +150,9 @@ describe('Nx Plugin', () => {
     const executor = uniq('executor');
 
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-    runCLI(`generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`);
+    runCLI(
+      `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin} --includeHasher`
+    );
 
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -155,16 +165,19 @@ describe('Nx Plugin', () => {
       `libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `libs/${plugin}/src/executors/${executor}/schema.json`,
       `libs/${plugin}/src/executors/${executor}/executor.ts`,
+      `libs/${plugin}/src/executors/${executor}/hasher.ts`,
       `libs/${plugin}/src/executors/${executor}/executor.spec.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.json`,
-      `dist/libs/${plugin}/src/executors/${executor}/executor.js`
+      `dist/libs/${plugin}/src/executors/${executor}/executor.js`,
+      `dist/libs/${plugin}/src/executors/${executor}/hasher.js`
     );
     const executorsJson = readJson(`libs/${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
       executors: expect.objectContaining({
         [executor]: {
           implementation: `./src/executors/${executor}/executor`,
+          hasher: `./src/executors/${executor}/hasher`,
           schema: `./src/executors/${executor}/schema.json`,
           description: `${executor} executor`,
         },
@@ -172,29 +185,115 @@ describe('Nx Plugin', () => {
     });
   }, 90000);
 
+  describe('local plugins', () => {
+    const plugin = uniq('plugin');
+    beforeEach(() => {
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    });
+
+    it('should be able to infer projects and targets', async () => {
+      // Cache workspace json, to test inference and restore afterwards
+      const workspaceJsonContents = readFile('workspace.json');
+      removeFile('workspace.json');
+
+      // Setup project inference + target inference
+      updateFile(
+        `libs/${plugin}/src/index.ts`,
+        `import {basename} from 'path'
+  
+  export function registerProjectTargets(f) {
+    if (basename(f) === 'my-project-file') {
+      return {
+        build: {
+          executor: "@nrwl/workspace:run-commands",
+          options: {
+            command: "echo 'custom registered target'"
+          }
+        }
+      }
+    }
+  }
+  
+  export const projectFilePatterns = ['my-project-file'];
+  `
+      );
+
+      // Register plugin in nx.json (required for inference)
+      updateFile(`nx.json`, (nxJson) => {
+        const nx = JSON.parse(nxJson);
+        nx.plugins = [`@${npmScope}/${plugin}`];
+        return JSON.stringify(nx, null, 2);
+      });
+
+      // Create project that should be inferred by Nx
+      const inferredProject = uniq('inferred');
+      createFile(`libs/${inferredProject}/my-project-file`);
+
+      // Attempt to use inferred project w/ Nx
+      expect(runCLI(`build ${inferredProject}`)).toContain(
+        'custom registered target'
+      );
+
+      // Restore workspace.json
+      createFile('workspace.json', workspaceJsonContents);
+    });
+
+    it('should be able to use local generators and executors', async () => {
+      const generator = uniq('generator');
+      const executor = uniq('executor');
+      const generatedProject = uniq('project');
+
+      runCLI(
+        `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
+      );
+
+      runCLI(
+        `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`
+      );
+
+      updateFile(
+        `libs/${plugin}/src/executors/${executor}/executor.ts`,
+        ASYNC_GENERATOR_EXECUTOR_CONTENTS
+      );
+
+      runCLI(
+        `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
+      );
+
+      updateFile(`libs/${generatedProject}/project.json`, (f) => {
+        const project: ProjectConfiguration = JSON.parse(f);
+        project.targets['execute'] = {
+          executor: `@${npmScope}/${plugin}:${executor}`,
+        };
+        return JSON.stringify(project, null, 2);
+      });
+
+      expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
+      expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
+    });
+  });
+
   describe('--directory', () => {
     it('should create a plugin in the specified directory', () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir`
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir `
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
-      const workspace = readJson(workspaceConfigName());
-      expect(workspace.projects[`subdir-${plugin}`]).toBeTruthy();
-      expect(workspace.projects[`subdir-${plugin}`].root).toBe(
-        `libs/subdir/${plugin}`
-      );
-      expect(workspace.projects[`subdir-${plugin}-e2e`]).toBeTruthy();
+      const pluginProject = readProjectConfig(`subdir-${plugin}`);
+      const pluginE2EProject = readProjectConfig(`subdir-${plugin}-e2e`);
+      expect(pluginProject.targets).toBeDefined();
+      expect(pluginE2EProject).toBeTruthy();
     }, 90000);
   });
   describe('--tags', () => {
-    it('should add tags to nx.json', async () => {
+    it('should add tags to workspace.json', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage`
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
-      const nxJson = readJson('nx.json');
-      expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
+      const pluginProject = readProjectConfig(plugin);
+      expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
   });
 });

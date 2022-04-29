@@ -2,14 +2,14 @@
 
 exports[`preset should create files (preset = angular) 1`] = `
 Array [
-  "src",
-  "tsconfig.editor.json",
-  "tsconfig.json",
   ".browserslistrc",
   "tsconfig.app.json",
   "tsconfig.spec.json",
+  "src",
+  "tsconfig.editor.json",
+  "tsconfig.json",
   ".eslintrc.json",
-  "jest.config.js",
+  "jest.config.ts",
 ]
 `;
 
@@ -34,5 +34,6 @@ Array [
   "app.component.html",
   "app.component.spec.ts",
   "app.component.ts",
+  "nx-welcome.component.ts",
 ]
 `;

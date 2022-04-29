@@ -1,3 +1,10 @@
+import type {
+  CustomTransformerFactory,
+  Node,
+  Program,
+  TransformerFactory as TypescriptTransformerFactory,
+} from 'typescript';
+
 export interface FileReplacement {
   replace: string;
   with: string;
@@ -15,6 +22,43 @@ export interface SourceMapOptions {
   hidden: boolean;
 }
 
+type TransformerFactory =
+  | TypescriptTransformerFactory<Node>
+  | CustomTransformerFactory;
+
+export interface TransformerPlugin {
+  name: string;
+  options: Record<string, unknown>;
+}
+
+export type TransformerEntry = string | TransformerPlugin;
+
+export interface CompilerPlugin {
+  before?: (
+    options?: Record<string, unknown>,
+    program?: Program
+  ) => TransformerFactory;
+  after?: (
+    options?: Record<string, unknown>,
+    program?: Program
+  ) => TransformerFactory;
+  afterDeclarations?: (
+    options?: Record<string, unknown>,
+    program?: Program
+  ) => TransformerFactory;
+}
+
+export interface CompilerPluginHooks {
+  beforeHooks: Array<(program?: Program) => TransformerFactory>;
+  afterHooks: Array<(program?: Program) => TransformerFactory>;
+  afterDeclarationsHooks: Array<(program?: Program) => TransformerFactory>;
+}
+
+export interface AdditionalEntryPoint {
+  entryName: string;
+  entryPath: string;
+}
+
 export interface BuildBuilderOptions {
   main: string;
   outputPath: string;
@@ -22,7 +66,6 @@ export interface BuildBuilderOptions {
   watch?: boolean;
   sourceMap?: boolean | SourceMapOptions;
   optimization?: boolean | OptimizationOptions;
-  showCircularDependencies?: boolean;
   maxWorkers?: number;
   memoryLimit?: number;
   poll?: number;
@@ -40,6 +83,11 @@ export interface BuildBuilderOptions {
   root?: string;
   sourceRoot?: string;
   projectRoot?: string;
+
+  transformers?: TransformerEntry[];
+
+  additionalEntryPoints?: AdditionalEntryPoint[];
+  outputFileName?: string;
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {

@@ -18,18 +18,17 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import { parseJson, serializeJson } from '@nrwl/devkit';
-import { getWorkspacePath } from './cli-config-utils';
 import {
-  createProjectGraph,
-  onlyWorkspaceProjects,
-} from '../core/project-graph';
-import { FileData } from '../core/file-utils';
+  parseJson,
+  ProjectConfiguration,
+  serializeJson,
+  FileData,
+} from '@nrwl/devkit';
+import { getWorkspacePath } from './cli-config-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import type {
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
-  ProjectGraph,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from '../utilities/typescript/find-nodes';
@@ -363,25 +362,6 @@ export function readJsonInTree<T extends object = any>(
 
 // TODO(v13): remove this deprecated method
 /**
- * @deprecated This method is deprecated and `{@link onlyWorkspaceProjects}(await {@link createProjectGraphAsync}())` should be used instead.
- * Method for utilizing the project graph in schematics
- */
-export function getProjectGraphFromHost(host: Tree): ProjectGraph {
-  return onlyWorkspaceProjects(
-    createProjectGraph(undefined, undefined, undefined, '3.0')
-  );
-}
-
-// TODO(v13): remove this deprecated method
-/**
- * @deprecated This method is deprecated and `await {@link createProjectGraphAsync}()` should be used instead
- */
-export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
-  return createProjectGraph(undefined, undefined, undefined, '3.0');
-}
-
-// TODO(v13): remove this deprecated method
-/**
  * @deprecated This method is deprecated
  */
 export function getFileDataInHost(host: Tree, path: Path): FileData {
@@ -479,19 +459,6 @@ export function updateNxJsonInTree(
     );
     return host;
   };
-}
-
-export function addProjectToNxJsonInTree(
-  projectName: string,
-  options: NxJsonProjectConfiguration
-): Rule {
-  const defaultOptions = {
-    tags: [],
-  };
-  return updateNxJsonInTree((json) => {
-    json.projects[projectName] = { ...defaultOptions, ...options };
-    return json;
-  });
 }
 
 export function readWorkspace(host: Tree): any {

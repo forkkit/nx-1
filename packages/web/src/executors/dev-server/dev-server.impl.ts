@@ -1,26 +1,24 @@
+import * as webpack from 'webpack';
 import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-  joinPathFragments,
 } from '@nrwl/devkit';
 
 import { eachValueFrom } from 'rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import * as WebpackDevServer from 'webpack-dev-server';
-import {
-  getEmittedFiles,
-  runWebpackDevServer,
-} from '@nrwl/workspace/src/utilities/run-webpack';
 
 import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { WebBuildBuilderOptions } from '../build/build.impl';
+import { WebWebpackExecutorOptions } from '../webpack/webpack.impl';
 import { getDevServerConfig } from '../../utils/devserver.config';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
+import { getEmittedFiles, runWebpackDevServer } from '../../utils/run-webpack';
+import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 
 export interface WebDevServerOptions {
   host: string;
@@ -45,47 +43,58 @@ export default async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
-  const { webpack } = require('../../webpack/entry');
-  const sourceRoot = context.workspace.projects[context.projectName].sourceRoot;
+  const { root: projectRoot, sourceRoot } =
+    context.workspace.projects[context.projectName];
   const buildOptions = normalizeWebBuildOptions(
     getBuildOptions(serveOptions, context),
     context.root,
     sourceRoot
   );
-  let webpackConfig = getDevServerConfig(
-    context.root,
-    sourceRoot,
-    buildOptions,
-    serveOptions
-  );
-
-  if (buildOptions.webpackConfig) {
-    webpackConfig = require(buildOptions.webpackConfig)(webpackConfig, {
-      buildOptions,
-      configuration: serveOptions.buildTarget.split(':')[2],
-    });
-  }
 
   if (!buildOptions.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph('4.0'),
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       'build', // should be generalized
       context.configurationName
     );
     buildOptions.tsConfig = createTmpTsConfig(
-      joinPathFragments(context.root, buildOptions.tsConfig),
+      buildOptions.tsConfig,
       context.root,
       target.data.root,
       dependencies
     );
   }
 
+  let webpackConfig = getDevServerConfig(
+    context.root,
+    projectRoot,
+    sourceRoot,
+    buildOptions,
+    serveOptions
+  );
+
+  if (buildOptions.webpackConfig) {
+    let customWebpack = resolveCustomWebpackConfig(
+      buildOptions.webpackConfig,
+      buildOptions.tsConfig
+    );
+
+    if (typeof customWebpack.then === 'function') {
+      customWebpack = await customWebpack;
+    }
+
+    webpackConfig = customWebpack(webpackConfig, {
+      buildOptions,
+      configuration: serveOptions.buildTarget.split(':')[2],
+    });
+  }
+
   return yield* eachValueFrom(
     runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
-        console.info(stats.toString(webpackConfig.stats));
+        console.info(stats.toString((webpackConfig as any).stats));
       }),
       map(({ baseUrl, stats }) => {
         return {
@@ -101,9 +110,13 @@ export default async function* devServerExecutor(
 function getBuildOptions(
   options: WebDevServerOptions,
   context: ExecutorContext
-): WebBuildBuilderOptions {
+): WebWebpackExecutorOptions {
   const target = parseTargetString(options.buildTarget);
-  const overrides: Partial<WebBuildBuilderOptions> = {
+
+  // TODO(jack): [Nx 14] Remove this line once we generate `development` configuration by default + add migration for it if missing
+  target.configuration ??= '';
+
+  const overrides: Partial<WebWebpackExecutorOptions> = {
     watch: false,
   };
   if (options.maxWorkers) {

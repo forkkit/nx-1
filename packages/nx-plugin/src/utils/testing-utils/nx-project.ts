@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { workspaceRoot } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   readJsonFile,
@@ -14,7 +14,7 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   const localTmpDir = dirname(tmpProjPath());
   return execSync(
     `node ${require.resolve(
-      '@nrwl/tao'
+      'nx'
     )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
       args || ''
     }`,
@@ -31,7 +31,7 @@ export function patchPackageJsonForPlugin(
 ) {
   const path = tmpProjPath('package.json');
   const json = readJsonFile(path);
-  json.devDependencies[npmPackageName] = `file:${appRootPath}/${distPath}`;
+  json.devDependencies[npmPackageName] = `file:${workspaceRoot}/${distPath}`;
   writeJsonFile(path, json);
 }
 

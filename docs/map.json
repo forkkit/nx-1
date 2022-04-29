@@ -1,6 +1,7 @@
 [
   {
-    "id": "angular",
+    "name": "default",
+    "id": "default",
     "itemList": [
       {
         "name": "Getting Started",
@@ -9,107 +10,115 @@
           {
             "name": "Intro to Nx",
             "id": "intro",
-            "file": "angular/getting-started/intro"
+            "file": "shared/getting-started/intro"
           },
           {
             "name": "Nx Setup",
             "id": "nx-setup",
-            "file": "angular/getting-started/nx-setup"
+            "file": "shared/getting-started/nx-setup"
           },
           {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "angular/getting-started/nx-cli"
+            "name": "Nx Without Plugins",
+            "id": "nx-core",
+            "file": "shared/nx-core"
           },
           {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
+          },
+          {
+            "name": "Nx and React",
+            "id": "nx-and-react",
+            "file": "shared/getting-started/nx-and-react"
+          },
+          {
+            "name": "Nx and Angular",
+            "id": "nx-and-angular",
+            "file": "shared/getting-started/nx-and-angular"
           }
         ]
       },
       {
-        "name": "Tutorial",
-        "id": "tutorial",
+        "name": "Configuration Choices",
+        "id": "configuration",
         "itemList": [
           {
-            "name": "1 - Create Application",
-            "id": "01-create-application"
+            "name": "package.json and nx.json",
+            "id": "packagejson",
+            "file": "shared/configuration/packagejson"
           },
           {
-            "name": "2 - Add E2E Test",
-            "id": "02-add-e2e-test"
-          },
-          {
-            "name": "3 - Display Todos",
-            "id": "03-display-todos"
-          },
-          {
-            "name": "4 - Connect to API",
-            "id": "04-connect-to-api"
-          },
-          {
-            "name": "5 - Add Node Application",
-            "id": "05-add-node-app"
-          },
-          {
-            "name": "6 - Configure Proxy",
-            "id": "06-proxy"
-          },
-          {
-            "name": "7 - Share Code",
-            "id": "07-share-code"
-          },
-          {
-            "name": "8 - Create Libraries",
-            "id": "08-create-libs"
-          },
-          {
-            "name": "9 - Dep Graph",
-            "id": "09-dep-graph"
-          },
-          {
-            "name": "10 - Use Computation Caching",
-            "id": "10-computation-caching"
-          },
-          {
-            "name": "11 - Test Affected Projects",
-            "id": "11-test-affected-projects"
-          },
-          {
-            "name": "12 - Summary",
-            "id": "12-summary"
+            "name": "project.json and nx.json",
+            "id": "projectjson",
+            "file": "shared/configuration/projectjson"
           }
         ]
       },
       {
         "name": "Using Nx",
-        "id": "core-concepts",
+        "id": "using-nx",
         "itemList": [
+          {
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "shared/using-nx/nx-cli"
+          },
+          {
+            "name": "Nx Editor Plugins",
+            "id": "console",
+            "file": "shared/console"
+          },
           {
             "name": "Mental Model",
             "id": "mental-model",
             "file": "shared/mental-model"
           },
           {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "angular/guides/configuration"
+            "name": "Computation Caching",
+            "id": "caching",
+            "file": "shared/using-nx/caching"
           },
           {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
+            "name": "Distributed Task Execution",
+            "id": "dte",
+            "file": "shared/using-nx/dte"
           },
           {
-            "name": "Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
+            "name": "Affected",
+            "id": "affected",
+            "file": "shared/using-nx/affected"
+          },
+          {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
           },
           {
             "name": "Updating Nx",
             "id": "updating-nx",
-            "file": "angular/guides/update"
+            "file": "shared/update"
+          }
+        ]
+      },
+      {
+        "name": "Extending Nx",
+        "id": "extending-nx",
+        "itemList": [
+          {
+            "name": "Nx Plugins and Devkit",
+            "id": "nx-devkit",
+            "file": "shared/extending-nx/devkit-and-nx-plugins"
+          },
+          {
+            "name": "Project Inference Plugins",
+            "id": "project-inference-plugins",
+            "file": "shared/extending-nx/project-inference-plugins"
+          },
+          {
+            "name": "Project Graph Plugins",
+            "id": "project-graph-plugins",
+            "file": "shared/extending-nx/project-graph-plugins"
           }
         ]
       },
@@ -118,17 +127,9 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
-            "name": "From Angular CLI",
-            "id": "migration-angular"
-          },
-          {
-            "name": "From AngularJS",
-            "id": "migration-angularjs"
+            "name": "From CRA",
+            "id": "migration-cra",
+            "file": "shared/migration/migration-cra"
           },
           {
             "name": "Lerna/Yarn/PNPM",
@@ -136,9 +137,238 @@
             "file": "shared/migration/adding-to-monorepo"
           },
           {
+            "name": "From Angular CLI",
+            "id": "migration-angular",
+            "file": "shared/migration/migration-angular"
+          },
+          {
+            "name": "From AngularJS",
+            "id": "migration-angularjs",
+            "file": "shared/migration/migration-angularjs"
+          },
+          {
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
+          }
+        ]
+      },
+      {
+        "name": "Core Tutorial",
+        "id": "core-tutorial",
+        "itemList": [
+          {
+            "name": "1 - Create Blog",
+            "id": "01-create-blog",
+            "file": "shared/core-tutorial/01-create-blog"
+          },
+          {
+            "name": "2 - Create CLI",
+            "id": "02-create-cli",
+            "file": "shared/core-tutorial/02-create-cli"
+          },
+          {
+            "name": "3 - Share Assets",
+            "id": "03-share-assets",
+            "file": "shared/core-tutorial/03-share-assets"
+          },
+          {
+            "name": "4 - Build Affected Projects",
+            "id": "04-build-affected-projects",
+            "file": "shared/core-tutorial/04-build-affected-projects"
+          },
+          {
+            "name": "5 - Automatically Detect Dependencies",
+            "id": "05-auto-detect-dependencies",
+            "file": "shared/core-tutorial/05-auto-detect-dependencies"
+          },
+          {
+            "name": "6 - Summary",
+            "id": "06-summary",
+            "file": "shared/core-tutorial/06-summary"
+          }
+        ]
+      },
+      {
+        "name": "React Tutorial",
+        "id": "react-tutorial",
+        "itemList": [
+          {
+            "name": "1 - Create Application",
+            "id": "01-create-application",
+            "file": "shared/react-tutorial/01-create-application"
+          },
+          {
+            "name": "2 - Add E2E Test",
+            "id": "02-add-e2e-test",
+            "file": "shared/react-tutorial/02-add-e2e-test"
+          },
+          {
+            "name": "3 - Display Todos",
+            "id": "03-display-todos",
+            "file": "shared/react-tutorial/03-display-todos"
+          },
+          {
+            "name": "4 - Connect to API",
+            "id": "04-connect-to-api",
+            "file": "shared/react-tutorial/04-connect-to-api"
+          },
+          {
+            "name": "5 - Add Node Application",
+            "id": "05-add-node-app",
+            "file": "shared/react-tutorial/05-add-node-app"
+          },
+          {
+            "name": "6 - Proxy Configuration",
+            "id": "06-proxy",
+            "file": "shared/react-tutorial/06-proxy"
+          },
+          {
+            "name": "7 - Share Code",
+            "id": "07-share-code",
+            "file": "shared/react-tutorial/07-share-code"
+          },
+          {
+            "name": "8 - Create Libraries",
+            "id": "08-create-libs",
+            "file": "shared/react-tutorial/08-create-libs"
+          },
+          {
+            "name": "9 - Project Graph",
+            "id": "09-dep-graph",
+            "file": "shared/react-tutorial/09-dep-graph"
+          },
+          {
+            "name": "10 - Use Computation Caching",
+            "id": "10-computation-caching",
+            "file": "shared/react-tutorial/10-computation-caching"
+          },
+          {
+            "name": "11 - Test Affected Projects",
+            "id": "11-test-affected-projects",
+            "file": "shared/react-tutorial/11-test-affected-projects"
+          },
+          {
+            "name": "12 - Summary",
+            "id": "12-summary",
+            "file": "shared/react-tutorial/12-summary"
+          }
+        ]
+      },
+      {
+        "name": "Angular Tutorial",
+        "id": "angular-tutorial",
+        "itemList": [
+          {
+            "name": "1 - Create Application",
+            "id": "01-create-application",
+            "file": "shared/angular-tutorial/01-create-application"
+          },
+          {
+            "name": "2 - Add E2E Test",
+            "id": "02-add-e2e-test",
+            "file": "shared/angular-tutorial/02-add-e2e-test"
+          },
+          {
+            "name": "3 - Display Todos",
+            "id": "03-display-todos",
+            "file": "shared/angular-tutorial/03-display-todos"
+          },
+          {
+            "name": "4 - Connect to API",
+            "id": "04-connect-to-api",
+            "file": "shared/angular-tutorial/04-connect-to-api"
+          },
+          {
+            "name": "5 - Add Node Application",
+            "id": "05-add-node-app",
+            "file": "shared/angular-tutorial/05-add-node-app"
+          },
+          {
+            "name": "6 - Proxy Configuration",
+            "id": "06-proxy",
+            "file": "shared/angular-tutorial/06-proxy"
+          },
+          {
+            "name": "7 - Share Code",
+            "id": "07-share-code",
+            "file": "shared/angular-tutorial/07-share-code"
+          },
+          {
+            "name": "8 - Create Libraries",
+            "id": "08-create-libs",
+            "file": "shared/angular-tutorial/08-create-libs"
+          },
+          {
+            "name": "9 - Project Graph",
+            "id": "09-dep-graph",
+            "file": "shared/angular-tutorial/09-dep-graph"
+          },
+          {
+            "name": "10 - Use Computation Caching",
+            "id": "10-computation-caching",
+            "file": "shared/angular-tutorial/10-computation-caching"
+          },
+          {
+            "name": "11 - Test Affected Projects",
+            "id": "11-test-affected-projects",
+            "file": "shared/angular-tutorial/11-test-affected-projects"
+          },
+          {
+            "name": "12 - Summary",
+            "id": "12-summary",
+            "file": "shared/angular-tutorial/12-summary"
+          }
+        ]
+      },
+      {
+        "name": "Node Tutorial",
+        "id": "node-tutorial",
+        "itemList": [
+          {
+            "name": "1 - Create Application",
+            "id": "01-create-application",
+            "file": "shared/node-tutorial/01-create-application"
+          },
+          {
+            "name": "2 - Display Todos",
+            "id": "02-display-todos",
+            "file": "shared/node-tutorial/02-display-todos"
+          },
+          {
+            "name": "3 - Share Code",
+            "id": "03-share-code",
+            "file": "shared/node-tutorial/03-share-code"
+          },
+          {
+            "name": "4 - Create Libraries",
+            "id": "04-create-libs",
+            "file": "shared/node-tutorial/04-create-libs"
+          },
+          {
+            "name": "5 - Project Graph",
+            "id": "05-dep-graph",
+            "file": "shared/node-tutorial/05-dep-graph"
+          },
+          {
+            "name": "6 - Use Computation Caching",
+            "id": "06-computation-caching",
+            "file": "shared/node-tutorial/06-computation-caching"
+          },
+          {
+            "name": "7 - Test Affected Projects",
+            "id": "07-test-affected-projects",
+            "file": "shared/node-tutorial/07-test-affected-projects"
+          },
+          {
+            "name": "8 - Summary",
+            "id": "08-summary",
+            "file": "shared/node-tutorial/08-summary"
           }
         ]
       },
@@ -147,150 +377,86 @@
         "id": "cli",
         "itemList": [
           {
+            "name": "create-nx-workspace",
+            "id": "create-nx-workspace",
+            "file": "generated/cli/create-nx-workspace"
+          },
+          {
             "name": "generate",
             "id": "generate",
-            "file": "angular/cli/generate"
+            "file": "generated/cli/generate"
           },
-          {
-            "name": "serve",
-            "id": "serve",
-            "file": "angular/cli/serve"
-          },
-          {
-            "name": "build",
-            "id": "build",
-            "file": "angular/cli/build"
-          },
-          {
-            "name": "test",
-            "id": "test",
-            "file": "angular/cli/test"
-          },
-          {
-            "name": "lint",
-            "id": "lint",
-            "file": "angular/cli/lint"
-          },
-          {
-            "name": "e2e",
-            "id": "e2e",
-            "file": "angular/cli/e2e"
-          },
-          {
-            "name": "run",
-            "id": "run",
-            "file": "angular/cli/run"
-          },
-          {
-            "name": "daemon:start",
-            "id": "daemon:start",
-            "file": "angular/cli/daemon-start"
-          },
-          {
-            "name": "daemon:stop",
-            "id": "daemon:stop",
-            "file": "angular/cli/daemon-stop"
-          },
-          {
-            "name": "dep-graph",
-            "id": "dep-graph",
-            "file": "angular/cli/dep-graph"
-          },
+          { "name": "serve", "id": "serve", "file": "generated/cli/serve" },
+          { "name": "build", "id": "build", "file": "generated/cli/build" },
+          { "name": "test", "id": "test", "file": "generated/cli/test" },
+          { "name": "lint", "id": "lint", "file": "generated/cli/lint" },
+          { "name": "e2e", "id": "e2e", "file": "generated/cli/e2e" },
+          { "name": "run", "id": "run", "file": "generated/cli/run" },
+          { "name": "daemon", "id": "daemon", "file": "generated/cli/daemon" },
+          { "name": "graph", "id": "dep-graph", "file": "generated/cli/graph" },
           {
             "name": "run-many",
             "id": "run-many",
-            "file": "angular/cli/run-many"
+            "file": "generated/cli/run-many"
           },
           {
             "name": "affected",
             "id": "affected",
-            "file": "angular/cli/affected"
+            "file": "generated/cli/affected"
           },
           {
-            "name": "affected:build",
-            "id": "affected-build",
-            "file": "angular/cli/affected-build"
-          },
-          {
-            "name": "affected:test",
-            "id": "affected-test",
-            "file": "angular/cli/affected-test"
-          },
-          {
-            "name": "affected:lint",
-            "id": "affected-lint",
-            "file": "angular/cli/affected-lint"
-          },
-          {
-            "name": "affected:e2e",
-            "id": "affected-e2e",
-            "file": "angular/cli/affected-e2e"
-          },
-          {
-            "name": "affected:dep-graph",
+            "name": "affected:graph",
             "id": "affected-dep-graph",
-            "file": "angular/cli/affected-dep-graph"
+            "file": "generated/cli/affected-graph"
           },
           {
             "name": "affected:apps",
             "id": "affected-apps",
-            "file": "angular/cli/affected-apps"
+            "file": "generated/cli/affected-apps"
           },
           {
             "name": "affected:libs",
             "id": "affected-libs",
-            "file": "angular/cli/affected-libs"
+            "file": "generated/cli/affected-libs"
           },
           {
             "name": "print-affected",
             "id": "print-affected",
-            "file": "angular/cli/print-affected"
+            "file": "generated/cli/print-affected"
           },
           {
             "name": "format:check",
             "id": "format-check",
-            "file": "angular/cli/format-check"
+            "file": "generated/cli/format-check"
           },
           {
             "name": "format:write",
             "id": "format-write",
-            "file": "angular/cli/format-write"
+            "file": "generated/cli/format-write"
           },
           {
             "name": "migrate",
             "id": "migrate",
-            "file": "angular/cli/migrate"
+            "file": "generated/cli/migrate"
           },
-          {
-            "name": "report",
-            "id": "report",
-            "file": "angular/cli/report"
-          },
-          {
-            "name": "list",
-            "id": "list",
-            "file": "angular/cli/list"
-          },
+          { "name": "report", "id": "report", "file": "generated/cli/report" },
+          { "name": "list", "id": "list", "file": "generated/cli/list" },
           {
             "name": "workspace-lint",
             "id": "workspace-lint",
-            "file": "angular/cli/workspace-lint"
+            "file": "generated/cli/workspace-lint"
           },
           {
             "name": "workspace-generator",
             "id": "workspace-generator",
-            "file": "angular/cli/workspace-generator"
+            "file": "generated/cli/workspace-generator"
           },
           {
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
-            "file": "angular/cli/connect-to-nx-cloud"
+            "file": "generated/cli/connect-to-nx-cloud"
           },
-          {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "angular/cli/clear-cache"
-          }
+          { "name": "reset", "id": "reset", "file": "generated/cli/reset" }
         ]
       },
       {
@@ -300,53 +466,88 @@
           {
             "id": "nrwl-workspace-overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/workspace Overview",
             "file": "shared/workspace-plugin"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "angular/api-workspace/generators/library"
+            "path": "/packages/workspace/generators/library"
+          },
+          {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "path": "/packages/workspace/generators/npm-package"
           },
           {
             "name": "move generator",
             "id": "move",
-            "file": "angular/api-workspace/generators/move"
+            "path": "/packages/workspace/generators/move"
           },
           {
             "name": "remove generator",
             "id": "remove",
-            "file": "angular/api-workspace/generators/remove"
+            "path": "/packages/workspace/generators/remove"
           },
           {
             "name": "run-commands generator",
             "id": "run-commands-generator",
-            "file": "angular/api-workspace/generators/run-commands"
+            "path": "/packages/workspace/generators/run-commands"
           },
           {
             "name": "workspace-generator generator",
             "id": "workspace-generator",
-            "file": "angular/api-workspace/generators/workspace-generator"
+            "path": "/packages/workspace/generators/workspace-generator"
+          },
+          {
+            "name": "ci-workflow generator",
+            "id": "ci-workflow-generator",
+            "path": "/packages/workspace/generators/ci-workflow"
           },
           {
             "name": "convert-to-nx-project generator",
             "id": "convert-to-nx-project-generator",
-            "file": "angular/api-workspace/generators/convert-to-nx-project"
+            "path": "/packages/workspace/generators/convert-to-nx-project"
           },
           {
             "name": "run-commands executor",
             "id": "run-commands-executor",
-            "file": "angular/api-workspace/executors/run-commands"
+            "path": "/packages/workspace/executors/run-commands"
           },
           {
             "name": "run-script executor",
             "id": "run-script",
-            "file": "angular/api-workspace/executors/run-script"
+            "path": "/packages/workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/js-plugin"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "path": "/packages/js/generators/library"
+          },
+          {
+            "name": "convert-to-swc generator",
+            "id": "convert-to-swc",
+            "path": "/packages/js/generators/convert-to-swc"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "angular/api-workspace/executors/tsc"
+            "path": "/packages/js/executors/tsc"
+          },
+          {
+            "name": "swc executor",
+            "id": "swc",
+            "path": "/packages/js/executors/swc"
           }
         ]
       },
@@ -357,38 +558,32 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/web Overview",
             "file": "shared/web-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-web/generators/application"
+            "path": "/packages/web/generators/application"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "angular/api-web/executors/build"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "angular/api-web/generators/migrate-to-webpack-5"
+            "path": "/packages/web/executors/webpack"
           },
           {
             "name": "dev-server executor",
             "id": "dev-server",
-            "file": "angular/api-web/executors/dev-server"
+            "path": "/packages/web/executors/dev-server"
           },
           {
             "name": "file-server executor",
             "id": "file-server",
-            "file": "angular/api-web/executors/file-server"
+            "path": "/packages/web/executors/file-server"
           },
           {
             "name": "package executor",
             "id": "package",
-            "file": "angular/api-web/executors/package"
+            "path": "/packages/web/executors/rollup"
           }
         ]
       },
@@ -399,108 +594,142 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/angular Overview",
             "file": "shared/angular-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-angular/generators/application"
+            "path": "/packages/angular/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "path": "/packages/angular/generators/component"
           },
           {
             "name": "convert-tslint-to-eslint",
             "id": "convert-tslint-to-eslint",
-            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+            "path": "/packages/angular/generators/convert-tslint-to-eslint"
           },
           {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
-            "file": "angular/api-angular/generators/downgrade-module"
+            "path": "/packages/angular/generators/downgrade-module"
           },
           {
             "name": "karma generator",
             "id": "karma",
-            "file": "angular/api-angular/generators/karma"
+            "path": "/packages/angular/generators/karma"
           },
           {
             "name": "karma-project generator",
             "id": "karma-project",
-            "file": "angular/api-angular/generators/karma-project"
+            "path": "/packages/angular/generators/karma-project"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "angular/api-angular/generators/library"
+            "path": "/packages/angular/generators/library"
+          },
+          {
+            "name": "library-secondary-entry-point generator",
+            "id": "library-secondary-entry-point",
+            "path": "/packages/angular/generators/library-secondary-entry-point"
+          },
+          {
+            "name": "mfe-host generator",
+            "id": "mfe-host",
+            "path": "/packages/angular/generators/mfe-host"
+          },
+          {
+            "name": "mfe-remote generator",
+            "id": "mfe-remote",
+            "path": "/packages/angular/generators/mfe-remote"
           },
           {
             "name": "move generator",
             "id": "move",
-            "file": "angular/api-angular/generators/move"
+            "path": "/packages/angular/generators/move"
+          },
+          {
+            "name": "convert-to-with-mf generator",
+            "id": "convert-to-with-mf",
+            "path": "/packages/angular/generators/convert-to-with-mf"
           },
           {
             "name": "ngrx generator",
             "id": "ngrx",
-            "file": "angular/api-angular/generators/ngrx"
+            "path": "/packages/angular/generators/ngrx"
+          },
+          {
+            "name": "scam generator",
+            "id": "scam",
+            "path": "/packages/angular/generators/scam"
+          },
+          {
+            "name": "scam-directive generator",
+            "id": "scam-directive",
+            "path": "/packages/angular/generators/scam-directive"
+          },
+          {
+            "name": "scam-pipe generator",
+            "id": "scam-pipe",
+            "path": "/packages/angular/generators/scam-pipe"
           },
           {
             "name": "setup-mfe generator",
             "id": "setup-mfe",
-            "file": "angular/api-angular/generators/setup-mfe"
+            "path": "/packages/angular/generators/setup-mfe"
+          },
+          {
+            "name": "setup-tailwind generator",
+            "id": "setup-tailwind",
+            "path": "/packages/angular/generators/setup-tailwind"
           },
           {
             "name": "stories generator",
             "id": "stories",
-            "file": "angular/api-angular/generators/stories"
+            "path": "/packages/angular/generators/stories"
           },
           {
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
-            "file": "angular/api-angular/generators/storybook-configuration"
-          },
-          {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "file": "angular/api-angular/generators/storybook-migrate-defaults-5-to-6"
-          },
-          {
-            "name": "storybook-migrate-stories-to-6-2 generator",
-            "id": "storybook-migrate-stories-to-6-2",
-            "file": "angular/api-angular/generators/storybook-migrate-stories-to-6-2"
+            "path": "/packages/angular/generators/storybook-configuration"
           },
           {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
-            "file": "angular/api-angular/generators/upgrade-module"
+            "path": "/packages/angular/generators/upgrade-module"
           },
           {
             "name": "web-worker generator",
             "id": "web-worker",
-            "file": "angular/api-angular/generators/web-worker"
+            "path": "/packages/angular/generators/web-worker"
           },
           {
             "name": "delegate-build executor",
             "id": "delegate-build",
-            "file": "angular/api-angular/executors/delegate-build"
+            "path": "/packages/angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
             "id": "ng-packagr-lite",
-            "file": "angular/api-angular/executors/ng-packagr-lite"
+            "path": "/packages/angular/executors/ng-packagr-lite"
           },
           {
             "name": "package executor",
             "id": "package",
-            "file": "angular/api-angular/executors/package"
+            "path": "/packages/angular/executors/package"
           },
           {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
-            "file": "angular/api-angular/executors/webpack-browser"
+            "path": "/packages/angular/executors/webpack-browser"
           },
           {
             "name": "webpack-server executor",
             "id": "webpack-server",
-            "file": "angular/api-angular/executors/webpack-server"
+            "path": "/packages/angular/executors/webpack-server"
           }
         ]
       },
@@ -511,53 +740,52 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/react Overview",
             "file": "shared/react-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-react/generators/application"
+            "path": "/packages/react/generators/application"
           },
           {
             "name": "component generator",
             "id": "component",
-            "file": "angular/api-react/generators/component"
+            "path": "/packages/react/generators/component"
           },
           {
             "name": "component-cypress-spec generator",
             "id": "component-cypress-spec",
-            "file": "angular/api-react/generators/component-cypress-spec"
+            "path": "/packages/react/generators/component-cypress-spec"
           },
           {
             "name": "component-story generator",
             "id": "component-story",
-            "file": "angular/api-react/generators/component-story"
+            "path": "/packages/react/generators/component-story"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "angular/api-react/generators/library"
+            "path": "/packages/react/generators/library"
           },
           {
             "name": "redux generator",
             "id": "redux",
-            "file": "angular/api-react/generators/redux"
+            "path": "/packages/react/generators/redux"
           },
           {
             "name": "stories generator",
             "id": "stories",
-            "file": "angular/api-react/generators/stories"
+            "path": "/packages/react/generators/stories"
           },
           {
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
-            "file": "angular/api-react/generators/storybook-configuration"
+            "path": "/packages/react/generators/storybook-configuration"
           },
           {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "file": "angular/api-react/generators/storybook-migrate-defaults-5-to-6"
+            "name": "hook generator",
+            "id": "hook",
+            "path": "/packages/react/generators/hook"
           }
         ]
       },
@@ -568,13 +796,12 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/jest Overview",
             "file": "shared/jest-plugin"
           },
           {
             "name": "jest executor",
             "id": "jest",
-            "file": "angular/api-jest/executors/jest"
+            "path": "/packages/jest/executors/jest"
           }
         ]
       },
@@ -585,13 +812,17 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/cypress Overview",
             "file": "shared/cypress-plugin"
           },
           {
             "name": "cypress executor",
             "id": "cypress",
-            "file": "angular/api-cypress/executors/cypress"
+            "path": "/packages/cypress/executors/cypress"
+          },
+          {
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "path": "/packages/cypress/generators/cypress-project"
           }
         ]
       },
@@ -600,50 +831,59 @@
         "id": "storybook",
         "itemList": [
           {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/storybook Overview",
-            "file": "angular/guides/storybook-plugin"
+            "id": "overview-react",
+            "name": "Overview (React)",
+            "file": "shared/guides/storybook/plugin-react"
           },
           {
-            "id": "migrate-webpack-final",
-            "name": "Migrate your webpack config",
-            "file": "angular/guides/storybook/migrate-webpack-final"
+            "id": "overview-angular",
+            "name": "Overview (Angular)",
+            "file": "shared/guides/storybook/plugin-angular"
           },
           {
-            "id": "upgrade-storybook-v6",
-            "name": "Upgrading to Storybook 6",
-            "file": "angular/guides/storybook/storybook-v6"
+            "id": "migrate-webpack-final-react",
+            "name": "Migrate to the Nrwl React Storybook Preset",
+            "file": "shared/guides/storybook/migrate-webpack-final-react"
+          },
+          {
+            "id": "migrate-webpack-final-angular",
+            "name": "Migrate to the Nrwl Angular Storybook Preset",
+            "file": "shared/guides/storybook/migrate-webpack-final-angular"
+          },
+          {
+            "id": "upgrade-storybook-v6-react",
+            "name": "Upgrading to Storybook 6 (React)",
+            "file": "shared/guides/storybook/storybook-v6-react"
+          },
+          {
+            "id": "upgrade-storybook-v6-angular",
+            "name": "Upgrading to Storybook 6 (Angular)",
+            "file": "shared/guides/storybook/storybook-v6-angular"
+          },
+          {
+            "id": "storybook-composition-setup",
+            "name": "Setting up Storybook Composition with Nx",
+            "file": "shared/guides/storybook/storybook-composition-setup"
           },
           {
             "name": "configuration generator",
             "id": "configuration",
-            "file": "angular/api-storybook/generators/configuration"
-          },
-          {
-            "name": "migrate-defaults-5-to-6 generator",
-            "id": "migrate-defaults-5-to-6",
-            "file": "angular/api-storybook/generators/migrate-defaults-5-to-6"
-          },
-          {
-            "name": "migrate-stories-to-6-2 generator",
-            "id": "migrate-stories-to-6-2",
-            "file": "angular/api-storybook/generators/migrate-stories-to-6-2"
+            "path": "/packages/storybook/generators/configuration"
           },
           {
             "name": "cypress-project generator",
             "id": "cypress-project",
-            "file": "angular/api-storybook/generators/cypress-project"
+            "path": "/packages/storybook/generators/cypress-project"
           },
           {
-            "name": "build executor",
-            "id": "build",
-            "file": "angular/api-storybook/executors/build"
+            "name": "Executors: Build",
+            "id": "executors-build",
+            "path": "/packages/storybook/executors/build"
           },
           {
-            "name": "storybook executor",
-            "id": "storybook",
-            "file": "angular/api-storybook/executors/storybook"
+            "name": "Executors: Storybook",
+            "id": "executors-storybook",
+            "path": "/packages/storybook/executors/storybook"
           }
         ]
       },
@@ -652,14 +892,29 @@
         "id": "linter",
         "itemList": [
           {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/linter-plugin"
+          },
+          {
+            "id": "eslint-plugin-nx",
+            "name": "eslint-plugin-nx",
+            "file": "shared/eslint-plugin-nx"
+          },
+          {
             "name": "eslint executor",
             "id": "eslint",
-            "file": "angular/api-linter/executors/eslint"
+            "path": "/packages/linter/executors/eslint"
           },
           {
             "name": "lint executor",
             "id": "lint",
-            "file": "angular/api-linter/executors/lint"
+            "path": "/packages/linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "path": "/packages/linter/generators/workspace-rule"
           }
         ]
       },
@@ -670,38 +925,27 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/node Overview",
             "file": "shared/node-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-node/generators/application"
+            "path": "/packages/node/generators/application"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "angular/api-node/generators/library"
+            "path": "/packages/node/generators/library"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "angular/api-node/generators/migrate-to-webpack-5"
+            "name": "webpack executor",
+            "id": "webpack",
+            "path": "/packages/node/executors/webpack"
           },
           {
-            "name": "build executor",
-            "id": "build",
-            "file": "angular/api-node/executors/build"
-          },
-          {
-            "name": "execute executor",
-            "id": "execute",
-            "file": "angular/api-node/executors/execute"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "angular/api-node/executors/package"
+            "name": "node executor",
+            "id": "node",
+            "path": "/packages/node/executors/node"
           }
         ]
       },
@@ -712,13 +956,12 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/express Overview",
             "file": "shared/express-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-express/generators/application"
+            "path": "/packages/express/generators/application"
           }
         ]
       },
@@ -729,93 +972,97 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/nest Overview",
             "file": "shared/nest-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-nest/generators/application"
+            "path": "/packages/nest/generators/application"
           },
           {
             "name": "class generator",
             "id": "class",
-            "file": "angular/api-nest/generators/class"
+            "path": "/packages/nest/generators/class"
           },
           {
             "name": "controller generator",
             "id": "controller",
-            "file": "angular/api-nest/generators/controller"
+            "path": "/packages/nest/generators/controller"
           },
           {
             "name": "decorator generator",
             "id": "decorator",
-            "file": "angular/api-nest/generators/decorator"
+            "path": "/packages/nest/generators/decorator"
           },
           {
             "name": "filter generator",
             "id": "filter",
-            "file": "angular/api-nest/generators/filter"
+            "path": "/packages/nest/generators/filter"
           },
           {
             "name": "gateway generator",
             "id": "gateway",
-            "file": "angular/api-nest/generators/gateway"
+            "path": "/packages/nest/generators/gateway"
           },
           {
             "name": "guard generator",
             "id": "guard",
-            "file": "angular/api-nest/generators/guard"
+            "path": "/packages/nest/generators/guard"
           },
           {
             "name": "interceptor generator",
             "id": "interceptor",
-            "file": "angular/api-nest/generators/interceptor"
+            "path": "/packages/nest/generators/interceptor"
           },
           {
             "name": "interface generator",
             "id": "interface",
-            "file": "angular/api-nest/generators/interface"
+            "path": "/packages/nest/generators/interface"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "angular/api-nest/generators/library"
+            "path": "/packages/nest/generators/library"
           },
           {
             "name": "middleware generator",
             "id": "middleware",
-            "file": "angular/api-nest/generators/middleware"
+            "path": "/packages/nest/generators/middleware"
           },
           {
             "name": "module generator",
             "id": "module",
-            "file": "angular/api-nest/generators/module"
+            "path": "/packages/nest/generators/module"
           },
           {
             "name": "pipe generator",
             "id": "pipe",
-            "file": "angular/api-nest/generators/pipe"
+            "path": "/packages/nest/generators/pipe"
           },
           {
             "name": "provider generator",
             "id": "provider",
-            "file": "angular/api-nest/generators/provider"
+            "path": "/packages/nest/generators/provider"
           },
           {
             "name": "resolver generator",
             "id": "resolver",
-            "file": "angular/api-nest/generators/resolver"
+            "path": "/packages/nest/generators/resolver"
+          },
+          {
+            "name": "resource generator",
+            "id": "resource",
+            "path": "/packages/nest/generators/resource"
           },
           {
             "name": "service generator",
             "id": "service",
-            "file": "angular/api-nest/generators/service"
+            "path": "/packages/nest/generators/service"
           },
           {
             "name": "convert-tslint-to-eslint",
             "id": "convert-tslint-to-eslint",
-            "file": "angular/api-nest/generators/convert-tslint-to-eslint"
+            "path": "/packages/nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -826,75 +1073,144 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/next Overview",
             "file": "shared/next-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-next/generators/application"
+            "path": "/packages/next/generators/application"
           },
           {
             "name": "component generator",
             "id": "component",
-            "file": "angular/api-next/generators/component"
+            "path": "/packages/next/generators/component"
           },
           {
             "name": "page generator",
             "id": "page",
-            "file": "angular/api-next/generators/page"
+            "path": "/packages/next/generators/page"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "angular/api-next/executors/build"
+            "path": "/packages/next/executors/build"
           },
           {
             "name": "server executor",
             "id": "server",
-            "file": "angular/api-next/executors/server"
+            "path": "/packages/next/executors/server"
           },
           {
             "name": "export executor",
             "id": "export",
-            "file": "angular/api-next/executors/export"
+            "path": "/packages/next/executors/export"
           }
         ]
       },
       {
-        "name": "gatsby",
-        "id": "gatsby",
+        "name": "detox",
+        "id": "detox",
         "itemList": [
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/gatsby Overview",
-            "file": "shared/gatsby-plugin"
+            "file": "shared/detox-plugin"
           },
           {
             "name": "application generator",
             "id": "application",
-            "file": "angular/api-gatsby/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "angular/api-gatsby/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "angular/api-gatsby/generators/page"
+            "path": "/packages/detox/generators/application"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "angular/api-gatsby/executors/build"
+            "path": "/packages/detox/executors/build"
           },
           {
-            "name": "server executor",
-            "id": "server",
-            "file": "angular/api-gatsby/executors/server"
+            "name": "test executor",
+            "id": "test",
+            "path": "/packages/detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/react-native-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "path": "/packages/react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "path": "/packages/react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "path": "/packages/react-native/generators/library"
+          },
+          {
+            "name": "component-story generator",
+            "id": "component-story",
+            "path": "/packages/react-native/generators/component-story"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "path": "/packages/react-native/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "path": "/packages/react-native/generators/storybook-configuration"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "path": "/packages/react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "path": "/packages/react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "path": "/packages/react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "path": "/packages/react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "path": "/packages/react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "path": "/packages/react-native/executors/start"
+          },
+          {
+            "name": "storybook executor",
+            "id": "storybook",
+            "path": "/packages/react-native/executors/storybook"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "path": "/packages/react-native/executors/sync-deps"
           }
         ]
       },
@@ -905,33 +1221,32 @@
           {
             "id": "overview",
             "name": "Overview",
-            "searchResultsName": "@nrwl/nx-plugin Overview",
             "file": "shared/nx-plugin"
           },
           {
             "name": "executor generator",
             "id": "executor",
-            "file": "angular/api-nx-plugin/generators/executor"
+            "path": "/packages/nx-plugin/generators/executor"
           },
           {
             "name": "migration generator",
             "id": "migration",
-            "file": "angular/api-nx-plugin/generators/migration"
+            "path": "/packages/nx-plugin/generators/migration"
           },
           {
             "name": "plugin generator",
             "id": "plugin",
-            "file": "angular/api-nx-plugin/generators/plugin"
+            "path": "/packages/nx-plugin/generators/plugin"
           },
           {
             "name": "generator generator",
             "id": "schematic",
-            "file": "angular/api-nx-plugin/generators/generator"
+            "path": "/packages/nx-plugin/generators/generator"
           },
           {
             "name": "e2e executor",
             "id": "e2e",
-            "file": "angular/api-nx-plugin/executors/e2e"
+            "path": "/packages/nx-plugin/executors/e2e"
           }
         ]
       },
@@ -941,31 +1256,13 @@
         "itemList": [
           {
             "id": "index",
-            "name": "index",
-            "searchResultsName": "Nx Devkit",
-            "file": "angular/api-nx-devkit/index"
+            "name": "Overview",
+            "file": "generated/api-nx-devkit/index"
           },
           {
             "id": "ngcli_adapter",
-            "name": "ngcli_adapter",
-            "searchResultsName": "Ng CLI Adapter",
-            "file": "angular/api-nx-devkit/ngcli_adapter"
-          }
-        ]
-      },
-      {
-        "name": "Core",
-        "id": "core-extended",
-        "itemList": [
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
+            "name": "Ng CLI Adapter",
+            "file": "generated/api-nx-devkit/ngcli_adapter"
           }
         ]
       },
@@ -984,7 +1281,7 @@
             "file": "shared/running-custom-commands"
           },
           {
-            "name": "Creating Custom Builders",
+            "name": "Creating Custom Executors",
             "id": "creating-custom-builders",
             "file": "shared/tools-workspace-builders"
           }
@@ -997,17 +1294,17 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "angular/generators/using-generators"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "angular/generators/workspace-generators"
+            "file": "shared/generators/workspace-generators"
           },
           {
             "name": "Composing Generators",
             "id": "composing-generators",
-            "file": "angular/generators/composing-generators"
+            "file": "shared/generators/composing-generators"
           },
           {
             "name": "Generator Options",
@@ -1030,6 +1327,11 @@
         "name": "Workspace Structure",
         "id": "structure",
         "itemList": [
+          {
+            "name": "Applications and Libraries",
+            "id": "applications-and-libraries",
+            "file": "shared/workspace/applications-and-libraries"
+          },
           {
             "name": "Creating Libraries",
             "id": "creating-libraries",
@@ -1063,7 +1365,7 @@
           {
             "name": "Extending the Project Graph",
             "id": "project-graph-plugins",
-            "file": "shared/workspace/project-graph-plugins"
+            "file": "shared/extending-nx/project-graph-plugins"
           }
         ]
       },
@@ -1072,19 +1374,39 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
+          },
+          {
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
+            "name": "Setting up Bitbucket",
+            "id": "monorepo-ci-bitbucket-pipelines",
+            "file": "shared/monorepo-ci-bitbucket-pipelines"
+          },
+          {
+            "name": "Distributed CI",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
@@ -1094,23 +1416,7 @@
           {
             "name": "Setup incremental builds for Angular applications",
             "id": "setup-incremental-builds-angular",
-            "file": "angular/guides/setup-incremental-builds"
-          }
-        ]
-      },
-      {
-        "name": "Modern Angular",
-        "id": "modern-angular",
-        "itemList": [
-          {
-            "name": "Moving from Protractor to Cypress",
-            "id": "protractor-to-cypress",
-            "file": "angular/guides/modern-angular/protractor-to-cypress"
-          },
-          {
-            "name": "Moving from Karma to Jest",
-            "id": "karma-to-jest",
-            "file": "angular/guides/modern-angular/karma-to-jest"
+            "file": "shared/guides/setup-incremental-builds-angular"
           }
         ]
       },
@@ -1119,182 +1425,14 @@
         "id": "guides",
         "itemList": [
           {
-            "name": "Lerna/Yarn and Nx",
+            "name": "Nx and Lerna/Yarn",
             "id": "lerna-and-nx",
             "file": "shared/guides/lerna-and-nx"
           },
           {
-            "name": "Using NgRx",
-            "id": "misc-ngrx"
-          },
-          {
-            "name": "Using DataPersistence",
-            "id": "misc-data-persistence"
-          },
-          {
-            "name": "Using Nx at Enterprises",
-            "id": "monorepo-nx-enterprise",
-            "file": "shared/monorepo-nx-enterprise"
-          },
-          {
-            "name": "Using ESLint in Nx Workspaces",
-            "id": "eslint",
-            "file": "shared/eslint"
-          },
-          {
-            "name": "Nx 7 => Nx 8",
-            "id": "nx7-to-nx8"
-          },
-          {
-            "name": "Upgrading AngularJS Applications",
-            "id": "misc-upgrade"
-          },
-          {
-            "name": "Configuring Browser Support",
-            "id": "browser-support",
-            "file": "shared/guides/browser-support"
-          },
-          {
-            "name": "Running custom commands",
-            "id": "running-custom-commands",
-            "file": "angular/guides/running-custom-commands"
-          },
-          {
-            "name": "Nx Devkit and Angular Devkit",
-            "id": "nx-devkit-angular-devkit",
-            "file": "angular/guides/nx-devkit-angular-devkit"
-          },
-          {
-            "name": "Webpack 5 Migration",
-            "id": "webpack-5",
-            "file": "shared/guides/webpack-5"
-          }
-        ]
-      },
-      {
-        "name": "Examples",
-        "id": "examples",
-        "itemList": [
-          {
-            "name": "Nx Micro-Frontend Example",
-            "id": "nx-examples",
-            "file": "shared/examples/nx-examples"
-          },
-          {
-            "name": "Building Angular and React Applications Together With Nx",
-            "id": "react-and-angular",
-            "file": "angular/examples/react-and-angular"
-          },
-          {
-            "name": "Using Apollo GraphQL",
-            "id": "apollo-angular",
-            "file": "angular/examples/apollo-angular"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "react",
-    "itemList": [
-      {
-        "name": "Getting Started",
-        "id": "getting-started",
-        "itemList": [
-          {
-            "name": "Intro to Nx",
-            "id": "intro",
-            "file": "react/getting-started/intro"
-          },
-          {
-            "name": "Nx Setup",
-            "id": "nx-setup",
-            "file": "react/getting-started/nx-setup"
-          },
-          {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "react/getting-started/nx-cli"
-          },
-          {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
-          }
-        ]
-      },
-      {
-        "name": "Tutorial",
-        "id": "tutorial",
-        "itemList": [
-          {
-            "name": "1 - Create Application",
-            "id": "01-create-application"
-          },
-          {
-            "name": "2 - Add E2E Test",
-            "id": "02-add-e2e-test"
-          },
-          {
-            "name": "3 - Display Todos",
-            "id": "03-display-todos"
-          },
-          {
-            "name": "4 - Connect to API",
-            "id": "04-connect-to-api"
-          },
-          {
-            "name": "5 - Add Node Application",
-            "id": "05-add-node-app"
-          },
-          {
-            "name": "6 - Configure Proxy",
-            "id": "06-proxy"
-          },
-          {
-            "name": "7 - Share Code",
-            "id": "07-share-code"
-          },
-          {
-            "name": "8 - Create Libraries",
-            "id": "08-create-libs"
-          },
-          {
-            "name": "9 - Dep Graph",
-            "id": "09-dep-graph"
-          },
-          {
-            "name": "10 - Use Computation Caching",
-            "id": "10-computation-caching"
-          },
-          {
-            "name": "11 - Test Affected Projects",
-            "id": "11-test-affected-projects"
-          },
-          {
-            "name": "12 - Summary",
-            "id": "12-summary"
-          }
-        ]
-      },
-      {
-        "name": "Using Nx",
-        "id": "core-concepts",
-        "itemList": [
-          {
-            "name": "Mental Model",
-            "id": "mental-model",
-            "file": "shared/mental-model"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "react/guides/configuration"
-          },
-          {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
+            "name": "Nx and Turborepo",
+            "id": "turbo-and-nx",
+            "file": "shared/guides/turbo-and-nx"
           },
           {
             "name": "Monorepos",
@@ -1302,1012 +1440,14 @@
             "file": "shared/guides/why-monorepos"
           },
           {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "shared/update"
-          }
-        ]
-      },
-      {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
-            "name": "From CRA",
-            "id": "migration-cra"
-          },
-          {
-            "name": "Lerna/Yarn/PNPM",
-            "id": "adding-to-monorepo",
-            "file": "shared/migration/adding-to-monorepo"
-          },
-          {
-            "name": "Preserving Git Histories",
-            "id": "preserving-git-histories",
-            "file": "shared/migration/preserving-git-histories"
-          }
-        ]
-      },
-      {
-        "name": "CLI",
-        "id": "cli",
-        "itemList": [
-          {
-            "name": "generate",
-            "id": "generate",
-            "file": "react/cli/generate"
-          },
-          {
-            "name": "serve",
-            "id": "serve",
-            "file": "react/cli/serve"
-          },
-          {
-            "name": "build",
-            "id": "build",
-            "file": "react/cli/build"
-          },
-          {
-            "name": "test",
-            "id": "test",
-            "file": "react/cli/test"
-          },
-          {
-            "name": "lint",
-            "id": "lint",
-            "file": "react/cli/lint"
-          },
-          {
-            "name": "e2e",
-            "id": "e2e",
-            "file": "react/cli/e2e"
-          },
-          {
-            "name": "run",
-            "id": "run",
-            "file": "react/cli/run"
-          },
-          {
-            "name": "daemon:start",
-            "id": "daemon:start",
-            "file": "react/cli/daemon-start"
-          },
-          {
-            "name": "daemon:stop",
-            "id": "daemon:stop",
-            "file": "react/cli/daemon-stop"
-          },
-          {
-            "name": "dep-graph",
-            "id": "dep-graph",
-            "file": "react/cli/dep-graph"
-          },
-          {
-            "name": "run-many",
-            "id": "run-many",
-            "file": "react/cli/run-many"
-          },
-          {
-            "name": "affected",
-            "id": "affected",
-            "file": "react/cli/affected"
-          },
-          {
-            "name": "affected:build",
-            "id": "affected-build",
-            "file": "react/cli/affected-build"
-          },
-          {
-            "name": "affected:test",
-            "id": "affected-test",
-            "file": "react/cli/affected-test"
-          },
-          {
-            "name": "affected:lint",
-            "id": "affected-lint",
-            "file": "react/cli/affected-lint"
-          },
-          {
-            "name": "affected:e2e",
-            "id": "affected-e2e",
-            "file": "react/cli/affected-e2e"
-          },
-          {
-            "name": "affected:dep-graph",
-            "id": "affected-dep-graph",
-            "file": "react/cli/affected-dep-graph"
-          },
-          {
-            "name": "affected:apps",
-            "id": "affected-apps",
-            "file": "react/cli/affected-apps"
-          },
-          {
-            "name": "affected:libs",
-            "id": "affected-libs",
-            "file": "react/cli/affected-libs"
-          },
-          {
-            "name": "print-affected",
-            "id": "print-affected",
-            "file": "react/cli/print-affected"
-          },
-          {
-            "name": "format:check",
-            "id": "format-check",
-            "file": "react/cli/format-check"
-          },
-          {
-            "name": "format:write",
-            "id": "format-write",
-            "file": "react/cli/format-write"
-          },
-          {
-            "name": "migrate",
-            "id": "migrate",
-            "file": "react/cli/migrate"
-          },
-          {
-            "name": "report",
-            "id": "report",
-            "file": "react/cli/report"
-          },
-          {
-            "name": "list",
-            "id": "list",
-            "file": "react/cli/list"
-          },
-          {
-            "name": "workspace-lint",
-            "id": "workspace-lint",
-            "file": "react/cli/workspace-lint"
-          },
-          {
-            "name": "workspace-generator",
-            "id": "workspace-generator",
-            "file": "react/cli/workspace-generator"
-          },
-          {
-            "name": "connect-to-nx-cloud",
-            "id": "connect-to-nx-cloud",
-            "file": "react/cli/connect-to-nx-cloud"
-          },
-          {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "react/cli/clear-cache"
-          }
-        ]
-      },
-      {
-        "name": "Workspace",
-        "id": "workspace",
-        "itemList": [
-          {
-            "id": "nrwl-workspace-overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/workspace Overview",
-            "file": "shared/workspace-plugin"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "react/api-workspace/generators/library"
-          },
-          {
-            "name": "move generator",
-            "id": "move",
-            "file": "react/api-workspace/generators/move"
-          },
-          {
-            "name": "remove generator",
-            "id": "remove",
-            "file": "react/api-workspace/generators/remove"
-          },
-          {
-            "name": "run-commands generator",
-            "id": "run-commands-generator",
-            "file": "react/api-workspace/generators/run-commands"
-          },
-          {
-            "name": "workspace-generator generator",
-            "id": "workspace-generator",
-            "file": "react/api-workspace/generators/workspace-generator"
-          },
-          {
-            "name": "convert-to-nx-project generator",
-            "id": "convert-to-nx-project-generator",
-            "file": "react/api-workspace/generators/convert-to-nx-project"
-          },
-          {
-            "name": "run-commands executor",
-            "id": "run-commands-executor",
-            "file": "react/api-workspace/executors/run-commands"
-          },
-          {
-            "name": "run-script executor",
-            "id": "run-script",
-            "file": "react/api-workspace/executors/run-script"
-          },
-          {
-            "name": "tsc executor",
-            "id": "tsc",
-            "file": "react/api-workspace/executors/tsc"
-          }
-        ]
-      },
-      {
-        "name": "web",
-        "id": "web",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/web Overview",
-            "file": "shared/web-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-web/generators/application"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "react/api-web/generators/migrate-to-webpack-5"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "react/api-web/executors/build"
-          },
-          {
-            "name": "dev-server executor",
-            "id": "dev-server",
-            "file": "react/api-web/executors/dev-server"
-          },
-          {
-            "name": "file-server executor",
-            "id": "file-server",
-            "file": "react/api-web/executors/file-server"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "react/api-web/executors/package"
-          }
-        ]
-      },
-      {
-        "name": "angular",
-        "id": "angular",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/angular Overview",
-            "file": "shared/angular-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-angular/generators/application"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "react/api-angular/generators/convert-tslint-to-eslint"
-          },
-          {
-            "name": "downgrade-module generator",
-            "id": "downgrade-module",
-            "file": "react/api-angular/generators/downgrade-module"
-          },
-          {
-            "name": "karma generator",
-            "id": "karma",
-            "file": "react/api-angular/generators/karma"
-          },
-          {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "react/api-angular/generators/karma-project"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "react/api-angular/generators/library"
-          },
-          {
-            "name": "move generator",
-            "id": "move",
-            "file": "react/api-angular/generators/move"
-          },
-          {
-            "name": "ngrx generator",
-            "id": "ngrx",
-            "file": "react/api-angular/generators/ngrx"
-          },
-          {
-            "name": "setup-mfe generator",
-            "id": "setup-mfe",
-            "file": "react/api-angular/generators/setup-mfe"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "file": "react/api-angular/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "file": "react/api-angular/generators/storybook-configuration"
-          },
-          {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "file": "react/api-angular/generators/storybook-migrate-defaults-5-to-6"
-          },
-          {
-            "name": "storybook-migrate-stories-to-6-2 generator",
-            "id": "storybook-migrate-stories-to-6-2",
-            "file": "react/api-angular/generators/storybook-migrate-stories-to-6-2"
-          },
-          {
-            "name": "upgrade-module generator",
-            "id": "upgrade-module",
-            "file": "react/api-angular/generators/upgrade-module"
-          },
-          {
-            "name": "web-worker generator",
-            "id": "web-worker",
-            "file": "react/api-angular/generators/web-worker"
-          },
-          {
-            "name": "delegate-build executor",
-            "id": "delegate-build",
-            "file": "react/api-angular/executors/delegate-build"
-          },
-          {
-            "name": "ng packagr lite executor",
-            "id": "ng-packagr-lite",
-            "file": "react/api-angular/executors/ng-packagr-lite"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "react/api-angular/executors/package"
-          },
-          {
-            "name": "webpack-browser executor",
-            "id": "webpack-browser",
-            "file": "react/api-angular/executors/webpack-browser"
-          },
-          {
-            "name": "webpack-server executor",
-            "id": "webpack-server",
-            "file": "react/api-angular/executors/webpack-server"
-          }
-        ]
-      },
-      {
-        "name": "react",
-        "id": "react",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/react Overview",
-            "file": "shared/react-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-react/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "react/api-react/generators/component"
-          },
-          {
-            "name": "component-cypress-spec generator",
-            "id": "component-cypress-spec",
-            "file": "react/api-react/generators/component-cypress-spec"
-          },
-          {
-            "name": "component-story generator",
-            "id": "component-story",
-            "file": "react/api-react/generators/component-story"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "react/api-react/generators/library"
-          },
-          {
-            "name": "redux generator",
-            "id": "redux",
-            "file": "react/api-react/generators/redux"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "file": "react/api-react/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "file": "react/api-react/generators/storybook-configuration"
-          },
-          {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "file": "react/api-react/generators/storybook-migrate-defaults-5-to-6"
-          }
-        ]
-      },
-      {
-        "name": "jest",
-        "id": "jest",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/jest Overview",
-            "file": "shared/jest-plugin"
-          },
-          {
-            "name": "jest executor",
-            "id": "jest",
-            "file": "react/api-jest/executors/jest"
-          }
-        ]
-      },
-      {
-        "name": "cypress",
-        "id": "cypress",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/cypress Overview",
-            "file": "shared/cypress-plugin"
-          },
-          {
-            "name": "cypress executor",
-            "id": "cypress",
-            "file": "react/api-cypress/executors/cypress"
-          }
-        ]
-      },
-      {
-        "name": "storybook",
-        "id": "storybook",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/storybook Overview",
-            "file": "react/guides/storybook-plugin"
-          },
-          {
-            "id": "migrate-webpack-final",
-            "name": "Migrate to the Nrwl React Storybook Preset",
-            "file": "react/guides/storybook/migrate-webpack-final"
-          },
-          {
-            "id": "upgrade-storybook-v6",
-            "name": "Upgrading to Storybook 6",
-            "file": "react/guides/storybook/storybook-v6"
-          },
-          {
-            "name": "configuration generator",
-            "id": "configuration",
-            "file": "react/api-storybook/generators/configuration"
-          },
-          {
-            "name": "cypress-project generator",
-            "id": "cypress-project",
-            "file": "react/api-storybook/generators/cypress-project"
-          },
-          {
-            "name": "migrate-defaults-5-to-6 generator",
-            "id": "migrate-defaults-5-to-6",
-            "file": "react/api-storybook/generators/migrate-defaults-5-to-6"
-          },
-          {
-            "name": "migrate-stories-to-6-2 generator",
-            "id": "migrate-stories-to-6-2",
-            "file": "react/api-storybook/generators/migrate-stories-to-6-2"
-          },
-          {
-            "id": "executors",
-            "name": "Executors / Builders",
-            "itemList": [
-              {
-                "name": "build",
-                "id": "build",
-                "file": "react/api-storybook/executors/build"
-              },
-              {
-                "name": "storybook",
-                "id": "storybook",
-                "file": "react/api-storybook/executors/storybook"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "linter",
-        "id": "linter",
-        "itemList": [
-          {
-            "name": "eslint executor",
-            "id": "eslint",
-            "file": "react/api-linter/executors/eslint"
-          },
-          {
-            "name": "lint executor",
-            "id": "lint",
-            "file": "react/api-linter/executors/lint"
-          }
-        ]
-      },
-      {
-        "name": "node",
-        "id": "node",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/node Overview",
-            "file": "shared/node-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-node/generators/application"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "react/api-node/generators/library"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "react/api-node/generators/migrate-to-webpack-5"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "react/api-node/executors/build"
-          },
-          {
-            "name": "execute executor",
-            "id": "execute",
-            "file": "react/api-node/executors/execute"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "react/api-node/executors/package"
-          }
-        ]
-      },
-      {
-        "name": "express",
-        "id": "express",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/express Overview",
-            "file": "shared/express-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-express/generators/application"
-          }
-        ]
-      },
-      {
-        "name": "nest",
-        "id": "nest",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/nest Overview",
-            "file": "shared/nest-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-nest/generators/application"
-          },
-          {
-            "name": "class generator",
-            "id": "class",
-            "file": "react/api-nest/generators/class"
-          },
-          {
-            "name": "controller generator",
-            "id": "controller",
-            "file": "react/api-nest/generators/controller"
-          },
-          {
-            "name": "decorator generator",
-            "id": "decorator",
-            "file": "react/api-nest/generators/decorator"
-          },
-          {
-            "name": "filter generator",
-            "id": "filter",
-            "file": "react/api-nest/generators/filter"
-          },
-          {
-            "name": "gateway generator",
-            "id": "gateway",
-            "file": "react/api-nest/generators/gateway"
-          },
-          {
-            "name": "guard generator",
-            "id": "guard",
-            "file": "react/api-nest/generators/guard"
-          },
-          {
-            "name": "interceptor generator",
-            "id": "interceptor",
-            "file": "react/api-nest/generators/interceptor"
-          },
-          {
-            "name": "interface generator",
-            "id": "interface",
-            "file": "react/api-nest/generators/interface"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "react/api-nest/generators/library"
-          },
-          {
-            "name": "middleware generator",
-            "id": "middleware",
-            "file": "react/api-nest/generators/middleware"
-          },
-          {
-            "name": "module generator",
-            "id": "module",
-            "file": "react/api-nest/generators/module"
-          },
-          {
-            "name": "pipe generator",
-            "id": "pipe",
-            "file": "react/api-nest/generators/pipe"
-          },
-          {
-            "name": "provider generator",
-            "id": "provider",
-            "file": "react/api-nest/generators/provider"
-          },
-          {
-            "name": "resolver generator",
-            "id": "resolver",
-            "file": "react/api-nest/generators/resolver"
-          },
-          {
-            "name": "service generator",
-            "id": "service",
-            "file": "react/api-nest/generators/service"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "react/api-nest/generators/convert-tslint-to-eslint"
-          }
-        ]
-      },
-      {
-        "name": "next",
-        "id": "next",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/next Overview",
-            "file": "shared/next-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-next/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "react/api-next/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "react/api-next/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "react/api-next/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "file": "react/api-next/executors/server"
-          },
-          {
-            "name": "export executor",
-            "id": "export",
-            "file": "react/api-next/executors/export"
-          }
-        ]
-      },
-      {
-        "name": "gatsby",
-        "id": "gatsby",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/gatsby Overview",
-            "file": "shared/gatsby-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "react/api-gatsby/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "react/api-gatsby/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "react/api-gatsby/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "react/api-gatsby/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "file": "react/api-gatsby/executors/server"
-          }
-        ]
-      },
-      {
-        "name": "Nx Plugin",
-        "id": "nx-plugin",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/nx-plugin Overview",
-            "file": "shared/nx-plugin"
-          },
-          {
-            "name": "executor generator",
-            "id": "executor",
-            "file": "react/api-nx-plugin/generators/executor"
-          },
-          {
-            "name": "migration generator",
-            "id": "migration",
-            "file": "react/api-nx-plugin/generators/migration"
-          },
-          {
-            "name": "plugin generator",
-            "id": "plugin",
-            "file": "react/api-nx-plugin/generators/plugin"
-          },
-          {
-            "name": "generator generator",
-            "id": "schematic",
-            "file": "react/api-nx-plugin/generators/generator"
-          },
-          {
-            "name": "e2e executor",
-            "id": "e2e",
-            "file": "react/api-nx-plugin/executors/e2e"
-          }
-        ]
-      },
-      {
-        "name": "Nx Devkit",
-        "id": "nx-devkit",
-        "itemList": [
-          {
-            "id": "index",
-            "name": "index",
-            "searchResultsName": "Nx Devkit",
-            "file": "react/api-nx-devkit/index"
-          },
-          {
-            "id": "ngcli_adapter",
-            "name": "ngcli_adapter",
-            "searchResultsName": "Ng CLI Adapter",
-            "file": "react/api-nx-devkit/ngcli_adapter"
-          }
-        ]
-      },
-      {
-        "name": "Core",
-        "id": "core-extended",
-        "itemList": [
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          }
-        ]
-      },
-      {
-        "name": "Executors / Builders",
-        "id": "executors",
-        "itemList": [
-          {
-            "name": "Using Executors / Builders",
-            "id": "using-builders",
-            "file": "shared/using-executors"
-          },
-          {
-            "name": "Running Custom Commands",
-            "id": "run-commands-builder",
-            "file": "shared/running-custom-commands"
-          },
-          {
-            "name": "Creating Custom Builders",
-            "id": "creating-custom-builders",
-            "file": "shared/tools-workspace-builders"
-          }
-        ]
-      },
-      {
-        "name": "Generators",
-        "id": "generators",
-        "itemList": [
-          {
-            "name": "Using Generators",
-            "id": "using-schematics",
-            "file": "shared/generators/using-generators"
-          },
-          {
-            "name": "Workspace Generators",
-            "id": "workspace-generators",
-            "file": "shared/generators/workspace-generators"
-          },
-          {
-            "name": "Composing Generators",
-            "id": "composing-generators",
-            "file": "shared/generators/composing-generators"
-          },
-          {
-            "name": "Generator Options",
-            "id": "generator-options",
-            "file": "shared/generators/generator-options"
-          },
-          {
-            "name": "Creating Files",
-            "id": "creating-files",
-            "file": "shared/generators/creating-files"
-          },
-          {
-            "name": "Modifying Files",
-            "id": "modifying-files",
-            "file": "shared/generators/modifying-files"
-          }
-        ]
-      },
-      {
-        "name": "Workspace Structure",
-        "id": "structure",
-        "itemList": [
-          {
-            "name": "Creating Libraries",
-            "id": "creating-libraries",
-            "file": "shared/workspace/creating-libraries"
-          },
-          {
-            "name": "Library Types",
-            "id": "library-types",
-            "file": "shared/workspace/library-types"
-          },
-          {
-            "name": "Grouping Libraries",
-            "id": "grouping-libraries",
-            "file": "shared/workspace/grouping-libraries"
-          },
-          {
-            "name": "Buildable and Publishable Libraries",
-            "id": "buildable-and-publishable-libraries",
-            "file": "shared/workspace/buildable-and-publishable-libraries"
-          },
-          {
-            "name": "Using Tags",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
-          },
-          {
-            "name": "Dependency Graph",
-            "id": "dependency-graph",
-            "file": "shared/workspace/structure/dependency-graph"
-          },
-          {
-            "name": "Extending the Project Graph",
-            "id": "project-graph-plugins",
-            "file": "shared/workspace/project-graph-plugins"
-          }
-        ]
-      },
-      {
-        "name": "CI",
-        "id": "ci",
-        "itemList": [
-          {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
-            "id": "monorepo-ci-azure",
-            "file": "shared/monorepo-ci-azure"
-          },
-          {
-            "name": "Distributed CI: Jenkins",
-            "id": "monorepo-ci-jenkins",
-            "file": "shared/monorepo-ci-jenkins"
-          },
-          {
-            "name": "Incremental Builds",
-            "id": "incremental-builds",
-            "file": "shared/incremental-builds"
-          }
-        ]
-      },
-      {
-        "name": "Guides",
-        "id": "guides",
-        "itemList": [
-          {
-            "name": "Lerna/Yarn and Nx",
-            "id": "lerna-and-nx",
-            "file": "shared/guides/lerna-and-nx"
-          },
-          {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
-            "file": "react/guides/adding-assets"
+            "file": "shared/guides/adding-assets"
           },
           {
             "name": "Using Environment Variables",
             "id": "environment-variables",
-            "file": "react/guides/environment-variables"
+            "file": "shared/guides/environment-variables"
           },
           {
             "name": "Using Nx at Enterprises",
@@ -2315,14 +1455,29 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
+            "name": "Profiling Build Performance",
+            "id": "performance-profiling",
+            "file": "shared/guides/performance-profiling"
+          },
+          {
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
             "file": "shared/eslint"
           },
           {
+            "name": "Customizing Webpack Config",
+            "id": "customize-webpack",
+            "file": "shared/guides/customize-webpack"
+          },
+          {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
+          },
+          {
             "name": "JavaScript and TypeScript",
             "id": "js-and-ts",
-            "file": "react/guides/js-and-ts"
+            "file": "shared/guides/js-and-ts"
           },
           {
             "name": "Configuring Browser Support",
@@ -2330,14 +1485,14 @@
             "file": "shared/guides/browser-support"
           },
           {
-            "name": "Next.js projects with Nx",
-            "id": "nextjs",
-            "file": "react/guides/nextjs"
+            "name": "React Native with Nx",
+            "id": "react-native",
+            "file": "shared/guides/react-native"
           },
           {
             "name": "Deploying Next.js applications to Vercel",
             "id": "deploy-nextjs-to-vercel",
-            "file": "react/guides/deploy-nextjs-to-vercel"
+            "file": "shared/guides/deploy-nextjs-to-vercel"
           },
           {
             "name": "Webpack 5 Migration",
@@ -2347,7 +1502,53 @@
           {
             "name": "Using Tailwind CSS in React",
             "id": "using-tailwind-css-in-react",
-            "file": "react/guides/using-tailwind-css-in-react"
+            "file": "shared/guides/using-tailwind-css-in-react"
+          },
+          {
+            "name": "React 18 Migration",
+            "id": "react-18",
+            "file": "shared/guides/react-18"
+          },
+          {
+            "name": "Using Tailwind CSS with Angular projects",
+            "id": "using-tailwind-css-with-angular-projects",
+            "file": "shared/guides/using-tailwind-css-with-angular-projects"
+          },
+          {
+            "name": "Using NgRx",
+            "id": "misc-ngrx",
+            "file": "shared/guides/misc-ngrx"
+          },
+          {
+            "name": "Using DataPersistence",
+            "id": "misc-data-persistence",
+            "file": "shared/guides/misc-data-persistence"
+          },
+          {
+            "name": "Nx Devkit and Angular Devkit",
+            "id": "nx-devkit-angular-devkit",
+            "file": "shared/guides/nx-devkit-angular-devkit"
+          }
+        ]
+      },
+      {
+        "name": "Module Federation",
+        "id": "module-federation",
+        "itemList": [
+          {
+            "name": "Faster Builds with Module Federation",
+            "id": "faster-builds",
+            "file": "shared/guides/module-federation/faster-builds"
+          },
+          {
+            "name": "Micro Frontend Architecture",
+            "id": "micro-frontend-architecture",
+            "file": "shared/guides/module-federation/micro-frontend-architecture"
+          },
+          {
+            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+            "id": "dynamic-module-federation-with-angular",
+            "file": "shared/guides/module-federation/dynamic-mfe-angular"
           }
         ]
       },
@@ -2363,1099 +1564,22 @@
           {
             "name": "Powering Up React Development With Nx",
             "id": "react-nx",
-            "file": "react/examples/react-nx"
+            "file": "shared/examples/react-nx"
           },
           {
             "name": "Using Apollo GraphQL",
             "id": "apollo-react",
-            "file": "react/examples/apollo-react"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "node",
-    "itemList": [
-      {
-        "name": "Getting Started",
-        "id": "getting-started",
-        "itemList": [
-          {
-            "name": "Intro to Nx",
-            "id": "intro",
-            "file": "node/getting-started/intro"
-          },
-          {
-            "name": "Nx Setup",
-            "id": "nx-setup",
-            "file": "node/getting-started/nx-setup"
-          },
-          {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "node/getting-started/nx-cli"
-          },
-          {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
-          }
-        ]
-      },
-      {
-        "name": "Tutorial",
-        "id": "tutorial",
-        "itemList": [
-          {
-            "name": "1 - Create Application",
-            "id": "01-create-application"
-          },
-          {
-            "name": "2 - Display Todos",
-            "id": "02-display-todos"
-          },
-          {
-            "name": "3 - Share Code",
-            "id": "03-share-code"
-          },
-          {
-            "name": "4 - Create Libraries",
-            "id": "04-create-libs"
-          },
-          {
-            "name": "5 - Dep Graph",
-            "id": "05-dep-graph"
-          },
-          {
-            "name": "6 - Use Computation Caching",
-            "id": "06-computation-caching"
-          },
-          {
-            "name": "7 - Test Affected Projects",
-            "id": "07-test-affected-projects"
-          },
-          {
-            "name": "8 - Summary",
-            "id": "08-summary"
-          }
-        ]
-      },
-      {
-        "name": "Using Nx",
-        "id": "core-concepts",
-        "itemList": [
-          {
-            "name": "Mental Model",
-            "id": "mental-model",
-            "file": "shared/mental-model"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "node/guides/configuration"
-          },
-          {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
-          },
-          {
-            "name": "Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "shared/update"
-          }
-        ]
-      },
-      {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
-            "name": "Lerna/Yarn/PNPM",
-            "id": "adding-to-monorepo",
-            "file": "shared/migration/adding-to-monorepo"
-          },
-          {
-            "name": "Preserving Git Histories",
-            "id": "preserving-git-histories",
-            "file": "shared/migration/preserving-git-histories"
-          }
-        ]
-      },
-      {
-        "name": "CLI",
-        "id": "cli",
-        "itemList": [
-          {
-            "name": "generate",
-            "id": "generate",
-            "file": "node/cli/generate"
-          },
-          {
-            "name": "serve",
-            "id": "serve",
-            "file": "node/cli/serve"
-          },
-          {
-            "name": "build",
-            "id": "build",
-            "file": "node/cli/build"
-          },
-          {
-            "name": "test",
-            "id": "test",
-            "file": "node/cli/test"
-          },
-          {
-            "name": "lint",
-            "id": "lint",
-            "file": "node/cli/lint"
-          },
-          {
-            "name": "e2e",
-            "id": "e2e",
-            "file": "node/cli/e2e"
-          },
-          {
-            "name": "run",
-            "id": "run",
-            "file": "node/cli/run"
-          },
-          {
-            "name": "daemon:start",
-            "id": "daemon:start",
-            "file": "node/cli/daemon-start"
-          },
-          {
-            "name": "daemon:stop",
-            "id": "daemon:stop",
-            "file": "node/cli/daemon-stop"
-          },
-          {
-            "name": "dep-graph",
-            "id": "dep-graph",
-            "file": "node/cli/dep-graph"
-          },
-          {
-            "name": "run-many",
-            "id": "run-many",
-            "file": "node/cli/run-many"
-          },
-          {
-            "name": "affected",
-            "id": "affected",
-            "file": "node/cli/affected"
-          },
-          {
-            "name": "affected:build",
-            "id": "affected-build",
-            "file": "node/cli/affected-build"
-          },
-          {
-            "name": "affected:test",
-            "id": "affected-test",
-            "file": "node/cli/affected-test"
-          },
-          {
-            "name": "affected:lint",
-            "id": "affected-lint",
-            "file": "node/cli/affected-lint"
-          },
-          {
-            "name": "affected:e2e",
-            "id": "affected-e2e",
-            "file": "node/cli/affected-e2e"
-          },
-          {
-            "name": "affected:dep-graph",
-            "id": "affected-dep-graph",
-            "file": "node/cli/affected-dep-graph"
-          },
-          {
-            "name": "affected:apps",
-            "id": "affected-apps",
-            "file": "node/cli/affected-apps"
-          },
-          {
-            "name": "affected:libs",
-            "id": "affected-libs",
-            "file": "node/cli/affected-libs"
-          },
-          {
-            "name": "print-affected",
-            "id": "print-affected",
-            "file": "node/cli/print-affected"
-          },
-          {
-            "name": "format:check",
-            "id": "format-check",
-            "file": "node/cli/format-check"
-          },
-          {
-            "name": "format:write",
-            "id": "format-write",
-            "file": "node/cli/format-write"
-          },
-          {
-            "name": "migrate",
-            "id": "migrate",
-            "file": "node/cli/migrate"
-          },
-          {
-            "name": "report",
-            "id": "report",
-            "file": "node/cli/report"
-          },
-          {
-            "name": "list",
-            "id": "list",
-            "file": "node/cli/list"
-          },
-          {
-            "name": "workspace-lint",
-            "id": "workspace-lint",
-            "file": "node/cli/workspace-lint"
-          },
-          {
-            "name": "workspace-generator",
-            "id": "workspace-generator",
-            "file": "node/cli/workspace-generator"
-          },
-          {
-            "name": "connect-to-nx-cloud",
-            "id": "connect-to-nx-cloud",
-            "file": "node/cli/connect-to-nx-cloud"
-          },
-          {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "node/cli/clear-cache"
-          }
-        ]
-      },
-      {
-        "name": "Workspace",
-        "id": "workspace",
-        "itemList": [
-          {
-            "id": "nrwl-workspace-overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/workspace Overview",
-            "file": "shared/workspace-plugin"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "node/api-workspace/generators/library"
-          },
-          {
-            "name": "move generator",
-            "id": "move",
-            "file": "node/api-workspace/generators/move"
-          },
-          {
-            "name": "remove generator",
-            "id": "remove",
-            "file": "node/api-workspace/generators/remove"
-          },
-          {
-            "name": "run-commands generator",
-            "id": "run-commands-generator",
-            "file": "node/api-workspace/generators/run-commands"
-          },
-          {
-            "name": "workspace-generator generator",
-            "id": "workspace-generator",
-            "file": "node/api-workspace/generators/workspace-generator"
-          },
-          {
-            "name": "convert-to-nx-project generator",
-            "id": "convert-to-nx-project-generator",
-            "file": "node/api-workspace/generators/convert-to-nx-project"
-          },
-          {
-            "name": "run-commands executor",
-            "id": "run-commands-executor",
-            "file": "node/api-workspace/executors/run-commands"
-          },
-          {
-            "name": "run-script executor",
-            "id": "run-script",
-            "file": "node/api-workspace/executors/run-script"
-          },
-          {
-            "name": "tsc executor",
-            "id": "tsc",
-            "file": "node/api-workspace/executors/tsc"
-          }
-        ]
-      },
-      {
-        "name": "web",
-        "id": "web",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/web Overview",
-            "file": "shared/web-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-web/generators/application"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "node/api-web/generators/migrate-to-webpack-5"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "node/api-web/executors/build"
-          },
-          {
-            "name": "dev-server executor",
-            "id": "dev-server",
-            "file": "node/api-web/executors/dev-server"
-          },
-          {
-            "name": "file-server executor",
-            "id": "file-server",
-            "file": "node/api-web/executors/file-server"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "node/api-web/executors/package"
-          }
-        ]
-      },
-      {
-        "name": "angular",
-        "id": "angular",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/angular Overview",
-            "file": "shared/angular-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-angular/generators/application"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "node/api-angular/generators/convert-tslint-to-eslint"
-          },
-          {
-            "name": "downgrade-module generator",
-            "id": "downgrade-module",
-            "file": "node/api-angular/generators/downgrade-module"
-          },
-          {
-            "name": "karma generator",
-            "id": "karma",
-            "file": "node/api-angular/generators/karma"
-          },
-          {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "node/api-angular/generators/karma-project"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "node/api-angular/generators/library"
-          },
-          {
-            "name": "move generator",
-            "id": "move",
-            "file": "node/api-angular/generators/move"
-          },
-          {
-            "name": "ngrx generator",
-            "id": "ngrx",
-            "file": "node/api-angular/generators/ngrx"
-          },
-          {
-            "name": "setup-mfe generator",
-            "id": "setup-mfe",
-            "file": "node/api-angular/generators/setup-mfe"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "file": "node/api-angular/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "file": "node/api-angular/generators/storybook-configuration"
-          },
-          {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "file": "node/api-angular/generators/storybook-migrate-defaults-5-to-6"
-          },
-          {
-            "name": "storybook-migrate-stories-to-6-2 generator",
-            "id": "storybook-migrate-stories-to-6-2",
-            "file": "node/api-angular/generators/storybook-migrate-stories-to-6-2"
-          },
-          {
-            "name": "upgrade-module generator",
-            "id": "upgrade-module",
-            "file": "node/api-angular/generators/upgrade-module"
-          },
-          {
-            "name": "web-worker generator",
-            "id": "web-worker",
-            "file": "node/api-angular/generators/web-worker"
-          },
-          {
-            "name": "delegate-build executor",
-            "id": "delegate-build",
-            "file": "node/api-angular/executors/delegate-build"
-          },
-          {
-            "name": "ng packagr lite executor",
-            "id": "ng-packagr-lite",
-            "file": "node/api-angular/executors/ng-packagr-lite"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "node/api-angular/executors/package"
-          },
-          {
-            "name": "webpack-browser executor",
-            "id": "webpack-browser",
-            "file": "node/api-angular/executors/webpack-browser"
-          },
-          {
-            "name": "webpack-server executor",
-            "id": "webpack-server",
-            "file": "node/api-angular/executors/webpack-server"
-          }
-        ]
-      },
-      {
-        "name": "react",
-        "id": "react",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/react Overview",
-            "file": "shared/react-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-react/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "node/api-react/generators/component"
-          },
-          {
-            "name": "component-cypress-spec generator",
-            "id": "component-cypress-spec",
-            "file": "node/api-react/generators/component-cypress-spec"
-          },
-          {
-            "name": "component-story generator",
-            "id": "component-story",
-            "file": "node/api-react/generators/component-story"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "node/api-react/generators/library"
-          },
-          {
-            "name": "redux generator",
-            "id": "redux",
-            "file": "node/api-react/generators/redux"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "file": "node/api-react/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "file": "node/api-react/generators/storybook-configuration"
-          },
-          {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "file": "node/api-react/generators/storybook-migrate-defaults-5-to-6"
-          }
-        ]
-      },
-      {
-        "name": "jest",
-        "id": "jest",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/jest Overview",
-            "file": "shared/jest-plugin"
-          },
-          {
-            "name": "jest executor",
-            "id": "jest",
-            "file": "node/api-jest/executors/jest"
-          }
-        ]
-      },
-      {
-        "name": "cypress",
-        "id": "cypress",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/cypress Overview",
-            "file": "shared/cypress-plugin"
-          },
-          {
-            "name": "cypress executor",
-            "id": "cypress",
-            "file": "node/api-cypress/executors/cypress"
-          }
-        ]
-      },
-      {
-        "name": "storybook",
-        "id": "storybook",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "file": "node/guides/storybook-plugin"
-          },
-          {
-            "name": "configuration generator",
-            "id": "configuration",
-            "file": "node/api-storybook/generators/configuration"
-          },
-          {
-            "name": "migrate-defaults-5-to-6 generator",
-            "id": "migrate-defaults-5-to-6",
-            "file": "node/api-storybook/generators/migrate-defaults-5-to-6"
-          },
-          {
-            "name": "migrate-stories-to-6-2 generator",
-            "id": "migrate-stories-to-6-2",
-            "file": "node/api-storybook/generators/migrate-stories-to-6-2"
-          },
-          {
-            "name": "cypress-project generator",
-            "id": "cypress-project",
-            "file": "node/api-storybook/generators/cypress-project"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "node/api-storybook/executors/build"
-          },
-          {
-            "name": "storybook executor",
-            "id": "storybook",
-            "file": "node/api-storybook/executors/storybook"
-          }
-        ]
-      },
-      {
-        "name": "linter",
-        "id": "linter",
-        "itemList": [
-          {
-            "name": "eslint executor",
-            "id": "eslint",
-            "file": "node/api-linter/executors/eslint"
-          },
-          {
-            "name": "lint executor",
-            "id": "lint",
-            "file": "node/api-linter/executors/lint"
-          }
-        ]
-      },
-      {
-        "name": "node",
-        "id": "node",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/node Overview",
-            "file": "shared/node-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-node/generators/application"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "node/api-node/generators/library"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "node/api-node/generators/migrate-to-webpack-5"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "node/api-node/executors/build"
-          },
-          {
-            "name": "execute executor",
-            "id": "execute",
-            "file": "node/api-node/executors/execute"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "node/api-node/executors/package"
-          }
-        ]
-      },
-      {
-        "name": "express",
-        "id": "express",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/express Overview",
-            "file": "shared/express-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-express/generators/application"
-          }
-        ]
-      },
-      {
-        "name": "nest",
-        "id": "nest",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/nest Overview",
-            "file": "shared/nest-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-nest/generators/application"
-          },
-          {
-            "name": "class generator",
-            "id": "class",
-            "file": "node/api-nest/generators/class"
-          },
-          {
-            "name": "controller generator",
-            "id": "controller",
-            "file": "node/api-nest/generators/controller"
-          },
-          {
-            "name": "decorator generator",
-            "id": "decorator",
-            "file": "node/api-nest/generators/decorator"
-          },
-          {
-            "name": "filter generator",
-            "id": "filter",
-            "file": "node/api-nest/generators/filter"
-          },
-          {
-            "name": "gateway generator",
-            "id": "gateway",
-            "file": "node/api-nest/generators/gateway"
-          },
-          {
-            "name": "guard generator",
-            "id": "guard",
-            "file": "node/api-nest/generators/guard"
-          },
-          {
-            "name": "interceptor generator",
-            "id": "interceptor",
-            "file": "node/api-nest/generators/interceptor"
-          },
-          {
-            "name": "interface generator",
-            "id": "interface",
-            "file": "node/api-nest/generators/interface"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "file": "node/api-nest/generators/library"
-          },
-          {
-            "name": "middleware generator",
-            "id": "middleware",
-            "file": "node/api-nest/generators/middleware"
-          },
-          {
-            "name": "module generator",
-            "id": "module",
-            "file": "node/api-nest/generators/module"
-          },
-          {
-            "name": "pipe generator",
-            "id": "pipe",
-            "file": "node/api-nest/generators/pipe"
-          },
-          {
-            "name": "provider generator",
-            "id": "provider",
-            "file": "node/api-nest/generators/provider"
-          },
-          {
-            "name": "resolver generator",
-            "id": "resolver",
-            "file": "node/api-nest/generators/resolver"
-          },
-          {
-            "name": "service generator",
-            "id": "service",
-            "file": "node/api-nest/generators/service"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "node/api-nest/generators/convert-tslint-to-eslint"
-          }
-        ]
-      },
-      {
-        "name": "next",
-        "id": "next",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/next Overview",
-            "file": "shared/next-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-next/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "node/api-next/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "node/api-next/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "node/api-next/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "file": "node/api-next/executors/server"
-          },
-          {
-            "name": "export executor",
-            "id": "export",
-            "file": "node/api-next/executors/export"
-          }
-        ]
-      },
-      {
-        "name": "gatsby",
-        "id": "gatsby",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/gatsby Overview",
-            "file": "shared/gatsby-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-gatsby/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "node/api-gatsby/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "node/api-gatsby/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "node/api-gatsby/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "file": "node/api-gatsby/executors/server"
-          }
-        ]
-      },
-      {
-        "name": "Nx Plugin",
-        "id": "nx-plugin",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/nx-plugin Overview",
-            "file": "shared/nx-plugin"
-          },
-          {
-            "name": "executor generator",
-            "id": "executor",
-            "file": "node/api-nx-plugin/generators/executor"
-          },
-          {
-            "name": "migration generator",
-            "id": "migration",
-            "file": "node/api-nx-plugin/generators/migration"
-          },
-          {
-            "name": "plugin generator",
-            "id": "plugin",
-            "file": "node/api-nx-plugin/generators/plugin"
-          },
-          {
-            "name": "generator generator",
-            "id": "schematic",
-            "file": "node/api-nx-plugin/generators/generator"
-          },
-          {
-            "name": "e2e executor",
-            "id": "e2e",
-            "file": "node/api-nx-plugin/executors/e2e"
-          }
-        ]
-      },
-      {
-        "name": "Nx Devkit",
-        "id": "nx-devkit",
-        "itemList": [
-          {
-            "id": "index",
-            "name": "index",
-            "searchResultsName": "Nx Devkit",
-            "file": "node/api-nx-devkit/index"
-          },
-          {
-            "id": "ngcli_adapter",
-            "name": "ngcli_adapter",
-            "searchResultsName": "Ng CLI Adapter",
-            "file": "node/api-nx-devkit/ngcli_adapter"
-          }
-        ]
-      },
-      {
-        "name": "Core",
-        "id": "core-extended",
-        "itemList": [
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          }
-        ]
-      },
-      {
-        "name": "Executors / Builders",
-        "id": "executors",
-        "itemList": [
-          {
-            "name": "Using Executors / Builders",
-            "id": "using-builders",
-            "file": "shared/using-executors"
-          },
-          {
-            "name": "Running Custom Commands",
-            "id": "run-commands-builder",
-            "file": "shared/running-custom-commands"
-          },
-          {
-            "name": "Creating Custom Builders",
-            "id": "creating-custom-builders",
-            "file": "shared/tools-workspace-builders"
-          }
-        ]
-      },
-      {
-        "name": "Generators",
-        "id": "generators",
-        "itemList": [
-          {
-            "name": "Using Generators",
-            "id": "using-schematics",
-            "file": "shared/generators/using-generators"
-          },
-          {
-            "name": "Workspace Generators",
-            "id": "workspace-generators",
-            "file": "shared/generators/workspace-generators"
-          },
-          {
-            "name": "Composing Generators",
-            "id": "composing-generators",
-            "file": "shared/generators/composing-generators"
-          },
-          {
-            "name": "Generator Options",
-            "id": "generator-options",
-            "file": "shared/generators/generator-options"
-          },
-          {
-            "name": "Creating Files",
-            "id": "creating-files",
-            "file": "shared/generators/creating-files"
-          },
-          {
-            "name": "Modifying Files",
-            "id": "modifying-files",
-            "file": "shared/generators/modifying-files"
-          }
-        ]
-      },
-      {
-        "name": "Workspace Structure",
-        "id": "structure",
-        "itemList": [
-          {
-            "name": "Creating Libraries",
-            "id": "creating-libraries",
-            "file": "shared/workspace/creating-libraries"
-          },
-          {
-            "name": "Library Types",
-            "id": "library-types",
-            "file": "shared/workspace/library-types"
-          },
-          {
-            "name": "Grouping Libraries",
-            "id": "grouping-libraries",
-            "file": "shared/workspace/grouping-libraries"
-          },
-          {
-            "name": "Buildable and Publishable Libraries",
-            "id": "buildable-and-publishable-libraries",
-            "file": "shared/workspace/buildable-and-publishable-libraries"
-          },
-          {
-            "name": "Using Tags",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
-          },
-          {
-            "name": "Dependency Graph",
-            "id": "dependency-graph",
-            "file": "shared/workspace/structure/dependency-graph"
-          },
-          {
-            "name": "Extending the Project Graph",
-            "id": "project-graph-plugins",
-            "file": "shared/workspace/project-graph-plugins"
-          }
-        ]
-      },
-      {
-        "name": "CI",
-        "id": "ci",
-        "itemList": [
-          {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
-            "id": "monorepo-ci-azure",
-            "file": "shared/monorepo-ci-azure"
-          },
-          {
-            "name": "Distributed CI: Jenkins",
-            "id": "monorepo-ci-jenkins",
-            "file": "shared/monorepo-ci-jenkins"
-          },
-          {
-            "name": "Incremental Builds",
-            "id": "incremental-builds",
-            "file": "shared/incremental-builds"
-          }
-        ]
-      },
-      {
-        "name": "Guides",
-        "id": "guides",
-        "itemList": [
-          {
-            "name": "Lerna/Yarn and Nx",
-            "id": "lerna-and-nx",
-            "file": "shared/guides/lerna-and-nx"
-          },
-          {
-            "name": "Using Nx at Enterprises",
-            "id": "monorepo-nx-enterprise",
-            "file": "shared/monorepo-nx-enterprise"
+            "file": "shared/examples/apollo-react"
           },
           {
-            "name": "Using ESLint in Nx Workspaces",
-            "id": "eslint",
-            "file": "shared/eslint"
+            "name": "Large Repo and Caching",
+            "id": "caching",
+            "file": "shared/examples/caching"
           },
           {
-            "name": "Webpack 5 Migration",
-            "id": "webpack-5",
-            "file": "shared/guides/webpack-5"
+            "name": "Large Repo and DTE",
+            "id": "dte",
+            "file": "shared/examples/dte"
           }
         ]
       }

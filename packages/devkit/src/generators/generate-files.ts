@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { logger } from '@nrwl/tao/src/shared/logger';
+import type { Tree } from 'nx/src/generators/tree';
+import { logger } from 'nx/src/utils/logger';
 
 const binaryExts = new Set([
   // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js
@@ -23,6 +23,7 @@ const binaryExts = new Set([
   '.jpx',
   '.heic',
   '.cur',
+  '.tgz',
 
   // Java files
   '.jar',
@@ -65,29 +66,37 @@ export function generateFiles(
   substitutions: { [k: string]: any }
 ): void {
   const ejs = require('ejs');
-  allFilesInDir(srcFolder).forEach((filePath) => {
-    let newContent: Buffer | string;
-    const computedPath = computePath(
-      srcFolder,
-      target,
-      filePath,
-      substitutions
+
+  const files = allFilesInDir(srcFolder);
+  if (files.length === 0) {
+    throw new Error(
+      `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`
     );
+  } else {
+    files.forEach((filePath) => {
+      let newContent: Buffer | string;
+      const computedPath = computePath(
+        srcFolder,
+        target,
+        filePath,
+        substitutions
+      );
 
-    if (binaryExts.has(path.extname(filePath))) {
-      newContent = readFileSync(filePath);
-    } else {
-      const template = readFileSync(filePath, 'utf-8');
-      try {
-        newContent = ejs.render(template, substitutions, {});
-      } catch (e) {
-        logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
-        throw e;
+      if (binaryExts.has(path.extname(filePath))) {
+        newContent = readFileSync(filePath);
+      } else {
+        const template = readFileSync(filePath, 'utf-8');
+        try {
+          newContent = ejs.render(template, substitutions, {});
+        } catch (e) {
+          logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
+          throw e;
+        }
       }
-    }
 
-    tree.write(computedPath, newContent);
-  });
+      tree.write(computedPath, newContent);
+    });
+  }
 }
 
 function computePath(

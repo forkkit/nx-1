@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { updateJson } from '../utils/json';
+import type { Tree } from 'nx/src/generators/tree';
+import { updateJson } from 'nx/src/generators/utils/json';
 
 export function updateTsConfigsToJs(
   tree: Tree,
@@ -46,7 +46,7 @@ export function updateTsConfigsToJs(
 
   updateJson(tree, updateConfigPath, (json) => {
     json.include = uniq([...json.include, '**/*.js']);
-    json.exclude = uniq([...json.exclude, '**/*.spec.js']);
+    json.exclude = uniq([...json.exclude, '**/*.spec.js', '**/*.test.js']);
 
     return json;
   });

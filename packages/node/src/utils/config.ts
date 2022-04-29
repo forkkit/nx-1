@@ -1,41 +1,62 @@
-import * as ts from 'typescript';
-import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { LicenseWebpackPlugin } from 'license-webpack-plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import * as ts from 'typescript';
+import type { Configuration, WebpackPluginInstance } from 'webpack';
+import * as webpack from 'webpack';
+import { loadTsTransformers } from './load-ts-transformers';
 import { BuildBuilderOptions } from './types';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { removeExt } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
-export const OUT_FILENAME = 'main.js';
-
-// TODO(jack): In Nx 13 go back to proper types.
-type Configuration = any;
-type WebpackPluginInstance = any; // This was webpack.Plugin in webpack 4
+export const OUT_FILENAME_TEMPLATE = '[name].js';
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions
 ): Configuration {
-  // TODO(jack): Remove in Nx 13
-  const { CopyWebpackPlugin, webpack } = require('../webpack/entry');
-
   const { options: compilerOptions } = readTsConfig(options.tsConfig);
   const supportsEs2015 =
     compilerOptions.target !== ts.ScriptTarget.ES3 &&
     compilerOptions.target !== ts.ScriptTarget.ES5;
   const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
+
+  const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
+    options.transformers
+  );
+
+  const additionalEntryPoints =
+    options.additionalEntryPoints?.reduce(
+      (obj, current) => ({
+        ...obj,
+        [current.entryName]: current.entryPath,
+      }),
+      {} as { [entryName: string]: string }
+    ) ?? {};
+  const mainEntry = options.outputFileName
+    ? removeExt(options.outputFileName)
+    : 'main';
   const webpackConfig: Configuration = {
     entry: {
-      main: [options.main],
+      [mainEntry]: [options.main],
+      ...additionalEntryPoints,
     },
     devtool: options.sourceMap ? 'source-map' : false,
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,
-      filename: OUT_FILENAME,
+      filename:
+        options.additionalEntryPoints?.length > 0
+          ? OUT_FILENAME_TEMPLATE
+          : options.outputFileName,
+      hashFunction: 'xxhash64',
+      // Disabled for performance
+      pathinfo: false,
     },
     module: {
+      // Enabled for performance
+      unsafeCache: true,
       rules: [
         {
           test: /\.([jt])sx?$/,
@@ -43,9 +64,20 @@ export function getBaseWebpackPartial(
           exclude: /node_modules/,
           options: {
             configFile: options.tsConfig,
-            transpileOnly: true,
+            transpileOnly: !hasPlugin,
             // https://github.com/TypeStrong/ts-loader/pull/685
             experimentalWatchApi: true,
+            getCustomTransformers: (program) => ({
+              before: compilerPluginHooks.beforeHooks.map((hook) =>
+                hook(program)
+              ),
+              after: compilerPluginHooks.afterHooks.map((hook) =>
+                hook(program)
+              ),
+              afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
+                (hook) => hook(program)
+              ),
+            }),
           },
         },
       ],
@@ -54,11 +86,11 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
-        new TsConfigPathsPlugin({
+        new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }),
+        }) as never, // TODO: Remove never type when 'tsconfig-paths-webpack-plugin' types fixed
       ],
       mainFields,
     },
@@ -67,6 +99,8 @@ export function getBaseWebpackPartial(
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
+        // For watch mode, type errors should result in failure.
+        async: false,
         typescript: {
           enabled: true,
           configFile: options.tsConfig,
@@ -76,9 +110,15 @@ export function getBaseWebpackPartial(
     ],
     watch: options.watch,
     watchOptions: {
+      // Delay the next rebuild from first file change, otherwise can lead to
+      // two builds on a single file change.
+      aggregateTimeout: 200,
       poll: options.poll,
     },
     stats: getStatsConfig(options),
+    experiments: {
+      cacheUnaffected: true,
+    },
   };
 
   const extraPlugins: WebpackPluginInstance[] = [];
@@ -143,14 +183,6 @@ export function getBaseWebpackPartial(
     extraPlugins.push(copyWebpackPluginInstance);
   }
 
-  if (options.showCircularDependencies) {
-    extraPlugins.push(
-      new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/,
-      })
-    );
-  }
-
   webpackConfig.plugins = [...webpackConfig.plugins, ...extraPlugins];
 
   return webpackConfig;
@@ -166,10 +198,7 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-// TODO(jack): Update the typing with new version of webpack -- was returning Stats.ToStringOptions in webpack 4
-// The StatsOptions type needs to be exported from webpack
-// PR: https://github.com/webpack/webpack/pull/12875
-function getStatsConfig(options: BuildBuilderOptions): any {
+function getStatsConfig(options: BuildBuilderOptions) {
   return {
     hash: true,
     timings: false,

@@ -1,24 +1,21 @@
+import { cypressInitGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  removeDependenciesFromPackageJson,
   Tree,
-  updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { Schema } from './schema';
-import { nxVersion } from '../../utils/versions';
-import { cypressInitGenerator } from '@nrwl/cypress';
 import { jestInitGenerator } from '@nrwl/jest';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
+import { nxVersion, typesNodeVersion } from '../../utils/versions';
+import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  updateJson(tree, 'package.json', (json) => {
-    delete json.dependencies['@nrwl/web'];
-    return json;
-  });
+  removeDependenciesFromPackageJson(tree, ['@nrwl/web'], []);
 
   return addDependenciesToPackageJson(
     tree,
@@ -29,6 +26,7 @@ function updateDependencies(tree: Tree) {
     },
     {
       '@nrwl/web': nxVersion,
+      '@types/node': typesNodeVersion,
     }
   );
 }
@@ -52,7 +50,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(tree);
+    const cypressTask = cypressInitGenerator(tree, {});
     tasks.push(cypressTask);
   }
   const installTask = updateDependencies(tree);

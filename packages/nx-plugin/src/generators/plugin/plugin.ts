@@ -1,20 +1,21 @@
-import {
-  readProjectConfiguration,
-  names,
-  convertNxGenerator,
-  generateFiles,
-  getWorkspaceLayout,
-  normalizePath,
-  updateProjectConfiguration,
-  addDependenciesToPackageJson,
-  formatFiles,
-  GeneratorCallback,
-} from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  convertNxGenerator,
+  formatFiles,
+  generateFiles,
+  GeneratorCallback,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  normalizePath,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import type { Schema } from './schema';
 import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
-import { libraryGenerator } from '@nrwl/node';
+import { libraryGenerator } from '@nrwl/js';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { generatorGenerator } from '../generator/generator';
 import { executorGenerator } from '../executor/executor';
@@ -40,12 +41,13 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalizePath(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-  const npmPackageName = `@${npmScope}/${name}`;
+
+  const npmPackageName = options.importPath || `@${npmScope}/${name}`;
 
   return {
     ...options,
@@ -82,6 +84,7 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
     project: options.name,
     name: 'build',
     unitTestRunner: options.unitTestRunner,
+    includeHasher: false,
   });
 }
 
@@ -125,9 +128,11 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   const libraryTask = await libraryGenerator(host, {
     ...schema,
-    publishable: true,
-    importPath: schema.importPath ?? options.npmPackageName,
+    config: options.standaloneConfig !== false ? 'project' : 'workspace',
+    buildable: true,
+    importPath: options.npmPackageName,
   });
+
   tasks.push(libraryTask);
 
   const installTask = addDependenciesToPackageJson(
@@ -136,7 +141,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     {
       '@nrwl/devkit': nxVersion,
       '@nrwl/jest': nxVersion,
-      '@nrwl/node': nxVersion,
+      '@nrwl/js': nxVersion,
       tslib: '^2.0.0',
     }
   );
@@ -150,7 +155,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     projectDirectory: options.projectDirectory,
     pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
     npmPackageName: options.npmPackageName,
-    standaloneConfig: options.standaloneConfig,
+    standaloneConfig: options.standaloneConfig ?? true,
   });
 
   await formatFiles(host);

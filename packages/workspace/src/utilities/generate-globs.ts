@@ -1,11 +1,11 @@
 import { joinPathFragments } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { relative, resolve } from 'path';
-import { readCachedProjectGraph } from '../core/project-graph';
+import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
-} from './project-graph-utils';
+} from 'nx/src/utils/project-graph-utils';
 
 /**
  * Generates a set of glob patterns based off the source root of the app and its dependencies
@@ -16,8 +16,8 @@ export function createGlobPatternsForDependencies(
   dirPath: string,
   fileGlobPattern: string
 ): string[] {
-  const filenameRelativeToWorkspaceRoot = relative(appRootPath, dirPath);
-  const projectGraph = readCachedProjectGraph('4.0');
+  const filenameRelativeToWorkspaceRoot = relative(workspaceRoot, dirPath);
+  const projectGraph = readCachedProjectGraph();
 
   // find the project
   let projectName;
@@ -40,7 +40,7 @@ export function createGlobPatternsForDependencies(
     );
 
     return projectDirs.map((sourceDir) =>
-      resolve(appRootPath, joinPathFragments(sourceDir, fileGlobPattern))
+      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
     );
   } catch (e) {
     throw new Error(

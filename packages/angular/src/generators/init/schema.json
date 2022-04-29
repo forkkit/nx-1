@@ -3,7 +3,7 @@
   "$id": "SchematicsAngularModuleInit",
   "cli": "nx",
   "title": "Init Angular Plugin",
-  "description": "NOTE: Does not work in the --dry-run mode",
+  "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
   "type": "object",
   "properties": {
     "unitTestRunner": {
@@ -38,6 +38,7 @@
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css",
+      "enum": ["css", "scss", "sass", "less"],
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -51,11 +52,20 @@
             "label": "SASS(.scss)  [ http://sass-lang.com   ]"
           },
           {
+            "value": "sass",
+            "label": "SASS(.sass)  [ http://sass-lang.com   ]"
+          },
+          {
             "value": "less",
             "label": "LESS         [ http://lesscss.org     ]"
           }
         ]
       }
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
     }
   },
   "additionalProperties": false

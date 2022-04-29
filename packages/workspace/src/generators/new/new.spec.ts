@@ -1,15 +1,16 @@
 import { createTree } from '@nrwl/devkit/testing';
 import { readJson, Tree, writeJson, PackageManager } from '@nrwl/devkit';
-import { newGenerator, Preset, Schema } from './new';
+import { newGenerator, Schema } from './new';
 import { Linter } from '../../utils/lint';
+import { Preset } from '../utils/presets';
 
 const defaultOptions: Omit<Schema, 'name' | 'directory' | 'appName'> = {
   cli: 'nx',
-  preset: Preset.Empty,
+  preset: Preset.Apps,
   skipInstall: false,
   skipGit: false,
   linter: Linter.EsLint,
-  defaultBase: 'master',
+  defaultBase: 'main',
 };
 
 describe('new', () => {
@@ -65,7 +66,7 @@ describe('new', () => {
     describe.each([['npm'], ['yarn'], ['pnpm']])(
       '%s',
       (packageManager: PackageManager) => {
-        it('should set the packageManager in workspace.json', async () => {
+        it('should set the packageManager in nx.json', async () => {
           await newGenerator(tree, {
             ...defaultOptions,
             name: 'my-workspace',
@@ -76,8 +77,8 @@ describe('new', () => {
             packageManager,
           });
 
-          const workspaceJson = readJson(tree, 'my-workspace/angular.json');
-          expect(workspaceJson.cli.packageManager).toEqual(packageManager);
+          const nxJson = readJson(tree, 'my-workspace/nx.json');
+          expect(nxJson.cli.packageManager).toEqual(packageManager);
         });
       }
     );

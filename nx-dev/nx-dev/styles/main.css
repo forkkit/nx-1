@@ -12,10 +12,6 @@
 @import './constellation-wobble.animation.css';
 /*! purgecss end ignore */
 
-html {
-  scroll-behavior: smooth;
-}
-
 svg {
   shape-rendering: auto;
   text-rendering: optimizeLegibility;
@@ -27,6 +23,7 @@ svg {
   font-family: 'InputMono';
   font-style: normal;
   font-weight: normal;
+  font-display: swap;
 }
 .font-input-mono {
   font-family: 'InputMono', monospace;
@@ -43,6 +40,7 @@ pre,
  */
 iframe[src*='youtube'] {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
 }
 .prose iframe,
 .prose img {
@@ -112,4 +110,66 @@ iframe[src*='youtube'] {
   position: absolute;
   top: 0;
   width: 100%;
+}
+
+/**
+ * Only used for animated background on really big definition
+ */
+@media (min-width: 2400px) {
+  div#animated-background {
+    background-size: cover !important;
+  }
+}
+
+/**
+ * Sponsor carousel
+ */
+#sponsors-carousel {
+  animation: scroll 80s linear infinite;
+  width: calc(192px * 18);
+}
+#sponsors-carousel div {
+  margin: 0 24px;
+  min-width: 144px;
+  width: 144px;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(calc(-192px * 18), 0, 0);
+  }
+}
+
+/**
+ * Tooltips
+ */
+[data-tooltip] {
+  cursor: help;
+  position: relative;
+}
+
+[data-tooltip]:before {
+  background-color: hsla(214, 61%, 11%, 1);
+  border-radius: 0.375rem;
+  color: hsla(0, 0%, 95%, 1);
+  content: attr(data-tooltip);
+  left: 0;
+  opacity: 0;
+  padding: 0.25rem 0.5rem;
+  position: absolute;
+  text-align: center;
+  text-transform: capitalize;
+  top: 120%;
+  transition: opacity 150ms ease-out;
+  visibility: hidden;
+  z-index: 1;
+  width: max-content;
+}
+
+[data-tooltip]:hover:before {
+  opacity: 1;
+  visibility: visible;
 }

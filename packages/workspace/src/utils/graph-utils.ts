@@ -1,5 +1,8 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { isWorkspaceProject } from '../core/project-graph/operators';
+import type {
+  FileData,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 
 interface Reach {
   graph: ProjectGraph;
@@ -15,9 +18,7 @@ const reach: Reach = {
 
 function buildMatrix(graph: ProjectGraph) {
   const dependencies = graph.dependencies;
-  const nodes = Object.keys(graph.nodes).filter((s) =>
-    isWorkspaceProject(graph.nodes[s])
-  );
+  const nodes = Object.keys(graph.nodes);
   const adjList = {};
   const matrix = {};
 
@@ -28,20 +29,20 @@ function buildMatrix(graph: ProjectGraph) {
     };
   }, {});
 
-  nodes.forEach((v, i) => {
-    adjList[nodes[i]] = [];
-    matrix[nodes[i]] = { ...initMatrixValues };
+  nodes.forEach((v) => {
+    adjList[v] = [];
+    matrix[v] = { ...initMatrixValues };
   });
 
   for (let proj in dependencies) {
     for (let dep of dependencies[proj]) {
-      if (isWorkspaceProject(graph.nodes[dep.target])) {
+      if (graph.nodes[dep.target]) {
         adjList[proj].push(dep.target);
       }
     }
   }
 
-  const traverse = (s, v) => {
+  const traverse = (s: string, v: string) => {
     matrix[s][v] = true;
 
     for (let adj of adjList[v]) {
@@ -51,8 +52,8 @@ function buildMatrix(graph: ProjectGraph) {
     }
   };
 
-  nodes.forEach((v, i) => {
-    traverse(nodes[i], nodes[i]);
+  nodes.forEach((v) => {
+    traverse(v, v);
   });
 
   return {
@@ -65,14 +66,14 @@ export function getPath(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string
-): Array<ProjectGraphNode> {
+): Array<ProjectGraphProjectNode> {
   if (sourceProjectName === targetProjectName) return [];
 
   if (reach.graph !== graph) {
-    const result = buildMatrix(graph);
+    const { matrix, adjList } = buildMatrix(graph);
     reach.graph = graph;
-    reach.matrix = result.matrix;
-    reach.adjList = result.adjList;
+    reach.matrix = matrix;
+    reach.adjList = adjList;
   }
 
   const adjList = reach.adjList;
@@ -99,17 +100,55 @@ export function getPath(
   }
 
   if (path.length > 1) {
-    return path.map((n) => graph.nodes[n]);
+    return path.map((n) => graph.nodes[n] as ProjectGraphProjectNode);
   } else {
     return [];
   }
 }
 
+export function pathExists(
+  graph: ProjectGraph,
+  sourceProjectName: string,
+  targetProjectName: string
+): boolean {
+  if (sourceProjectName === targetProjectName) return true;
+
+  if (reach.graph !== graph) {
+    const { matrix, adjList } = buildMatrix(graph);
+    reach.graph = graph;
+    reach.matrix = matrix;
+    reach.adjList = adjList;
+  }
+
+  return reach.matrix[sourceProjectName][targetProjectName];
+}
+
 export function checkCircularPath(
   graph: ProjectGraph,
-  sourceProject: ProjectGraphNode,
-  targetProject: ProjectGraphNode
-): Array<ProjectGraphNode> {
+  sourceProject: ProjectGraphProjectNode,
+  targetProject: ProjectGraphProjectNode
+): ProjectGraphProjectNode[] {
   if (!graph.nodes[targetProject.name]) return [];
+
   return getPath(graph, targetProject.name, sourceProject.name);
+}
+
+export function findFilesInCircularPath(
+  circularPath: ProjectGraphProjectNode[]
+): Array<string[]> {
+  const filePathChain = [];
+
+  for (let i = 0; i < circularPath.length - 1; i++) {
+    const next = circularPath[i + 1].name;
+    const files: FileData[] = circularPath[i].data.files;
+    filePathChain.push(
+      Object.keys(files)
+        .filter(
+          (key) => files[key].deps && files[key].deps.indexOf(next) !== -1
+        )
+        .map((key) => files[key].file)
+    );
+  }
+
+  return filePathChain;
 }

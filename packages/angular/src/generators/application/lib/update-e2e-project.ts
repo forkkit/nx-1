@@ -6,6 +6,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
@@ -15,7 +16,7 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
     spec,
     content.replace(
       `${options.name} app is running!`,
-      `Welcome to ${options.name}!`
+      `Welcome ${options.name}`
     )
   );
 
@@ -30,6 +31,8 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
     targets: {
       e2e: proj.targets.e2e,
     },
+    implicitDependencies: [options.name],
+    tags: [],
   };
   project.targets.e2e.options.protractorConfig = `${options.e2eProjectRoot}/protractor.conf.js`;
   // update workspace.json / angular.json
@@ -58,7 +61,7 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, `${options.e2eProjectRoot}/tsconfig.json`, (json) => {
     return {
       ...json,
-      extends: `${offsetFromRoot(options.e2eProjectRoot)}tsconfig.base.json`,
+      extends: getRelativePathToRootTsConfig(tree, options.e2eProjectRoot),
     };
   });
 }

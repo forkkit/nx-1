@@ -9,7 +9,8 @@ import {
 } from '@nrwl/devkit';
 import * as ts from 'typescript';
 import {
-  getComponentName,
+  findExportDeclarationsForJsx,
+  getComponentNode,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
 
@@ -41,10 +42,8 @@ export function createComponentStoriesFile(
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
 
-  // TODO: Remove this entirely, given we don't support TSLint with React?
-  const usesEsLint = true;
-
   const componentFilePath = joinPathFragments(sourceRoot, componentPath);
+
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),
     ''
@@ -79,15 +78,52 @@ export function createComponentStoriesFile(
     true
   );
 
-  const cmpDeclaration = getComponentName(sourceFile);
+  const cmpDeclaration = getComponentNode(sourceFile);
 
   if (!cmpDeclaration) {
-    throw new Error(
-      `Could not find any React component in file ${componentFilePath}`
+    const componentNodes = findExportDeclarationsForJsx(sourceFile);
+    if (componentNodes?.length) {
+      componentNodes.forEach((declaration) => {
+        findPropsAndGenerateFile(
+          host,
+          sourceFile,
+          declaration,
+          componentDirectory,
+          name,
+          isPlainJs,
+          fileExt,
+          componentNodes.length > 1
+        );
+      });
+    } else {
+      throw new Error(
+        `Could not find any React component in file ${componentFilePath}`
+      );
+    }
+  } else {
+    findPropsAndGenerateFile(
+      host,
+      sourceFile,
+      cmpDeclaration,
+      componentDirectory,
+      name,
+      isPlainJs,
+      fileExt
     );
   }
+}
 
-  const propsInterface = getComponentPropsInterface(sourceFile);
+export function findPropsAndGenerateFile(
+  host: Tree,
+  sourceFile: ts.SourceFile,
+  cmpDeclaration: ts.Node,
+  componentDirectory: string,
+  name: string,
+  isPlainJs: boolean,
+  fileExt: string,
+  fromNodeArray?: boolean
+) {
+  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
 
   let propsTypeName: string = null;
   let props: {
@@ -124,14 +160,16 @@ export function createComponentStoriesFile(
     joinPathFragments(__dirname, './files'),
     normalizePath(componentDirectory),
     {
-      componentFileName: name,
+      componentFileName: fromNodeArray
+        ? `${name}--${(cmpDeclaration as any).name.text}`
+        : name,
+      componentImportFileName: name,
       propsTypeName,
       props,
       argTypes,
       componentName: (cmpDeclaration as any).name.text,
       isPlainJs,
       fileExt,
-      usesEsLint,
     }
   );
 }

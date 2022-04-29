@@ -1,6 +1,6 @@
 import { joinPathFragments, logger } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { getSourceDirOfDependentProjects } from '@nrwl/workspace/src/utilities/project-graph-utils';
+import { workspaceRoot } from '@nrwl/devkit';
+import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { resolve } from 'path';
 
 /**
@@ -19,7 +19,7 @@ export function createGlobPatternsOfDependentProjects(
     const projectDirs = getSourceDirOfDependentProjects(projectName);
 
     return projectDirs.map((sourceDir) =>
-      resolve(appRootPath, joinPathFragments(sourceDir, fileGlobPattern))
+      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
     );
   } catch (e) {
     throw new Error(

@@ -41,11 +41,11 @@ export function createEmptyWorkspace(tree: Tree): Tree {
       npmScope: 'proj',
       projects: {},
       affected: {
-        defaultBase: 'master',
+        defaultBase: 'main',
       },
       tasksRunnerOptions: {
         default: {
-          runner: '@nrwl/workspace/tasks-runners/default',
+          runner: 'nx/tasks-runners/default',
           options: {
             cacheableOperations: ['build', 'lint', 'test', 'e2e'],
           },
@@ -166,7 +166,7 @@ export class MockBuilderContext implements BuilderContext {
     return this.architect.scheduleBuilder(name, overrides, scheduleOptions);
   }
 
-  getTargetOptions(target: Target) {
+  getTargetOptions(target: Target): Promise<JsonObject> {
     return this.architectHost.getOptionsForTarget(target);
   }
 

@@ -42,14 +42,18 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-console.log('> git fetch --all');
-childProcess.execSync('git fetch --all', {
-  stdio: [0, 1, 2],
-});
+if (!parsedArgs.local) {
+  console.log('> git fetch --all');
+  childProcess.execSync('git fetch --all', {
+    stdio: [0, 1, 2],
+  });
+}
 
 function updatePackageJsonFiles(parsedVersion, isLocal) {
   let pkgFiles = [
     'package.json',
+    'build/npm/add-nx-to-monorepo/package.json',
+    'build/npm/cra-to-nx/package.json',
     'build/npm/create-nx-workspace/package.json',
     'build/npm/create-nx-plugin/package.json',
     'build/npm/jest/package.json',
@@ -58,7 +62,6 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/angular/package.json',
     'build/npm/react/package.json',
     'build/npm/next/package.json',
-    'build/npm/gatsby/package.json',
     'build/npm/web/package.json',
     'build/npm/node/package.json',
     'build/npm/express/package.json',
@@ -69,11 +72,22 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/devkit/package.json',
     'build/npm/eslint-plugin-nx/package.json',
     'build/npm/linter/package.json',
+    'build/npm/make-angular-cli-faster/package.json',
     'build/npm/nx-plugin/package.json',
     'build/npm/nx/package.json',
+    'build/npm/react-native/package.json',
+    'build/npm/detox/package.json',
+    'build/npm/js/package.json',
   ];
   if (isLocal) {
     pkgFiles = pkgFiles.filter((f) => f !== 'package.json');
+  }
+  for (const pkgFile of pkgFiles) {
+    const pkgDir = path.dirname(pkgFile);
+    const licensePath = path.join(pkgDir, 'LICENSE');
+    if (!fs.existsSync(licensePath)) {
+      throw new Error('Missing License: ' + licensePath);
+    }
   }
   pkgFiles.forEach((p) => {
     const content = JSON.parse(fs.readFileSync(p).toString());
@@ -175,7 +189,6 @@ process.env.GITHUB_TOKEN = !parsedArgs.local
  */
 const options = {
   'dry-run': DRY_RUN,
-  changelogCommand: 'conventional-changelog -p angular | tail -n +3',
   /**
    * Needed so that we can leverage conventional-changelog to generate
    * the changelog
@@ -190,6 +203,7 @@ const options = {
   npm: false,
   git: {
     requireCleanWorkingDir: false,
+    changelog: 'conventional-changelog -p angular | tail -n +3',
   },
 };
 

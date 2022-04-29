@@ -1,9 +1,8 @@
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import type { ProjectGraph } from '@nrwl/devkit';
+import { writeJsonFile } from '@nrwl/devkit';
 
 import { BuildNodeBuilderOptions } from './types';
 import { createPackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
-import { OUT_FILENAME } from './config';
 
 export function generatePackageJson(
   projectName: string,
@@ -11,7 +10,7 @@ export function generatePackageJson(
   options: BuildNodeBuilderOptions
 ) {
   const packageJson = createPackageJson(projectName, graph, options);
-  packageJson.main = packageJson.main ?? OUT_FILENAME;
+  packageJson.main = packageJson.main ?? options.outputFileName;
   delete packageJson.devDependencies;
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }

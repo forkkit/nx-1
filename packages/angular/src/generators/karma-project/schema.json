@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxKarmaProjectGenerator",
   "title": "Create Karma Configuration for a project",
+  "description": "Add Karma configuration to an angular project.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -11,6 +12,16 @@
       "$default": {
         "$source": "projectName"
       }
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Skip updating package.json.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

@@ -1,36 +1,49 @@
-import { exec, execSync } from 'child_process';
-import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
+import { execFile, execFileSync } from 'child_process';
+import {
+  ExecutorContext,
+  joinPathFragments,
+  workspaceLayout,
+} from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 import { Schema } from './schema';
 import { watch } from 'chokidar';
-import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import { platform } from 'os';
+
+// platform specific command name
+const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
-  const args = [] as any[];
+  const args = ['-c-1', '--cors'];
   if (options.port) {
-    args.push(`-p ${options.port}`);
+    args.push(`-p=${options.port}`);
   }
   if (options.host) {
-    args.push(`-a ${options.host}`);
+    args.push(`-a=${options.host}`);
   }
   if (options.ssl) {
     args.push(`-S`);
   }
   if (options.sslCert) {
-    args.push(`-C ${options.sslCert}`);
+    args.push(`-C=${options.sslCert}`);
   }
   if (options.sslKey) {
-    args.push(`-K ${options.sslKey}`);
+    args.push(`-K=${options.sslKey}`);
   }
   if (options.proxyUrl) {
-    args.push(`-P ${options.proxyUrl}`);
+    args.push(`-P=${options.proxyUrl}`);
+  }
+
+  if (options.proxyOptions) {
+    Object.keys(options.proxyOptions).forEach((key) => {
+      args.push(`--proxy-options.${key}=options.proxyOptions[key]`);
+    });
   }
   return args;
 }
 
 function getBuildTargetCommand(options: Schema) {
-  const cmd = [`npx nx run ${options.buildTarget}`];
+  const cmd = ['nx', 'run', options.buildTarget];
   if (options.withDeps) {
     cmd.push(`--with-deps`);
   }
@@ -40,7 +53,7 @@ function getBuildTargetCommand(options: Schema) {
   if (options.maxParallel) {
     cmd.push(`--maxParallel=${options.maxParallel}`);
   }
-  return cmd.join(' ');
+  return cmd;
 }
 
 function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
@@ -78,7 +91,10 @@ function getIgnoredGlobs(root: string) {
   return ig;
 }
 
-function createFileWatcher(root: string, changeHandler: () => void) {
+function createFileWatcher(
+  root: string,
+  changeHandler: () => void
+): () => void {
   const ignoredGlobs = getIgnoredGlobs(root);
   const layout = workspaceLayout();
 
@@ -96,7 +112,7 @@ function createFileWatcher(root: string, changeHandler: () => void) {
     if (ignoredGlobs.ignores(path)) return;
     changeHandler();
   });
-  return { close: () => watcher.close() };
+  return () => watcher.close();
 }
 
 export default async function* fileServerExecutor(
@@ -109,15 +125,22 @@ export default async function* fileServerExecutor(
     if (!running) {
       running = true;
       try {
-        execSync(getBuildTargetCommand(options), {
+        const args = getBuildTargetCommand(options);
+        execFileSync(pmCmd, args, {
           stdio: [0, 1, 2],
+          // NX_CLOUD: true is only used when Nx Cloud is on.
+          // It forces remote caching.
+          env: { ...process.env, NX_CLOUD: 'true' },
         });
       } catch {}
       running = false;
     }
   };
 
-  const watcher = createFileWatcher(context.root, run);
+  let disposeWatch: () => void;
+  if (options.watch) {
+    disposeWatch = createFileWatcher(context.root, run);
+  }
 
   // perform initial run
   run();
@@ -125,12 +148,18 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
 
-  const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
+  const serve = execFile(pmCmd, ['http-server', outputPath, ...args], {
     cwd: context.root,
+    env: {
+      FORCE_COLOR: 'true',
+      ...process.env,
+    },
   });
   const processExitListener = () => {
     serve.kill();
-    watcher.close();
+    if (disposeWatch) {
+      disposeWatch();
+    }
   };
   process.on('exit', processExitListener);
   process.on('SIGTERM', processExitListener);

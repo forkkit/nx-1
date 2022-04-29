@@ -7,16 +7,19 @@ import {
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { isFramework } from '../../utils/utilities';
 import {
   babelCoreVersion,
   babelLoaderVersion,
   babelPresetTypescriptVersion,
   nxVersion,
+  reactNativeStorybookLoader,
+  storybookReactNativeVersion,
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
+  webpack5Version,
 } from '../../utils/versions';
-import { isFramework } from '../../utils/utilities';
 import { Schema } from './schema';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
@@ -28,40 +31,14 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   // base deps
   devDependencies['@nrwl/storybook'] = nxVersion;
-
-  /**
-   * If Storybook already exists, do NOT update it to the latest version.
-   * Leave it alone.
-   */
-
-  if (
-    !packageJson.dependencies['@storybook/addon-essentials'] &&
-    !packageJson.devDependencies['@storybook/addon-essentials']
-  ) {
-    devDependencies['@storybook/addon-essentials'] = storybookVersion;
-  }
+  devDependencies['@storybook/core-server'] = storybookVersion;
+  devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
   if (isFramework('angular', schema)) {
-    if (
-      !packageJson.dependencies['@storybook/angular'] &&
-      !packageJson.devDependencies['@storybook/angular']
-    ) {
-      devDependencies['@storybook/angular'] = storybookVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/builder-webpack5'] &&
-      !packageJson.devDependencies['@storybook/builder-webpack5']
-    ) {
-      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/manager-webpack5'] &&
-      !packageJson.devDependencies['@storybook/manager-webpack5']
-    ) {
-      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-    }
+    devDependencies['@storybook/angular'] = storybookVersion;
+    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+    devDependencies['webpack'] = webpack5Version;
 
     if (
       !packageJson.dependencies['@angular/forms'] &&
@@ -78,13 +55,9 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['babel-loader'] = babelLoaderVersion;
     devDependencies['@babel/core'] = babelCoreVersion;
     devDependencies['@babel/preset-typescript'] = babelPresetTypescriptVersion;
-
-    if (
-      !packageJson.dependencies['@storybook/react'] &&
-      !packageJson.devDependencies['@storybook/react']
-    ) {
-      devDependencies['@storybook/react'] = storybookVersion;
-    }
+    devDependencies['@storybook/react'] = storybookVersion;
+    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
   }
 
   if (isFramework('html', schema)) {
@@ -95,8 +68,30 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@storybook/vue'] = storybookVersion;
   }
 
+  if (isFramework('vue3', schema)) {
+    devDependencies['@storybook/vue3'] = storybookVersion;
+  }
+
   if (isFramework('web-components', schema)) {
     devDependencies['@storybook/web-components'] = storybookVersion;
+  }
+
+  if (isFramework('svelte', schema)) {
+    devDependencies['@storybook/svelte'] = storybookVersion;
+  }
+
+  if (isFramework('react-native', schema)) {
+    devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-actions'] =
+      storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-backgrounds'] =
+      storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-controls'] =
+      storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-notes'] =
+      storybookReactNativeVersion;
+    devDependencies['react-native-storybook-loader'] =
+      reactNativeStorybookLoader;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
@@ -107,8 +102,10 @@ export function addCacheableOperation(tree: Tree) {
   if (
     !workspace.tasksRunnerOptions ||
     !workspace.tasksRunnerOptions.default ||
-    workspace.tasksRunnerOptions.default.runner !==
-      '@nrwl/workspace/tasks-runners/default'
+    (workspace.tasksRunnerOptions.default.runner !==
+      '@nrwl/workspace/tasks-runners/default' &&
+      workspace.tasksRunnerOptions.default.runner !==
+        'nx/tasks-runners/default')
   ) {
     return;
   }
@@ -119,7 +116,7 @@ export function addCacheableOperation(tree: Tree) {
   workspace.tasksRunnerOptions.default.options.cacheableOperations =
     workspace.tasksRunnerOptions.default.options.cacheableOperations || [];
   if (
-    !workspace.tasksRunnerOptions.default.options.cacheableOperations.includes(
+    !workspace.tasksRunnerOptions.default.options.cacheableOperations?.includes(
       'build-storybook'
     )
   ) {
@@ -150,5 +147,6 @@ export function initGenerator(tree: Tree, schema: Schema) {
   addCacheableOperation(tree);
   return installTask;
 }
+
 export default initGenerator;
 export const initSchematic = convertNxGenerator(initGenerator);

@@ -9,7 +9,21 @@ describe('karma', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should do nothing when karma is already installed', () => {
+  it('should do nothing when karma is already installed and karma.conf.js exists', () => {
+    jest.spyOn(devkit, 'generateFiles');
+    jest.spyOn(devkit, 'addDependenciesToPackageJson');
+    devkit.updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { karma: '~5.0.0' };
+      return json;
+    });
+    tree.write('karma.conf.js', '');
+    karmaGenerator(tree, {});
+
+    expect(devkit.generateFiles).not.toHaveBeenCalled();
+    expect(devkit.addDependenciesToPackageJson).not.toHaveBeenCalled();
+  });
+
+  it('should create karma.conf.js when karma is installed', () => {
     jest.spyOn(devkit, 'generateFiles');
     jest.spyOn(devkit, 'addDependenciesToPackageJson');
     devkit.updateJson(tree, 'package.json', (json) => {
@@ -17,28 +31,29 @@ describe('karma', () => {
       return json;
     });
 
-    karmaGenerator(tree);
+    karmaGenerator(tree, {});
 
-    expect(devkit.generateFiles).not.toHaveBeenCalled();
+    expect(devkit.generateFiles).toHaveBeenCalled();
     expect(devkit.addDependenciesToPackageJson).not.toHaveBeenCalled();
   });
 
   it('should add karma dependencies', () => {
-    karmaGenerator(tree);
+    karmaGenerator(tree, {});
 
     const { devDependencies } = devkit.readJson(tree, 'package.json');
     expect(devDependencies['karma']).toBeDefined();
     expect(devDependencies['karma-chrome-launcher']).toBeDefined();
-    expect(devDependencies['karma-coverage-istanbul-reporter']).toBeDefined();
+    expect(devDependencies['karma-coverage']).toBeDefined();
     expect(devDependencies['karma-jasmine']).toBeDefined();
     expect(devDependencies['karma-jasmine-html-reporter']).toBeDefined();
     expect(devDependencies['jasmine-core']).toBeDefined();
     expect(devDependencies['jasmine-spec-reporter']).toBeDefined();
     expect(devDependencies['@types/jasmine']).toBeDefined();
+    expect(devDependencies['@types/node']).toBeDefined();
   });
 
   it('should add karma configuration', () => {
-    karmaGenerator(tree);
+    karmaGenerator(tree, {});
 
     expect(tree.exists('karma.conf.js')).toBeTruthy();
   });

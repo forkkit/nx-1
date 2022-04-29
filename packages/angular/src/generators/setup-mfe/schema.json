@@ -21,6 +21,12 @@
       "description": "Type of application to generate the Module Federation configuration for.",
       "default": "remote"
     },
+    "federationType": {
+      "type": "string",
+      "enum": ["static", "dynamic"],
+      "description": "Use either Static or Dynamic Module Federation pattern for the application.",
+      "default": "static"
+    },
     "port": {
       "type": "number",
       "description": "The port at which the remote application should be served."
@@ -40,6 +46,15 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes."
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
+    },
+    "e2eProjectName": {
+      "type": "string",
+      "description": "The project name of the associated E2E project for the application. This is only required for Cypress E2E projects that do not follow the naming convention `<appName>-e2e`."
     }
   },
   "required": ["appName", "mfeType"],

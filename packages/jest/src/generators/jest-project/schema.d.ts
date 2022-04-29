@@ -8,6 +8,12 @@ export interface JestProjectSchema {
   setupFile?: 'angular' | 'web-components' | 'none';
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | '';
+  /**
+   * @deprecated
+   */
   babelJest?: boolean;
   skipFormat?: boolean;
+  compiler?: 'tsc' | 'babel' | 'swc';
+  skipPackageJson?: boolean;
+  js?: boolean;
 }

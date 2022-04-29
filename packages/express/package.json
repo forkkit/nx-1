@@ -1,10 +1,11 @@
 {
   "name": "@nrwl/express",
   "version": "0.0.1",
-  "description": "Express Plugin for Nx",
+  "description": "The Nx Plugin for Express that contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/express"
   },
   "keywords": [
     "Monorepo",
@@ -30,7 +31,14 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/node": "*",
-    "@nrwl/jest": "*",
     "@nrwl/workspace": "*"
+  },
+  "peerDependencies": {
+    "express": "4.17.2"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    }
   }
 }

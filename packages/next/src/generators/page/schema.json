@@ -3,15 +3,12 @@
   "cli": "nx",
   "$id": "NxNextReactPage",
   "title": "Create a Page for Next",
+  "description": "Create a Page for Next.",
   "type": "object",
   "examples": [
     {
-      "command": "g component my-component --project=mylib",
-      "description": "Generate a component in the mylib library"
-    },
-    {
-      "command": "g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the mylib library"
+      "command": "nx g page my-new-page --project=my-app",
+      "description": "Generate a page in the my-app application"
     }
   ],
   "properties": {
@@ -35,8 +32,8 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the page under this directory (can be nested). Will be created under 'pages/'.",
-      "alias": "d"
+      "description": "Create the page under this directory (can be nested). Will be created under `pages/`.",
+      "alias": "dir"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -81,12 +78,12 @@
     },
     "withTests": {
       "type": "boolean",
-      "description": "When true, creates a \"spec.ts\" test file for the new page.",
+      "description": "When true, creates a `spec.ts` test file for the new page.",
       "default": false
     },
     "export": {
       "type": "boolean",
-      "description": "When true, the component is exported from the project index.ts (if it exists).",
+      "description": "When true, the component is exported from the project `index.ts` (if it exists).",
       "alias": "e",
       "default": false
     },

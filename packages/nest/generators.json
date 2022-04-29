@@ -7,6 +7,7 @@
       "factory": "./src/generators/application/application#applicationSchematic",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Create a NestJS application."
     },
     "convert-tslint-to-eslint": {
@@ -17,7 +18,7 @@
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/nest plugin.",
+      "description": "Initialize the `@nrwl/nest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -25,6 +26,7 @@
       "factory": "./src/generators/library/library#librarySchematic",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Create a new NestJS library."
     },
     "class": {
@@ -92,6 +94,11 @@
       "schema": "./src/generators/resolver/schema.json",
       "description": "Run the `resolver` NestJS generator with Nx project support."
     },
+    "resource": {
+      "factory": "./src/generators/resource/resource#resourceSchematic",
+      "schema": "./src/generators/resource/schema.json",
+      "description": "Run the `resource` NestJS generator with Nx project support."
+    },
     "service": {
       "factory": "./src/generators/service/service#serviceSchematic",
       "schema": "./src/generators/service/schema.json",
@@ -103,6 +110,7 @@
       "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Create a NestJS application."
     },
     "convert-tslint-to-eslint": {
@@ -113,7 +121,7 @@
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/nest plugin.",
+      "description": "Initialize the `@nrwl/nest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -121,6 +129,7 @@
       "factory": "./src/generators/library/library",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Create a new NestJS library."
     },
     "class": {
@@ -187,6 +196,11 @@
       "factory": "./src/generators/resolver/resolver",
       "schema": "./src/generators/resolver/schema.json",
       "description": "Run the `resolver` NestJS generator with Nx project support."
+    },
+    "resource": {
+      "factory": "./src/generators/resource/resource",
+      "schema": "./src/generators/resource/schema.json",
+      "description": "Run the `resource` NestJS generator with Nx project support."
     },
     "service": {
       "factory": "./src/generators/service/service",

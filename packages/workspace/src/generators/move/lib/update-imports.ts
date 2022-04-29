@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import * as ts from 'typescript';
+import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { findNodes } from '../../../utilities/typescript/find-nodes';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
@@ -34,7 +35,7 @@ export function updateImports(
 
   // use the source root to find the from location
   // this attempts to account for libs that have been created with --importPath
-  const tsConfigPath = 'tsconfig.base.json';
+  const tsConfigPath = getRootTsConfigPathInTree(tree);
   let tsConfig: any;
   let fromPath: string;
   if (tree.exists(tsConfigPath)) {
@@ -50,7 +51,7 @@ export function updateImports(
     from:
       fromPath ||
       normalizeSlashes(
-        `@${npmScope}/${project.root.substr(libsDir.length + 1)}`
+        `@${npmScope}/${project.root.slice(libsDir.length + 1)}`
       ),
     to: schema.importPath,
   };
@@ -65,6 +66,7 @@ export function updateImports(
 
       visitNotIgnoredFiles(tree, definition.root, (file) => {
         const contents = tree.read(file, 'utf-8');
+        replaceProjectRef.lastIndex = 0;
         if (!replaceProjectRef.test(contents)) {
           return;
         }
@@ -75,7 +77,7 @@ export function updateImports(
   }
 
   const projectRoot = {
-    from: project.root.substr(libsDir.length + 1),
+    from: project.root.slice(libsDir.length + 1),
     to: schema.destination,
   };
 

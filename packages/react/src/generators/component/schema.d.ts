@@ -8,9 +8,11 @@ export interface Schema {
   directory?: string;
   export?: boolean;
   pascalCaseFiles?: boolean;
+  pascalCaseDirectory?: boolean;
   classComponent?: boolean;
   routing?: boolean;
   js?: boolean;
   flat?: boolean;
   globalCss?: boolean;
+  fileName?: string;
 }

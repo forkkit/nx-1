@@ -1,11 +1,11 @@
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
-  writeJson,
-  updateProjectConfiguration,
+  formatFiles,
   offsetFromRoot,
   readProjectConfiguration,
-  formatFiles,
+  updateProjectConfiguration,
+  writeJson,
 } from '@nrwl/devkit';
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { join } from 'path';
 import { Linter } from '../utils/linter';
 import { lintInitGenerator } from '../init/init';
@@ -17,6 +17,7 @@ interface LintProjectOptions {
   tsConfigPaths?: string[];
   skipFormat: boolean;
   setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean;
 }
 
 function createTsLintConfiguration(
@@ -87,12 +88,14 @@ export async function lintProjectGenerator(
 ) {
   const installTask = lintInitGenerator(tree, {
     linter: options.linter,
+    skipPackageJson: options.skipPackageJson,
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   if (options.linter === Linter.EsLint) {
     projectConfig.targets['lint'] = {
       executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: options.eslintFilePatterns,
       },

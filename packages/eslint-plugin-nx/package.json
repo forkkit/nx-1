@@ -4,7 +4,8 @@
   "description": "ESLint Plugin for Nx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint-plugin-nx"
   },
   "keywords": [
     "Monorepo",
@@ -12,12 +13,6 @@
     "Lint",
     "ESLint",
     "CLI"
-  ],
-  "files": [
-    "src",
-    "package.json",
-    "README.md",
-    "LICENSE"
   ],
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
@@ -28,13 +23,19 @@
   },
   "homepage": "https://nx.dev",
   "peerDependencies": {
-    "@typescript-eslint/parser": "~4.28.3",
+    "@typescript-eslint/parser": "~5.18.0",
     "eslint-config-prettier": "^8.1.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint-config-prettier": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
-    "@typescript-eslint/experimental-utils": "~4.28.3",
+    "@typescript-eslint/experimental-utils": "~5.18.0",
+    "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9"
   }
 }

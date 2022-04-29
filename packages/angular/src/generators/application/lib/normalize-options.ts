@@ -1,10 +1,16 @@
-import type { Tree } from '@nrwl/devkit';
+import {
+  getWorkspacePath,
+  joinPathFragments,
+  readJson,
+  Tree,
+} from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
 import { names, getWorkspaceLayout } from '@nrwl/devkit';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { Linter } from '@nrwl/linter';
+import { normalizeDirectory, normalizeProjectName } from '../../utils/project';
 
 export function normalizeOptions(
   host: Tree,
@@ -12,18 +18,16 @@ export function normalizeOptions(
 ): NormalizedSchema {
   const { appsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
 
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
+  const appDirectory = normalizeDirectory(options.name, options.directory);
 
   let e2eProjectName = `${names(options.name).fileName}-e2e`;
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
+  const appProjectName = normalizeProjectName(options.name, options.directory);
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;
   }
 
-  const appProjectRoot = `${appsDir}/${appDirectory}`;
-  const e2eProjectRoot = `${appsDir}/${appDirectory}-e2e`;
+  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
+  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -31,7 +35,21 @@ export function normalizeOptions(
 
   const defaultPrefix = npmScope;
 
-  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
+  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
+
+  // Determine the roots where @schematics/angular will place the projects
+  // This might not be where the projects actually end up
+  const workspaceJsonPath = getWorkspacePath(host);
+  let newProjectRoot = null;
+  if (workspaceJsonPath) {
+    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
+  }
+  const ngCliSchematicAppRoot = newProjectRoot
+    ? `${newProjectRoot}/${appProjectName}`
+    : appProjectName;
+  const ngCliSchematicE2ERoot = newProjectRoot
+    ? `${newProjectRoot}/${e2eProjectName}`
+    : `${appProjectName}/e2e`;
 
   // Set defaults and then overwrite with user options
   return {
@@ -52,5 +70,7 @@ export function normalizeOptions(
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
+    ngCliSchematicAppRoot,
+    ngCliSchematicE2ERoot,
   };
 }

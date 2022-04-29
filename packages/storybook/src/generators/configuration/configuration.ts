@@ -19,13 +19,22 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Linter } from '@nrwl/linter';
 import { join } from 'path';
 
-import { isFramework, TsConfig } from '../../utils/utilities';
+import {
+  isFramework,
+  readCurrentWorkspaceStorybookVersionFromGenerator,
+  TsConfig,
+} from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
-import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
+import {
+  customProjectBuildConfigIsValid,
+  findStorybookAndBuildTargets,
+} from '../../executors/utils';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+
 export async function configurationGenerator(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
@@ -34,27 +43,27 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion(tree);
+  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
 
-  const { projectType } = readProjectConfiguration(tree, schema.name);
+  const { buildTarget } = findStorybookAndBuildTargets(targets);
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js, workspaceStorybookVersion);
-  createProjectStorybookDir(
-    tree,
-    schema.name,
-    schema.uiFramework,
-    schema.js,
-    workspaceStorybookVersion
-  );
+  createRootStorybookDir(tree, schema.js);
+  createProjectStorybookDir(tree, schema.name, schema.uiFramework, schema.js);
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
-  addStorybookTask(tree, schema.name, schema.uiFramework);
+  addStorybookTask(
+    tree,
+    schema.name,
+    schema.uiFramework,
+    buildTarget,
+    schema.projectBuildConfig
+  );
   if (schema.configureCypress) {
     if (projectType !== 'application') {
       const cypressTask = await cypressProjectGenerator(tree, {
@@ -75,7 +84,9 @@ export async function configurationGenerator(
   return runTasksInSerial(...tasks);
 }
 
-function normalizeSchema(schema: StorybookConfigureSchema) {
+function normalizeSchema(
+  schema: StorybookConfigureSchema
+): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
     linter: Linter.TsLint,
@@ -87,23 +98,19 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
   };
 }
 
-function createRootStorybookDir(
-  tree: Tree,
-  js: boolean,
-  workspaceStorybookVersion: string
-) {
+function createRootStorybookDir(tree: Tree, js: boolean) {
   if (tree.exists('.storybook')) {
+    logger.warn(
+      `.storybook folder already exists at root! Skipping generating files in it.`
+    );
     return;
   }
-  logger.debug(
-    `adding .storybook folder to the root directory - 
-     based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
-  );
-  const templatePath = join(
-    __dirname,
-    workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
-  );
-  generateFiles(tree, templatePath, '', {});
+  logger.debug(`adding .storybook folder to the root directory`);
+
+  const templatePath = join(__dirname, './root-files');
+  generateFiles(tree, templatePath, '', {
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
+  });
 
   if (js) {
     toJS(tree);
@@ -114,39 +121,32 @@ function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
-  js: boolean,
-  workspaceStorybookVersion: string
+  js: boolean
 ) {
-  /**
-   * Here, same as above
-   * Check storybook version
-   * and use the correct folder
-   * lib-files-5 or lib-files-6
-   */
-
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
 
   const storybookRoot = join(root, '.storybook');
 
   if (tree.exists(storybookRoot)) {
+    logger.warn(
+      `.storybook folder already exists for ${projectName}! Skipping generating files in it.`
+    );
     return;
   }
 
-  logger.debug(
-    `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
-  );
-  const templatePath = join(
-    __dirname,
-    workspaceStorybookVersion === '6' ? './project-files' : './project-files-5'
-  );
+  logger.debug(`adding .storybook folder to ${projectDirectory}`);
+  const templatePath = join(__dirname, './project-files');
 
   generateFiles(tree, templatePath, root, {
     tmpl: '',
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectType: projectDirectory,
-    useWebpack5: uiFramework === '@storybook/angular',
+    useWebpack5:
+      uiFramework === '@storybook/angular' ||
+      uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
   });
 
@@ -194,14 +194,19 @@ function configureTsProjectConfig(
     tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
   }
 
-  tsConfigContent.exclude = [
-    ...(tsConfigContent.exclude || []),
-    '**/*.stories.ts',
-    '**/*.stories.js',
-    ...(isFramework('react', schema)
-      ? ['**/*.stories.jsx', '**/*.stories.tsx']
-      : []),
-  ];
+  if (
+    !tsConfigContent?.exclude?.includes('**/*.stories.ts') &&
+    !tsConfigContent?.exclude?.includes('**/*.stories.js')
+  ) {
+    tsConfigContent.exclude = [
+      ...(tsConfigContent.exclude || []),
+      '**/*.stories.ts',
+      '**/*.stories.js',
+      ...(isFramework('react', schema) || isFramework('react-native', schema)
+        ? ['**/*.stories.jsx', '**/*.stories.tsx']
+        : []),
+    ];
+  }
 
   writeJson(tree, tsConfigPath, tsConfigContent);
 }
@@ -216,12 +221,18 @@ function configureTsSolutionConfig(
   const tsConfigPath = join(root, 'tsconfig.json');
   const tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
 
-  tsConfigContent.references = [
-    ...(tsConfigContent.references || []),
-    {
-      path: './.storybook/tsconfig.json',
-    },
-  ];
+  if (
+    !tsConfigContent?.references
+      ?.map((reference) => reference.path)
+      ?.includes('./.storybook/tsconfig.json')
+  ) {
+    tsConfigContent.references = [
+      ...(tsConfigContent.references || []),
+      {
+        path: './.storybook/tsconfig.json',
+      },
+    ];
+  }
 
   writeJson(tree, tsConfigPath, tsConfigContent);
 }
@@ -287,8 +298,13 @@ function dedupe(arr: string[]) {
 function addStorybookTask(
   tree: Tree,
   projectName: string,
-  uiFramework: string
+  uiFramework: string,
+  buildTargetForAngularProjects: string,
+  customProjectBuildConfig?: string
 ) {
+  if (uiFramework === '@storybook/react-native') {
+    return;
+  }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
     executor: '@nrwl/storybook:storybook',
@@ -298,6 +314,15 @@ function addStorybookTask(
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },
+      projectBuildConfig:
+        uiFramework === '@storybook/angular'
+          ? customProjectBuildConfig &&
+            customProjectBuildConfigIsValid(tree, customProjectBuildConfig)
+            ? customProjectBuildConfig
+            : buildTargetForAngularProjects
+            ? projectName
+            : `${projectName}:build-storybook`
+          : undefined,
     },
     configurations: {
       ci: {
@@ -314,6 +339,15 @@ function addStorybookTask(
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },
+      projectBuildConfig:
+        uiFramework === '@storybook/angular'
+          ? customProjectBuildConfig &&
+            customProjectBuildConfigIsValid(tree, customProjectBuildConfig)
+            ? customProjectBuildConfig
+            : buildTargetForAngularProjects
+            ? projectName
+            : `${projectName}:build-storybook`
+          : undefined,
     },
     configurations: {
       ci: {
@@ -325,37 +359,10 @@ function addStorybookTask(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
-  const packageJsonContents = readJson(tree, 'package.json');
-  let workspaceStorybookVersion = storybookVersion;
-  if (packageJsonContents && packageJsonContents['devDependencies']) {
-    if (packageJsonContents['devDependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/core'];
-    }
-  }
-  if (packageJsonContents && packageJsonContents['dependencies']) {
-    if (packageJsonContents['dependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/core'];
-    }
-  }
+function getCurrentWorkspaceStorybookVersion(tree: Tree): string {
+  let workspaceStorybookVersion =
+    readCurrentWorkspaceStorybookVersionFromGenerator(tree);
+
   if (
     gte(
       checkAndCleanWithSemver('@storybook/core', workspaceStorybookVersion),

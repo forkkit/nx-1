@@ -1,4 +1,3 @@
-import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '../library/library';
@@ -12,12 +11,12 @@ describe('react:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-      devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
-        '@storybook/react': '^6.0.21',
-      },
-    });
+    // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+    //   devDependencies: {
+    //     '@storybook/addon-essentials': '^6.0.21',
+    //     '@storybook/react': '^6.0.21',
+    //   },
+    // });
 
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
@@ -150,10 +149,8 @@ describe('react:storybook-configuration', () => {
     [
       'apps/one/two/test-ui-lib-e2e/cypress.json',
       'apps/one/two/test-ui-lib-e2e/src/fixtures/example.json',
-      'apps/one/two/test-ui-lib-e2e/src/plugins/index.js',
       'apps/one/two/test-ui-lib-e2e/src/support/commands.ts',
       'apps/one/two/test-ui-lib-e2e/src/support/index.ts',
-      'apps/one/two/test-ui-lib-e2e/tsconfig.e2e.json',
       'apps/one/two/test-ui-lib-e2e/tsconfig.json',
       'apps/one/two/test-ui-lib-e2e/.eslintrc.json',
       'apps/one/two/test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
@@ -190,7 +187,6 @@ export async function createTestAppLib(
   let appTree = createTreeWithEmptyWorkspace();
 
   await applicationGenerator(appTree, {
-    babelJest: false,
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
     skipFormat: false,

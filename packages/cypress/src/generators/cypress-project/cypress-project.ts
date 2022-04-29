@@ -12,49 +12,58 @@ import {
   toJS,
   Tree,
   updateJson,
+  ProjectConfiguration,
+  stripIndents,
+  logger,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { join } from 'path';
 // app
 import { Schema } from './schema';
-import { eslintPluginCypressVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  eslintPluginCypressVersion,
+} from '../../utils/versions';
 import { filePathPrefix } from '../../utils/project-name';
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
   projectRoot: string;
 }
 
-function createFiles(host: Tree, options: CypressProjectSchema) {
-  generateFiles(host, join(__dirname, './files'), options.projectRoot, {
+function createFiles(tree: Tree, options: CypressProjectSchema) {
+  generateFiles(tree, join(__dirname, './files'), options.projectRoot, {
     tmpl: '',
     ...options,
     project: options.project || 'Project',
     ext: options.js ? 'js' : 'ts',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
   });
 
+  const cypressVersion = installedCypressVersion();
+  if (!cypressVersion || cypressVersion >= 7) {
+    tree.delete(join(options.projectRoot, 'src/plugins/index.js'));
+  } else {
+    updateJson(tree, join(options.projectRoot, 'cypress.json'), (json) => {
+      json.pluginsFile = './src/plugins/index';
+      return json;
+    });
+  }
+
   if (options.js) {
-    toJS(host);
+    toJS(tree);
   }
 }
 
 function addProject(tree: Tree, options: CypressProjectSchema) {
-  let devServerTarget: string = `${options.project}:serve`;
-  if (options.project) {
-    const project = readProjectConfiguration(tree, options.project);
-    devServerTarget =
-      project.targets.serve && project.targets.serve.defaultConfiguration
-        ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
-        : devServerTarget;
-  }
-
-  addProjectConfiguration(
-    tree,
-    options.projectName,
-    {
+  let e2eProjectConfig: ProjectConfiguration;
+  if (options.baseUrl) {
+    e2eProjectConfig = {
       root: options.projectRoot,
       sourceRoot: joinPathFragments(options.projectRoot, 'src'),
       projectType: 'application',
@@ -66,9 +75,37 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
               options.projectRoot,
               'cypress.json'
             ),
-            tsConfig: joinPathFragments(
+            baseUrl: options.baseUrl,
+          },
+        },
+      },
+      tags: [],
+      implicitDependencies: options.project ? [options.project] : undefined,
+    };
+  } else if (options.project) {
+    const project = readProjectConfiguration(tree, options.project);
+
+    if (!project.targets) {
+      logger.warn(stripIndents`
+      NOTE: Project, "${options.project}", does not have any targets defined and a baseUrl was not provided. Nx will use  
+      "${options.project}:serve" as the devServerTarget. But you may need to define this target within the project, "${options.project}".
+      `);
+    }
+    const devServerTarget =
+      project.targets?.serve && project.targets?.serve?.defaultConfiguration
+        ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
+        : `${options.project}:serve`;
+    e2eProjectConfig = {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'application',
+      targets: {
+        e2e: {
+          executor: '@nrwl/cypress:cypress',
+          options: {
+            cypressConfig: joinPathFragments(
               options.projectRoot,
-              'tsconfig.e2e.json'
+              'cypress.json'
             ),
             devServerTarget,
           },
@@ -81,7 +118,22 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       },
       tags: [],
       implicitDependencies: options.project ? [options.project] : undefined,
-    },
+    };
+  } else {
+    throw new Error(`Either project or baseUrl should be specified.`);
+  }
+
+  const detectedCypressVersion = installedCypressVersion() ?? cypressVersion;
+  if (detectedCypressVersion < 7) {
+    e2eProjectConfig.targets.e2e.options.tsConfig = joinPathFragments(
+      options.projectRoot,
+      'tsconfig.json'
+    );
+  }
+  addProjectConfiguration(
+    tree,
+    options.projectName,
+    e2eProjectConfig,
     options.standaloneConfig
   );
 }
@@ -95,24 +147,25 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
     project: options.projectName,
     linter: options.linter,
     skipFormat: true,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.e2e.json'),
-    ],
+    tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : '{js,ts}'}`,
     ],
     setParserOptionsProject: options.setParserOptionsProject,
+    skipPackageJson: options.skipPackageJson,
   });
 
   if (!options.linter || options.linter !== Linter.EsLint) {
     return installTask;
   }
 
-  const installTask2 = addDependenciesToPackageJson(
-    host,
-    {},
-    { 'eslint-plugin-cypress': eslintPluginCypressVersion }
-  );
+  const installTask2 = !options.skipPackageJson
+    ? addDependenciesToPackageJson(
+        host,
+        {},
+        { 'eslint-plugin-cypress': eslintPluginCypressVersion }
+      )
+    : () => {};
 
   updateJson(host, join(options.projectRoot, '.eslintrc.json'), (json) => {
     json.extends = ['plugin:cypress/recommended', ...json.extends];
@@ -148,18 +201,21 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
          */
         rules: {},
       },
+    ];
+
+    if (installedCypressVersion() < 7) {
       /**
        * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
        * That however leads to issues with the CommonJS Cypress plugin file.
        */
-      {
+      json.overrides.push({
         files: ['src/plugins/index.js'],
         rules: {
           '@typescript-eslint/no-var-requires': 'off',
           'no-undef': 'off',
         },
-      },
-    ];
+      });
+    }
 
     return json;
   });
@@ -180,9 +236,9 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
 
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   const { appsDir } = getWorkspaceLayout(host);
-  const projectName = options.directory
-    ? `${filePathPrefix(options.directory)}-${options.name}`
-    : options.name;
+  const projectName = filePathPrefix(
+    options.directory ? `${options.directory}-${options.name}` : options.name
+  );
   const projectRoot = options.directory
     ? joinPathFragments(
         appsDir,

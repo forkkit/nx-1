@@ -4,6 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { Schema } from '../schema';
 
 /**
@@ -18,17 +19,16 @@ export function updateTsconfig(
 ) {
   const { appsDir, libsDir, npmScope } = getWorkspaceLayout(tree);
 
-  const tsConfigPath = 'tsconfig.base.json';
+  const tsConfigPath = getRootTsConfigPathInTree(tree);
+  const defaultImportPath = `@${npmScope}/${project.root.slice(
+    project.projectType === 'application'
+      ? appsDir.length + 1
+      : libsDir.length + 1
+  )}`;
+  const importPath = schema.importPath || defaultImportPath;
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (json) => {
-      delete json.compilerOptions.paths[
-        `@${npmScope}/${project.root.substr(
-          project.projectType === 'application'
-            ? appsDir.length + 1
-            : libsDir.length + 1
-        )}`
-      ];
-
+      delete json.compilerOptions.paths[importPath];
       return json;
     });
   }

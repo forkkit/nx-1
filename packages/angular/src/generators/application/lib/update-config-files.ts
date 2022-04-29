@@ -9,36 +9,15 @@ import {
   removeProjectConfiguration,
   offsetFromRoot,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace';
+import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
-  addProjectToNx(host, options);
-  updateTsConfigCompilerOptions(host, options);
+  updateTsConfigOptions(host, options);
   updateAppAndE2EProjectConfigurations(host, options);
 }
 
-function addProjectToNx(host: Tree, options: NormalizedSchema) {
-  // nx.json
-  updateJson(host, '/nx.json', (json) => {
-    const resultJson = {
-      ...json,
-      projects: {
-        ...json.projects,
-        [options.name]: { tags: options.parsedTags },
-      },
-    };
-    if (options.e2eTestRunner === 'protractor') {
-      resultJson.projects[options.e2eProjectName] = { tags: [] };
-      resultJson.projects[options.e2eProjectName].implicitDependencies = [
-        options.name,
-      ];
-    }
-    return resultJson;
-  });
-}
-
-function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {
+function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
   // tsconfig.app.json
   updateJson(host, `${options.appProjectRoot}/tsconfig.app.json`, (json) => ({
     ...json,
@@ -46,7 +25,11 @@ function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {
     compilerOptions: {
       ...json.compilerOptions,
       outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
+      target: 'ES2017',
     },
+    exclude: [
+      ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
+    ],
   }));
 }
 
@@ -55,30 +38,47 @@ function updateAppAndE2EProjectConfigurations(
   options: NormalizedSchema
 ) {
   // workspace.json
-  const project = readProjectConfiguration(host, options.name);
+  let project = readProjectConfiguration(host, options.name);
 
-  let fixedProject = replaceAppNameWithPath(
-    project,
-    options.name,
-    options.appProjectRoot
-  );
+  if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
+    project = replaceAppNameWithPath(
+      project,
+      options.ngCliSchematicAppRoot,
+      options.appProjectRoot
+    );
+    // project already has the right root, but the above function, makes it incorrect.
+    // This corrects it.
+    project.root = options.appProjectRoot;
+  }
 
-  delete fixedProject.targets.test;
+  delete project.targets.test;
 
   // Ensure the outputs property comes after the executor for
   // better readability.
-  const { executor, ...rest } = fixedProject.targets.build;
-  fixedProject.targets.build = {
+  const { executor, ...rest } = project.targets.build;
+  project.targets.build = {
     executor,
     outputs: ['{options.outputPath}'],
     ...rest,
   };
 
-  if (fixedProject.generators) {
-    delete fixedProject.generators;
+  if (project.generators) {
+    delete project.generators;
   }
 
-  updateProjectConfiguration(host, options.name, fixedProject);
+  if (options.port) {
+    project.targets.serve = {
+      ...project.targets.serve,
+      options: {
+        ...project.targets.serve.options,
+        port: options.port,
+      },
+    };
+  }
+
+  project.tags = options.parsedTags;
+
+  updateProjectConfiguration(host, options.name, project);
 
   if (options.unitTestRunner === UnitTestRunner.None) {
     host.delete(`${options.appProjectRoot}/src/app/app.component.spec.ts`);

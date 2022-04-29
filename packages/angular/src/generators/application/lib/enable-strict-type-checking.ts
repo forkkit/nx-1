@@ -9,7 +9,7 @@ export function enableStrictTypeChecking(
 ) {
   const configFiles = [
     `${options.appProjectRoot}/tsconfig.json`,
-    `${options.e2eProjectRoot}/tsconfig.e2e.json`,
+    `${options.e2eProjectRoot}/tsconfig.json`,
   ];
 
   for (const configFile of configFiles) {
@@ -25,6 +25,8 @@ export function enableStrictTypeChecking(
         ...(json.compilerOptions ?? {}),
         forceConsistentCasingInFileNames: true,
         strict: true,
+        noImplicitOverride: true,
+        noPropertyAccessFromIndexSignature: true,
         noImplicitReturns: true,
         noFallthroughCasesInSwitch: true,
       };

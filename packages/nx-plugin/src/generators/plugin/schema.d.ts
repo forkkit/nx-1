@@ -10,4 +10,6 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
   standaloneConfig?: boolean;
+  setParserOptionsProject?: boolean;
+  compiler: 'swc' | 'tsc';
 }

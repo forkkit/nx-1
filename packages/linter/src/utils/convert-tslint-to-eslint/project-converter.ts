@@ -15,7 +15,6 @@ import {
 import type {
   Tree,
   GeneratorCallback,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
@@ -56,8 +55,7 @@ export interface ConvertTSLintToESLintSchema {
  * and it will extend from the root workspace .eslintrc.json file as normal.
  */
 export class ProjectConverter {
-  private readonly projectConfig: ProjectConfiguration &
-    NxJsonProjectConfiguration;
+  private readonly projectConfig: ProjectConfiguration;
   private readonly rootTSLintJsonPath = 'tslint.json';
   private readonly rootTSLintJson: Record<string, unknown>;
   private readonly projectTSLintJsonPath: string;
@@ -67,7 +65,7 @@ export class ProjectConverter {
   private readonly ignoreExistingTslintConfig: boolean;
   private readonly eslintInitializer: (projectInfo: {
     projectName: string;
-    projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
+    projectConfig: ProjectConfiguration;
   }) => Promise<void>;
 
   /**
@@ -86,7 +84,7 @@ export class ProjectConverter {
     ignoreExistingTslintConfig: boolean;
     eslintInitializer: (projectInfo: {
       projectName: string;
-      projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
+      projectConfig: ProjectConfiguration;
     }) => Promise<void>;
   }) {
     this.host = host;
@@ -103,18 +101,21 @@ export class ProjectConverter {
      * Given the user is converting a project from TSLint to ESLint, we expect them
      * to have both a root and a project-specific tslint.json
      */
-    if (!host.exists(this.rootTSLintJsonPath)) {
-      throw new Error(
-        'We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?'
-      );
+    if (!ignoreExistingTslintConfig) {
+      if (!host.exists(this.rootTSLintJsonPath)) {
+        throw new Error(
+          'We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?'
+        );
+      }
+      this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
+      if (!host.exists(this.projectTSLintJsonPath)) {
+        logger.warn(
+          `We could not find a tslint.json for the selected project "${this.projectTSLintJsonPath}", maybe you have already migrated to ESLint?`
+        );
+      } else {
+        this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
+      }
     }
-    if (!host.exists(this.projectTSLintJsonPath)) {
-      throw new Error(
-        `We could not find a tslint.json for the selected project "${this.projectTSLintJsonPath}", maybe you have already migrated to ESLint?`
-      );
-    }
-    this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
-    this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
 
     /**
      * We are not able to support --dry-run in this generator, because we need to dynamically install
@@ -269,7 +270,7 @@ export class ProjectConverter {
   async convertProjectConfig(
     applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config
   ): Promise<GeneratorCallback> {
-    if (this.ignoreExistingTslintConfig) {
+    if (this.ignoreExistingTslintConfig || !this.projectTSLintJson) {
       return Promise.resolve(() => {});
     }
 

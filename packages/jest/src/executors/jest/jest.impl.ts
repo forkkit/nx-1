@@ -16,18 +16,32 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const config = jestConfigParser(options, context);
+  const config = await jestConfigParser(options, context);
 
   const { results } = await runCLI(config, [options.jestConfig]);
 
   return { success: results.success };
 }
 
-export function jestConfigParser(
+function getExtraArgs(
+  options: JestExecutorOptions,
+  schema: { properties: Record<string, any> }
+) {
+  const extraArgs = {};
+  for (const key of Object.keys(options)) {
+    if (!schema.properties[key]) {
+      extraArgs[key] = options[key];
+    }
+  }
+
+  return extraArgs;
+}
+
+export async function jestConfigParser(
   options: JestExecutorOptions,
   context: ExecutorContext,
   multiProjects = false
-): Config.Argv {
+): Promise<Config.Argv> {
   let jestConfig:
     | {
         transform: any;
@@ -36,13 +50,13 @@ export function jestConfigParser(
       }
     | undefined;
 
-  if (!multiProjects) {
-    options.jestConfig = path.resolve(context.root, options.jestConfig);
-
-    jestConfig = require(options.jestConfig);
-  }
+  // support passing extra args to jest cli supporting 3rd party plugins
+  // like 'jest-runner-groups' --group arg
+  const schema = await import('./schema.json');
+  const extraArgs = getExtraArgs(options, schema);
 
   const config: Config.Argv = {
+    ...extraArgs,
     $0: undefined,
     _: [],
     config: options.config,
@@ -51,9 +65,12 @@ export function jestConfigParser(
     ci: options.ci,
     color: options.color,
     detectOpenHandles: options.detectOpenHandles,
+    logHeapUsage: options.logHeapUsage,
+    detectLeaks: options.detectLeaks,
     json: options.json,
     maxWorkers: options.maxWorkers,
     onlyChanged: options.onlyChanged,
+    changedSince: options.changedSince,
     outputFile: options.outputFile,
     passWithNoTests: options.passWithNoTests,
     runInBand: options.runInBand,
@@ -62,6 +79,7 @@ export function jestConfigParser(
     testLocationInResults: options.testLocationInResults,
     testNamePattern: options.testNamePattern,
     testPathPattern: options.testPathPattern,
+    testPathIgnorePatterns: options.testPathIgnorePatterns,
     testTimeout: options.testTimeout,
     colors: options.colors,
     verbose: options.verbose,
@@ -71,6 +89,12 @@ export function jestConfigParser(
     watch: options.watch,
     watchAll: options.watchAll,
   };
+
+  if (!multiProjects) {
+    options.jestConfig = path.resolve(context.root, options.jestConfig);
+
+    jestConfig = (await readConfig(config, options.jestConfig)).projectConfig;
+  }
 
   // for backwards compatibility
   if (options.setupFile && !multiProjects) {
@@ -131,7 +155,7 @@ export async function batchJest(
   );
 
   const { globalConfig, results } = await runCLI(
-    jestConfigParser(overrides, context, true),
+    await jestConfigParser(overrides, context, true),
     [...configPaths]
   );
 

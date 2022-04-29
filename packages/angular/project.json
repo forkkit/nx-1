@@ -6,17 +6,16 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/angular/jest.config.js",
+        "jestConfig": "packages/angular/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/angular"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/angular",
         "tsConfig": "packages/angular/tsconfig.lib.json",
-        "packageJson": "packages/angular/package.json",
         "main": "packages/angular/index.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
@@ -38,12 +37,13 @@
           {
             "input": "packages/angular",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
             "input": "packages/angular",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -51,7 +51,11 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -81,9 +85,12 @@
           "packages/angular/**/*.spec.tsx",
           "packages/angular/**/*.spec.js",
           "packages/angular/**/*.spec.jsx",
-          "packages/angular/**/*.d.ts"
+          "packages/angular/**/*.d.ts",
+          "packages/angular/**/executors/**/schema.json",
+          "packages/angular/**/generators/**/schema.json"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["workspace", "cypress", "jest"]

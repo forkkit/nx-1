@@ -1,7 +1,7 @@
-import type { Target } from '@nrwl/tao/src/commands/run';
-import type { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { combineOptionsForExecutor } from '@nrwl/tao/src/shared/params';
+import type { Target } from 'nx/src/command-line/run';
+import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { Workspaces } from 'nx/src/config/workspaces';
+import { combineOptionsForExecutor } from 'nx/src/utils/params';
 
 /**
  * Reads and combines options for a given target.
@@ -26,7 +26,7 @@ export function readTargetOptions<T = any>(
 
   return combineOptionsForExecutor(
     {},
-    configuration ?? '',
+    configuration ?? targetConfiguration.defaultConfiguration ?? '',
     targetConfiguration,
     schema,
     defaultProject,

@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { tmpProjPath } from './paths';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand } from '@nrwl/devkit';
 
 /**
  * Run a command asynchronously inside the e2e directory.

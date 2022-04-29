@@ -25,11 +25,10 @@ describe('Cypress E2E Test runner', () => {
 
     // Making sure the cypress folders & files are created
     checkFilesExist(`apps/${myapp}-e2e/cypress.json`);
-    checkFilesExist(`apps/${myapp}-e2e/tsconfig.e2e.json`);
+    checkFilesExist(`apps/${myapp}-e2e/tsconfig.json`);
 
     checkFilesExist(`apps/${myapp}-e2e/src/fixtures/example.json`);
     checkFilesExist(`apps/${myapp}-e2e/src/integration/app.spec.ts`);
-    checkFilesExist(`apps/${myapp}-e2e/src/plugins/index.js`);
     checkFilesExist(`apps/${myapp}-e2e/src/support/app.po.ts`);
     checkFilesExist(`apps/${myapp}-e2e/src/support/index.ts`);
     checkFilesExist(`apps/${myapp}-e2e/src/support/commands.ts`);
@@ -42,10 +41,10 @@ describe('Cypress E2E Test runner', () => {
       `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
     );
 
-    expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
+    expect(runCLI(`e2e ${myapp}-e2e --no-watch`)).toContain(
       'All specs passed!'
     );
-
+    await killPorts(4200);
     const originalContents = JSON.parse(
       readFile(`apps/${myapp}-e2e/cypress.json`)
     );
@@ -55,9 +54,9 @@ describe('Cypress E2E Test runner', () => {
       JSON.stringify(originalContents)
     );
 
-    expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
+    expect(runCLI(`e2e ${myapp}-e2e --no-watch`)).toContain(
       'All specs passed!'
     );
-    expect(await killPorts()).toBeTruthy();
+    expect(await killPorts(4200)).toBeTruthy();
   }, 1000000);
 });

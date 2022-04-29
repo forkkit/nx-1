@@ -1,4 +1,10 @@
-import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  NxJsonConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { nxVersion } from '../../utils/versions';
@@ -36,8 +42,8 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await webInitGenerator(tree, {});
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/web');
+      const { cli } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(cli.defaultCollection).toEqual('@nrwl/web');
     });
   });
 
@@ -73,6 +79,20 @@ describe('init', () => {
         unitTestRunner: 'none',
       });
       expect(tree.exists('babel.config.json')).toBe(false);
+    });
+
+    it('should not fail when dependencies is missing from package.json and no other init generators are invoked', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        delete json.dependencies;
+        return json;
+      });
+
+      expect(
+        webInitGenerator(tree, {
+          e2eTestRunner: 'none',
+          unitTestRunner: 'none',
+        })
+      ).resolves.toBeTruthy();
     });
   });
 });

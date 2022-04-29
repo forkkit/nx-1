@@ -2,9 +2,10 @@
   "root": "packages/nx",
   "sourceRoot": "packages/nx",
   "projectType": "library",
+  "implicitDependencies": ["dep-graph-client"],
   "targets": {
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/nx",
         "tsConfig": "packages/nx/tsconfig.lib.json",
@@ -25,12 +26,13 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
             "output": "/"
           },
           {
             "input": "packages/nx",
-            "glob": "**/*.js",
+            "glob": "**/*.{js,css,html,svg}",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -38,16 +40,43 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
+    },
+    "echo": {
+      "executor": "nx:command",
+      "options": {
+        "command": "echo hi"
+      }
     },
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "outputs": ["build/packages/nx"],
       "options": {
-        "command": "node ./scripts/copy-readme.js nx"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-dep-graph.js"
+          },
+          {
+            "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js nx"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
+          }
+        ],
+        "parallel": false
       }
     },
     "lint": {
@@ -62,7 +91,16 @@
           "packages/nx/**/*.spec.jsx",
           "packages/nx/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/nx"]
     }
   }
 }

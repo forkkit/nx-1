@@ -4,6 +4,9 @@ export interface Schema {
   port?: number;
   remotes?: string[];
   host?: string;
+  federationType?: 'static' | 'dynamic';
   routing?: boolean;
   skipFormat?: boolean;
+  skipPackageJson?: boolean;
+  e2eProjectName?: string;
 }

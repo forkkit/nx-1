@@ -1,9 +1,6 @@
-import { defaultTasksRunner } from './default-tasks-runner';
-
 export {
+  tasksRunnerV2,
   DefaultTasksRunnerOptions,
   RemoteCache,
-  defaultTasksRunner as tasksRunnerV2,
-} from './default-tasks-runner';
-
-export default defaultTasksRunner;
+  default,
+} from 'nx/src/tasks-runner/tasks-runner-v2';

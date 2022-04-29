@@ -1,9 +1,9 @@
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { workspaceRoot } from '@nrwl/devkit';
 import * as path from 'path';
 import { extname, join } from 'path';
 import { NormalizedSchema } from '../schema';
-
+const allowedExt = ['.ts', '.js', '.json'];
 /**
  * Updates the files in the root of the project
  *
@@ -18,13 +18,13 @@ export function updateProjectRootFiles(
 ) {
   const newRelativeRoot = path
     .relative(
-      path.join(appRootPath, schema.relativeToRootDestination),
-      appRootPath
+      path.join(workspaceRoot, schema.relativeToRootDestination),
+      workspaceRoot
     )
     .split(path.sep)
     .join('/');
   const oldRelativeRoot = path
-    .relative(path.join(appRootPath, project.root), appRootPath)
+    .relative(path.join(workspaceRoot, project.root), workspaceRoot)
     .split(path.sep)
     .join('/');
 
@@ -35,9 +35,12 @@ export function updateProjectRootFiles(
 
   const dots = /\./g;
   const regex = new RegExp(oldRelativeRoot.replace(dots, '\\.'), 'g');
-
   for (const file of tree.children(schema.relativeToRootDestination)) {
-    if (!extname(file).startsWith('.js')) {
+    const ext = extname(file);
+    if (!allowedExt.includes(ext)) {
+      continue;
+    }
+    if (file === '.eslintrc.json') {
       continue;
     }
 

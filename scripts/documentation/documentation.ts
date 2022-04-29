@@ -1,37 +1,33 @@
 import * as chalk from 'chalk';
-import { execSync, exec } from 'child_process';
+import { execSync } from 'child_process';
+import { removeSync } from 'fs-extra';
 import { join } from 'path';
-import { Frameworks } from './frameworks';
-
 import { generateCLIDocumentation } from './generate-cli-data';
-import { generateExecutorsDocumentation } from './generate-executors-data';
-import { generateGeneratorsDocumentation } from './generate-generators-data';
+import { generateCNWocumentation } from './generate-cnw-documentation';
+import { generateDevkitDocumentation } from './generate-devkit-documentation';
+import { generatePackageSchemas } from './package-schemas/generatePackageSchemas';
 
 async function generate() {
-  console.log(`${chalk.blue('i')} Generating Documentation`);
+  try {
+    console.log(`${chalk.blue('i')} Generating Documentation`);
+    generatePackageSchemas();
+    generateDevkitDocumentation();
 
-  execSync('nx build typedoc-theme');
-  Frameworks.forEach((framework) => {
-    execSync(
-      `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib`
+    const commandsOutputDirectory = join(
+      __dirname,
+      '../../docs/',
+      'generated',
+      'cli'
     );
-    execSync(
-      `rm -rf docs/${framework}/api-nx-devkit/modules.md docs/${framework}/api-nx-devkit/README.md`
-    );
-    execSync(
-      `npx prettier docs/${framework}/api-nx-devkit --write --config ${join(
-        __dirname,
-        '..',
-        '..',
-        '.prettierrc'
-      )}`
-    );
-  });
-  await generateGeneratorsDocumentation();
-  await generateExecutorsDocumentation();
-  await generateCLIDocumentation();
+    removeSync(commandsOutputDirectory);
+    await generateCNWocumentation(commandsOutputDirectory);
+    await generateCLIDocumentation(commandsOutputDirectory);
 
-  console.log(`\n${chalk.green('🗸')} Generated Documentation\n`);
+    console.log(`\n${chalk.green('✓')} Generated Documentation\n`);
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 }
 
 function checkDocumentation() {

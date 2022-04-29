@@ -1,19 +1,15 @@
 import { vol } from 'memfs';
-import { extname } from 'path';
 import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
-import {
-  DependencyType,
-  ProjectGraph,
-  ProjectType,
-} from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import { TargetProjectLocator } from '../core/target-project-locator';
-import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
-import { FileData } from 'packages/devkit/src/project-graph/interfaces';
+import { DependencyType, FileData, ProjectGraph } from '@nrwl/devkit';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
+import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('nx/src/utils/app-root', () => ({
+  workspaceRoot: '/root',
+}));
 
 const tsconfig = {
   compilerOptions: {
@@ -89,7 +85,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'libs/myapp',
               tags: [],
@@ -103,7 +99,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -134,7 +130,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'libs/myapp',
               tags: [],
@@ -148,7 +144,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           myapp2Name: {
             name: 'myapp2Name',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'libs/myapp2',
               tags: [],
@@ -159,7 +155,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           'myapp2-mylib': {
             name: 'myapp2-mylib',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/myapp2/mylib',
               tags: [],
@@ -177,11 +173,11 @@ describe('Enforce Module Boundaries (tslint)', () => {
   });
 
   describe('depConstraints', () => {
-    const graph = {
+    const graph: ProjectGraph = {
       nodes: {
         apiName: {
           name: 'apiName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/api',
             tags: ['api', 'domain1'],
@@ -192,7 +188,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         },
         'impl-both-domainsName': {
           name: 'impl-both-domainsName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl-both-domains',
             tags: ['impl', 'domain1', 'domain2'],
@@ -203,7 +199,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         },
         'impl-domain2Name': {
           name: 'impl-domain2Name',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl-domain2',
             tags: ['impl', 'domain2'],
@@ -214,7 +210,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         },
         impl2Name: {
           name: 'impl2Name',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl2',
             tags: ['impl', 'domain1'],
@@ -225,7 +221,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         },
         implName: {
           name: 'implName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl',
             tags: ['impl', 'domain1'],
@@ -236,7 +232,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         },
         untaggedName: {
           name: 'untaggedName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/untagged',
             tags: [],
@@ -245,16 +241,14 @@ describe('Enforce Module Boundaries (tslint)', () => {
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
+      },
+      externalNodes: {
         npmPackage: {
-          name: 'npmPackage',
+          name: 'npm:package',
           type: 'npm',
           data: {
             packageName: 'npm-package',
             version: '0.0.0',
-            tags: [],
-            implicitDependencies: [],
-            targets: {},
-            files: [],
           },
         },
       },
@@ -328,7 +322,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
       );
 
       expect(failures[0].getFailure()).toEqual(
-        'A project without tags cannot depend on any libraries'
+        'A project without tags matching at least one constraint cannot depend on any libraries'
       );
     });
 
@@ -412,7 +406,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -440,7 +434,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -468,7 +462,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -479,7 +473,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
             },
             otherName: {
               name: 'otherName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/other',
                 tags: [],
@@ -507,7 +501,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -518,7 +512,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
             },
             otherName: {
               name: 'otherName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/other',
                 tags: [],
@@ -546,7 +540,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -580,7 +574,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -591,7 +585,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           utils: {
             name: 'utils',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/utils',
               tags: [],
@@ -616,7 +610,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -627,7 +621,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           otherName: {
             name: 'otherName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/other',
               tags: [],
@@ -662,7 +656,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -673,7 +667,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -698,7 +692,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -709,7 +703,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           myappE2eName: {
             name: 'myappE2eName',
-            type: ProjectType.e2e,
+            type: 'e2e',
             data: {
               root: 'apps/myapp-e2e',
               tags: [],
@@ -736,7 +730,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -747,7 +741,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
@@ -758,7 +752,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -796,7 +790,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -807,7 +801,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
@@ -818,7 +812,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -851,34 +845,34 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
             },
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`)],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`, ['mylibName'])],
             },
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              targets: {},
+              architect: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -895,7 +889,11 @@ describe('Enforce Module Boundaries (tslint)', () => {
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "anotherlibName" and "mylibName" detected: anotherlibName -> mylibName -> anotherlibName'
+      `Circular dependency between "anotherlibName" and "mylibName" detected: anotherlibName -> mylibName -> anotherlibName
+
+Circular file chain:
+- libs/anotherlib/src/main.ts
+- libs/mylib/src/main.ts`
     );
   });
 
@@ -908,45 +906,52 @@ describe('Enforce Module Boundaries (tslint)', () => {
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
+              architect: {},
+              files: [
+                createFile(`libs/mylib/src/main.ts`, ['badcirclelibName']),
+              ],
             },
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`)],
+              architect: {},
+              files: [
+                createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+                createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+              ],
             },
           },
           badcirclelibName: {
             name: 'badcirclelibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/badcirclelib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/badcirclelib/src/main.ts`)],
+              architect: {},
+              files: [
+                createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+              ],
             },
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              targets: {},
+              architect: {},
               files: [createFile(`apps/myapp/index.ts`)],
             },
           },
@@ -977,7 +982,12 @@ describe('Enforce Module Boundaries (tslint)', () => {
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "mylibName" and "badcirclelibName" detected: mylibName -> badcirclelibName -> anotherlibName -> mylibName'
+      `Circular dependency between "mylibName" and "badcirclelibName" detected: mylibName -> badcirclelibName -> anotherlibName -> mylibName
+
+Circular file chain:
+- libs/mylib/src/main.ts
+- libs/badcirclelib/src/main.ts
+- [libs/anotherlib/src/main.ts,libs/anotherlib/src/index.ts]`
     );
   });
 
@@ -993,7 +1003,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1009,7 +1019,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1036,7 +1046,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1052,7 +1062,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1081,7 +1091,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1097,7 +1107,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
             },
             anotherBuildableLib: {
               name: 'anotherBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/anotherBuildableLib',
                 tags: [],
@@ -1129,7 +1139,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1139,7 +1149,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1156,8 +1166,8 @@ describe('Enforce Module Boundaries (tslint)', () => {
   });
 });
 
-function createFile(f): FileData {
-  return { file: f, hash: '' };
+function createFile(f: string, deps?: string[]): FileData {
+  return { file: f, hash: '', ...(deps && { deps }) };
 }
 
 function runRule(
@@ -1184,9 +1194,11 @@ function runRule(
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
-    'mycompany',
     mappedProjectGraph,
-    new TargetProjectLocator(mappedProjectGraph.nodes)
+    new TargetProjectLocator(
+      mappedProjectGraph.nodes,
+      mappedProjectGraph.externalNodes
+    )
   );
   return rule.apply(sourceFile);
 }

@@ -1,9 +1,11 @@
-import type { NextConfig } from 'next/dist/next-server/server/config';
-import { WebpackConfigOptions } from '../src/utils/types';
+// ignoring while we support both Next 11.1.0 and versions before it
+// @ts-ignore
+import type { NextConfig } from 'next/dist/server/config';
+import type { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
-const { appRootPath } = require('@nrwl/tao/src/utils/app-root');
-const { workspaceLayout } = require('@nrwl/workspace/src/core/file-utils');
+const { workspaceRoot } = require('@nrwl/devkit');
+const { workspaceLayout } = require('@nrwl/devkit');
 
 export interface WithNxOptions extends NextConfig {
   nx?: WebpackConfigOptions;
@@ -21,19 +23,12 @@ function regexEqual(x, y) {
 }
 
 function withNx(nextConfig = {} as WithNxOptions) {
-  /**
-   * In collaboration with Vercel themselves, we have been advised to set the "experimental-serverless-trace" target
-   * if we detect that the build is running on Vercel to allow for the most ergonomic configuration for Vercel users.
-   */
-  if (process.env.NOW_BUILDER) {
-    console.log(
-      'withNx() plugin: Detected Vercel build environment, applying "experimental-serverless-trace" target'
-    );
-    nextConfig.target = 'experimental-serverless-trace';
-  }
-
   const userWebpack = nextConfig.webpack || ((x) => x);
   return {
+    eslint: {
+      ignoreDuringBuilds: true,
+      ...(nextConfig.eslint ?? {}),
+    },
     ...nextConfig,
     webpack: (config, options) => {
       /*
@@ -49,7 +44,7 @@ function withNx(nextConfig = {} as WithNxOptions) {
        */
 
       // Include workspace libs in css/sass loaders
-      const includes = [join(appRootPath, workspaceLayout().libsDir)];
+      const includes = [join(workspaceRoot, workspaceLayout().libsDir)];
 
       const nextCssLoaders = config.module.rules.find(
         (rule) => typeof rule.oneOf === 'object'
@@ -124,9 +119,40 @@ function withNx(nextConfig = {} as WithNxOptions) {
         delete nextGlobalCssLoader.issuer.and;
       }
 
+      /**
+       * 5. Add env variables prefixed with NX_
+       */
+      addNxEnvVariables(config);
+
       return userWebpack(config, options);
     },
   };
+}
+
+function getNxEnvironmentVariables() {
+  return Object.keys(process.env)
+    .filter((env) => /^NX_/i.test(env))
+    .reduce((env, key) => {
+      env[key] = process.env[key];
+      return env;
+    }, {});
+}
+
+function addNxEnvVariables(config: any) {
+  const maybeDefinePlugin = config.plugins.find((plugin) => {
+    return plugin.definitions?.['process.env.NODE_ENV'];
+  });
+
+  if (maybeDefinePlugin) {
+    const env = getNxEnvironmentVariables();
+
+    Object.entries(env)
+      .map(([name, value]) => [`process.env.${name}`, `"${value}"`])
+      .filter(([name]) => !maybeDefinePlugin.definitions[name])
+      .forEach(
+        ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
+      );
+  }
 }
 
 module.exports = withNx;

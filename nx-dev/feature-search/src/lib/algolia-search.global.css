@@ -108,7 +108,7 @@
   height: 4.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: black;
+  color: #374151;
   margin-left: 1rem;
   margin-right: 1rem;
   flex: auto;
@@ -117,6 +117,7 @@
 
 .DocSearch-Input:focus {
   outline: 2px dotted transparent;
+  border-color: #143157 !important;
 }
 
 .DocSearch-Input::-webkit-search-cancel-button,
@@ -155,11 +156,12 @@
 }
 
 .DocSearch-Hit-source {
-  line-height: 1.5rem;
-  font-weight: bold;
   color: theme('colors.gray.600');
+  font-weight: bold;
+  line-height: 1.5rem;
   margin-top: 1.5rem;
   margin-bottom: 1rem;
+  text-transform: capitalize;
 }
 
 .DocSearch-Hit-Container {
@@ -205,7 +207,7 @@
 }
 
 .DocSearch-Hit-title {
-  color: black;
+  color: #374151;
   line-height: 1.5rem;
   font-weight: 600;
   overflow: hidden;
@@ -304,7 +306,7 @@
 
 .DocSearch-Hits mark {
   background: none;
-  color: theme('colors.purple.nx-base');
+  color: theme('colors.blue.nx-dark');
 }
 
 .DocSearch-Hit[aria-selected='true'] mark {

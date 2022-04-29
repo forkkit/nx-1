@@ -1,5 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
+
 import { readJsonInTree } from './ast-utils';
+
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 export function getWorkspacePath(host: Tree) {
@@ -59,6 +61,9 @@ export function replaceAppNameWithPath(
       'builder',
       'executor',
       'browserTarget',
+      'tags',
+      'defaultConfiguration',
+      'maximumError',
     ]; // Some of the properties should not be renamed
     return Object.keys(node).reduce(
       (m, c) => (

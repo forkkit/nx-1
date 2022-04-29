@@ -34,6 +34,12 @@ describe('component', () => {
     expect(
       appTree.exists('libs/my-lib/src/lib/hello/hello.module.css')
     ).toBeTruthy();
+    expect(
+      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
+    ).toMatch(/import styles from '.\/hello.module.css'/);
+    expect(
+      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
+    ).toMatch(/<div className={styles\['container']}>/);
   });
 
   it('should generate files with global CSS', async () => {
@@ -52,6 +58,12 @@ describe('component', () => {
     expect(
       appTree.exists('libs/my-lib/src/lib/hello/hello.module.css')
     ).toBeFalsy();
+    expect(
+      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
+    ).toMatch(/import '.\/hello.css'/);
+    expect(
+      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
+    ).toMatch(/<div>/);
   });
 
   it('should generate files for an app', async () => {
@@ -132,6 +144,27 @@ describe('component', () => {
       ).toBeTruthy();
       expect(
         appTree.exists('libs/my-lib/src/lib/hello/Hello.module.css')
+      ).toBeTruthy();
+    });
+  });
+
+  describe('--pascalCaseDirectory', () => {
+    it('should generate component files with pascal case directories', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello-world',
+        style: 'css',
+        project: projectName,
+        pascalCaseFiles: true,
+        pascalCaseDirectory: true,
+      });
+      expect(
+        appTree.exists('libs/my-lib/src/lib/HelloWorld/HelloWorld.tsx')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('libs/my-lib/src/lib/HelloWorld/HelloWorld.spec.tsx')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('libs/my-lib/src/lib/HelloWorld/HelloWorld.module.css')
       ).toBeTruthy();
     });
   });

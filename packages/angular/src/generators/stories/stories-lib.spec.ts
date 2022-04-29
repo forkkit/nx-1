@@ -3,6 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator } from '@nrwl/storybook';
 import { libraryGenerator } from '../library/library';
+import { scamGenerator } from '../scam/scam';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 
@@ -150,6 +151,111 @@ describe('angularStories generator: libraries', () => {
       expect(
         tree.exists(
           `apps/${libName}-e2e/src/integration/variable-declare-view/variable-declare-view.component.spec.ts`
+        )
+      ).toBeTruthy();
+    });
+
+    it('should handle modules with where components are spread into the declarations array', async () => {
+      await cypressProjectGenerator(tree, {
+        linter: Linter.EsLint,
+        name: libName,
+      });
+
+      angularStoriesGenerator(tree, {
+        name: libName,
+        generateCypressSpecs: true,
+      });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-button/variable-spread-declare-button.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-view/variable-spread-declare-view.component.stories.ts`
+        )
+      ).toBeTruthy();
+
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/variable-spread-declare-button/variable-spread-declare-button.component.spec.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/variable-spread-declare-view/variable-spread-declare-view.component.spec.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.spec.ts`
+        )
+      ).toBeTruthy();
+    });
+
+    it('should handle modules using static members for declarations rather than literals', async () => {
+      await cypressProjectGenerator(tree, {
+        linter: Linter.EsLint,
+        name: libName,
+      });
+
+      angularStoriesGenerator(tree, {
+        name: libName,
+        generateCypressSpecs: true,
+      });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/static-member-declarations/cmp1/cmp1.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/static-member-declarations/cmp2/cmp2.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/cmp1/cmp1.component.spec.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/cmp2/cmp2.component.spec.ts`
+        )
+      ).toBeTruthy();
+    });
+
+    it('should generate stories file for scam component', async () => {
+      await scamGenerator(tree, { name: 'my-scam', project: libName });
+
+      angularStoriesGenerator(tree, { name: libName });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/my-scam/my-scam.component.stories.ts`
+        )
+      ).toBeTruthy();
+    });
+
+    it('should generate stories file for inline scam component', async () => {
+      await scamGenerator(tree, {
+        name: 'my-scam',
+        project: libName,
+        inlineScam: true,
+      });
+
+      angularStoriesGenerator(tree, { name: libName });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/my-scam/my-scam.component.stories.ts`
         )
       ).toBeTruthy();
     });

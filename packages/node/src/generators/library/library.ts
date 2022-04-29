@@ -24,6 +24,7 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectDirectory: string;
   parsedTags: string[];
+  compiler: 'swc' | 'tsc';
 }
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
@@ -40,6 +41,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     importPath: options.importPath,
     testEnvironment: 'node',
     skipFormat: true,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
   createFiles(tree, options);
 
@@ -67,7 +69,10 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.simpleModuleName ? name : projectName;
+  const fileName = getCaseAwareFileName({
+    fileName: options.simpleModuleName ? name : projectName,
+    pascalCaseFiles: options.pascalCaseFiles,
+  });
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
@@ -89,18 +94,30 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   };
 }
 
+function getCaseAwareFileName(options: {
+  pascalCaseFiles: boolean;
+  fileName: string;
+}) {
+  const normalized = names(options.fileName);
+
+  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
+}
+
 function createFiles(tree: Tree, options: NormalizedSchema) {
-  const nameFormats = names(options.fileName);
+  const { className, name, propertyName } = names(options.fileName);
+
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
-    ...nameFormats,
+    className,
+    name,
+    propertyName,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
   });
 
   if (options.unitTestRunner === 'none') {
     tree.delete(
-      join(options.projectRoot, `./src/lib/${nameFormats.fileName}.spec.ts`)
+      join(options.projectRoot, `./src/lib/${options.fileName}.spec.ts`)
     );
   }
   if (!options.publishable && !options.buildable) {
@@ -121,7 +138,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
 
   project.targets = project.targets || {};
   project.targets.build = {
-    executor: '@nrwl/node:package',
+    executor: `@nrwl/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
       outputPath: `dist/${libsDir}/${options.projectDirectory}`,

@@ -1,90 +1,53 @@
+import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import { readFileSync } from 'fs';
-import { join, relative } from 'path';
 import matter from 'gray-matter';
+import { join } from 'path';
 import { extractTitle } from './documents.utils';
-import {
-  DocumentData,
-  DocumentMetadata,
-  VersionMetadata,
-} from './documents.models';
 
 export interface StaticDocumentPaths {
   params: { segments: string[] };
 }
 
-export const flavorList: {
-  label: string;
-  value: string;
-  default?: boolean;
-}[] = [
-  { label: 'Angular', value: 'angular' },
-  { label: 'React', value: 'react', default: true },
-  { label: 'Node', value: 'node' },
-];
-
 export class DocumentsApi {
   constructor(
     private readonly options: {
-      previewRoot: string;
-      archiveRoot: string;
-      versions: VersionMetadata[];
-      documentsMap: Map<string, DocumentMetadata[]>;
+      publicDocsRoot: string;
+      documents: DocumentMetadata;
     }
   ) {
-    if (!options.archiveRoot || !options.previewRoot) {
-      throw new Error('archive and preview roots cannot be undefined');
+    if (!options.publicDocsRoot) {
+      throw new Error('public docs root cannot be undefined');
     }
   }
 
-  getDefaultVersion(): VersionMetadata {
-    const found = this.options.versions.find((v) => v.default);
-    if (found) return found;
-    throw new Error('Cannot find default version');
-  }
+  getDocument(path: string[]): DocumentData {
+    const docPath = this.getFilePath(path);
 
-  getVersions(): VersionMetadata[] {
-    return this.options.versions;
-  }
-
-  getDocument(
-    versionId: string,
-    flavorId: string,
-    path: string[]
-  ): DocumentData {
-    const docPath = this.getFilePath(versionId, flavorId, path);
     const originalContent = readFileSync(docPath, 'utf8');
     const file = matter(originalContent);
 
     // Set default title if not provided in front-matter section.
     if (!file.data.title) {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
+      file.data.description = file.excerpt ?? path[path.length - 1];
     }
 
     return {
-      filePath: relative(
-        versionId === 'preview'
-          ? this.options.previewRoot
-          : this.options.archiveRoot,
-        docPath
-      ),
+      filePath: docPath,
       data: file.data,
       content: file.content,
       excerpt: file.excerpt,
     };
   }
 
-  getDocuments(version: string) {
-    const docs = this.options.documentsMap.get(version);
-    if (docs) {
-      return docs;
-    } else {
-      throw new Error(`Cannot find documents for ${version}`);
-    }
+  getDocuments(): DocumentMetadata {
+    const docs = this.options.documents;
+    if (docs) return docs;
+    throw new Error(`Cannot find any documents`);
   }
 
-  getStaticDocumentPaths(version: string): StaticDocumentPaths[] {
+  getStaticDocumentPaths(): StaticDocumentPaths[] {
     const paths: StaticDocumentPaths[] = [];
-    const defaultVersion = this.getDefaultVersion();
 
     function recur(curr, acc) {
       if (curr.itemList) {
@@ -92,50 +55,33 @@ export class DocumentsApi {
           recur(ii, [...acc, curr.id]);
         });
       } else {
+        /*
+         * Do not try to get paths for Packages (done by the PackagesApi).
+         * This should be removed when the packages/schemas menu is inferred directly from PackagesApi.
+         * TODO@ben: Remove this when packages schemas menu is auto-generated.
+         */
+        if (!!curr['path'] && curr['path'].startsWith('/packages/'))
+          return void 0; // Do nothing
+
         paths.push({
           params: {
-            segments: [version, ...acc, curr.id],
+            segments: [...acc, curr.id],
           },
         });
-
-        // For generic paths such as `/getting-started/intro`, use the default version and react flavor.
-        if (version === defaultVersion.id && acc[0] === 'react') {
-          paths.push({
-            params: {
-              segments: [...acc.slice(1), curr.id],
-            },
-          });
-        }
       }
     }
 
-    this.getDocuments(version).forEach((item) => {
+    if (!this.options.documents || !this.options.documents.itemList)
+      throw new Error(`Can't find any items`);
+    this.options.documents.itemList.forEach((item) => {
       recur(item, []);
     });
 
     return paths;
   }
 
-  getDocumentsRoot(version: string): string {
-    if (version === 'preview') {
-      return this.options.previewRoot;
-    }
-
-    const versionPath = this.options.versions.find(
-      (x) => x.id === version
-    )?.path;
-
-    if (versionPath) {
-      return join(this.options.archiveRoot, versionPath);
-    }
-
-    throw new Error(`Cannot find root for ${version}`);
-  }
-
-  private getFilePath(versionId, flavorId, path): string {
-    let items = this.getDocuments(versionId).find(
-      (item) => item.id === flavorId
-    )?.itemList;
+  private getFilePath(path: string[]): string {
+    let items = this.options.documents?.itemList;
 
     if (!items) {
       throw new Error(`Document not found`);
@@ -150,7 +96,7 @@ export class DocumentsApi {
         throw new Error(`Document not found`);
       }
     }
-    const file = found.file ?? [flavorId, ...path].join('/');
-    return join(this.getDocumentsRoot(versionId), `${file}.md`);
+    const file = found.file ?? ['generated', ...path].join('/');
+    return join(this.options.publicDocsRoot, `${file}.md`);
   }
 }

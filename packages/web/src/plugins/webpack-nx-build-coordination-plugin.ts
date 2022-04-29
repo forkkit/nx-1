@@ -1,11 +1,11 @@
 import { watch } from 'chokidar';
 import { execSync } from 'child_process';
-import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import { workspaceLayout } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 
-export class WebpackNxBuildCoordinaionPlugin {
+export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
 
   constructor(private readonly buildCmd: string) {
